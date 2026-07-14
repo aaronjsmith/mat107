@@ -358,7 +358,7 @@ html[dir="rtl"] .lang-wrap {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 #q-input {
@@ -380,6 +380,38 @@ html[dir="rtl"] .lang-wrap {
   font-family: var(--mono);
   color: var(--muted);
   white-space: nowrap;
+}
+
+.math-insert {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.15rem 0 0.55rem;
+}
+
+.math-btn {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  min-width: 2.4rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.math-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent-deep);
+  background: rgba(15, 110, 86, 0.06);
+}
+
+.math-btn:focus-visible {
+  outline: 2px solid rgba(15, 110, 86, 0.35);
+  outline-offset: 1px;
 }
 
 .primary, .ghost {
@@ -404,11 +436,16 @@ html[dir="rtl"] .lang-wrap {
   color: var(--muted);
 }
 
-.actions {
+.answer-actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.75rem;
-  margin-top: auto;
-  padding-top: 1rem;
+  margin-top: 0.35rem;
+}
+
+.answer-actions #btn-next {
+  margin-inline-start: auto;
 }
 
 .feedback {
@@ -417,6 +454,7 @@ html[dir="rtl"] .lang-wrap {
   border-radius: 10px;
   font-size: 0.98rem;
   line-height: 1.45;
+  white-space: pre-wrap;
 }
 
 .feedback.ok { background: var(--good-bg); color: var(--good); }

@@ -182,7 +182,7 @@
       expected: expected,
       credit: credit,
       hints_used: hintsUsed,
-      hint: question.hint || "",
+      hint: question.hint || question.setup || "",
       streak: p.streak,
       unaided_correct: unaided,
       unaided_needed: UNAIDED,

@@ -36,6 +36,8 @@
     form: document.getElementById("q-form"),
     input: document.getElementById("q-input"),
     unit: document.getElementById("q-unit"),
+    mathInsert: document.getElementById("math-insert"),
+    check: document.getElementById("btn-check"),
     feedback: document.getElementById("feedback"),
     next: document.getElementById("btn-next"),
     skip: document.getElementById("btn-skip"),
@@ -127,6 +129,7 @@
     els.feedback.hidden = true;
     els.feedback.textContent = "";
     els.feedback.className = "feedback";
+    els.check.hidden = true;
     els.next.hidden = true;
     els.skip.hidden = false;
     els.hint1.hidden = true;
@@ -149,6 +152,11 @@
     els.figure.innerHTML = "";
     els.input.value = "";
     els.input.placeholder = "";
+    if (els.mathInsert) {
+      els.mathInsert.querySelectorAll("button").forEach((btn) => {
+        btn.disabled = false;
+      });
+    }
   }
 
   function loadQuestion() {
@@ -195,6 +203,7 @@
       });
     } else {
       els.form.hidden = false;
+      els.check.hidden = false;
       els.unit.textContent = pub.unit || "";
       if (pub.placeholder) els.input.placeholder = pub.placeholder;
       els.input.focus();
@@ -205,7 +214,13 @@
     if (!state.fullQuestion || state.answered) return;
     state.answered = true;
     els.skip.hidden = true;
+    els.check.hidden = true;
     hideHintControls();
+    if (els.mathInsert) {
+      els.mathInsert.querySelectorAll("button").forEach((btn) => {
+        btn.disabled = true;
+      });
+    }
 
     const result = P.recordAnswer(state.fullQuestion, answer, state.hintsUsed);
     els.feedback.hidden = false;
@@ -223,9 +238,18 @@
       });
     } else {
       els.feedback.className = "feedback no";
+      const tip =
+        result.hint ||
+        state.publicQ?.hint1 ||
+        state.publicQ?.hint2 ||
+        "";
       els.feedback.textContent =
         t("feedback_wrong", { expected: result.expected }) +
-        (result.hint ? t("feedback_wrong_hint", { hint: result.hint }) : "");
+        (tip ? t("feedback_wrong_hint", { hint: tip }) : "");
+      // Show approach/setup hints so the miss is still a learning moment.
+      if (els.hint1.textContent) els.hint1.hidden = false;
+      if (els.hint2.textContent) els.hint2.hidden = false;
+      if (els.hint3.textContent) els.hint3.hidden = false;
     }
 
     if (state.publicQ.type === "mc") {
@@ -238,6 +262,51 @@
 
     els.next.hidden = false;
     refreshProgress();
+  }
+
+  function insertAtCursor(text, cursorOffset) {
+    const input = els.input;
+    if (!input || state.answered) return;
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    const before = input.value.slice(0, start);
+    const after = input.value.slice(end);
+    input.value = before + text + after;
+    const pos =
+      cursorOffset != null ? start + cursorOffset : start + text.length;
+    input.focus();
+    input.setSelectionRange(pos, pos);
+  }
+
+  function insertFraction() {
+    const input = els.input;
+    if (!input || state.answered) return;
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? 0;
+    const selected = input.value.slice(start, end);
+    if (selected) {
+      // Wrap selection as (sel)/() with cursor in the denominator.
+      insertAtCursor("(" + selected + ")/()", selected.length + 3);
+    } else {
+      insertAtCursor("()/()", 1);
+    }
+  }
+
+  if (els.mathInsert) {
+    // Keep input focus/selection when pressing insert buttons.
+    els.mathInsert.addEventListener("mousedown", (e) => {
+      if (e.target.closest("button")) e.preventDefault();
+    });
+    els.mathInsert.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn || state.answered) return;
+      if (btn.hasAttribute("data-insert-frac")) {
+        insertFraction();
+        return;
+      }
+      const text = btn.getAttribute("data-insert");
+      if (text) insertAtCursor(text);
+    });
   }
 
   els.form.addEventListener("submit", (e) => {

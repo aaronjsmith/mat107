@@ -68,13 +68,20 @@
           <input id="q-input" name="answer" autocomplete="off" spellcheck="false" />
           <span class="unit" id="q-unit"></span>
         </div>
-        <button class="primary" type="submit" data-i18n="btn_check">Check</button>
+        <div class="math-insert" id="math-insert" role="group" aria-label="Insert math symbols">
+          <button type="button" class="math-btn" data-insert="π" title="Pi (π)">π</button>
+          <button type="button" class="math-btn" data-insert="²" title="Superscript 2">x²</button>
+          <button type="button" class="math-btn" data-insert="³" title="Superscript 3">x³</button>
+          <button type="button" class="math-btn" data-insert="½" title="One half">½</button>
+          <button type="button" class="math-btn" data-insert-frac title="Fraction a/b">a/b</button>
+        </div>
       </form>
-      <div id="feedback" class="feedback" hidden></div>
-      <div class="actions">
-        <button class="primary" id="btn-next" type="button" hidden data-i18n="btn_next">Next question</button>
+      <div class="answer-actions">
+        <button class="primary" id="btn-check" type="submit" form="q-form" hidden data-i18n="btn_check">Check</button>
         <button class="ghost" id="btn-skip" type="button" data-i18n="btn_skip">Skip</button>
+        <button class="primary" id="btn-next" type="button" hidden data-i18n="btn_next">Next question</button>
       </div>
+      <div id="feedback" class="feedback" hidden></div>
     </section>
 
     <aside class="panel mastery">
