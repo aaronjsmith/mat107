@@ -154,7 +154,10 @@
     meta.languages.forEach(function (L) {
       const opt = document.createElement("option");
       opt.value = L.code;
-      opt.textContent = L.native + (L.native !== L.name ? " · " + L.name : "");
+      const flag = L.flag ? L.flag + " " : "";
+      const label =
+        flag + L.native + (L.native !== L.name ? " · " + L.name : "");
+      opt.textContent = label;
       if (L.code === lang) opt.selected = true;
       selectEl.appendChild(opt);
     });

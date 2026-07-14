@@ -69,14 +69,14 @@ html, body {
 }
 
 .lang-select {
-  font-family: var(--font);
+  font-family: var(--font), "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
   font-size: 0.9rem;
   color: var(--ink);
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 0.4rem 0.65rem;
-  min-width: 11rem;
+  min-width: 13rem;
   cursor: pointer;
 }
 
@@ -241,17 +241,24 @@ html[dir="rtl"] .lang-wrap {
 }
 
 .figure {
-  margin-bottom: 1rem;
-  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.25rem 0 1.15rem;
+  padding: 0.5rem 0;
 }
 
 .q-svg {
+  display: block;
+  width: min(100%, 380px);
   max-width: 100%;
   height: auto;
+  margin: 0 auto;
+  overflow: visible;
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 8px;
+  border-radius: 10px;
+  box-sizing: content-box;
 }
 
 .hint-stack {
