@@ -1,0 +1,206 @@
+/* MAT107 progress — localStorage */
+(function () {
+  const STORAGE_KEY = "mat107-assessment1-progress";
+  const Q = window.QuizQuestions;
+  const UNAIDED = Q.UNAIDED_TO_MASTER || 10;
+
+  function emptyTopic(label) {
+    return {
+      correct: 0,
+      attempted: 0,
+      credit: 0,
+      unaided_correct: 0,
+      label: label,
+    };
+  }
+
+  function emptyProgress() {
+    const topics = {};
+    Object.keys(Q.TOPICS).forEach((key) => {
+      topics[key] = emptyTopic(Q.TOPICS[key]);
+    });
+    return {
+      total_correct: 0,
+      total_attempted: 0,
+      total_credit: 0,
+      total_unaided_correct: 0,
+      streak: 0,
+      best_streak: 0,
+      topics: topics,
+      history: [],
+      updated_at: null,
+    };
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return emptyProgress();
+      const data = JSON.parse(raw);
+      data.total_credit = data.total_credit != null ? data.total_credit : data.total_correct || 0;
+      data.total_unaided_correct = data.total_unaided_correct || 0;
+      Object.keys(Q.TOPICS).forEach((key) => {
+        const t = data.topics[key] || emptyTopic(Q.TOPICS[key]);
+        t.label = Q.TOPICS[key];
+        t.credit = t.credit != null ? t.credit : t.correct || 0;
+        t.unaided_correct = t.unaided_correct || 0;
+        data.topics[key] = t;
+      });
+      return data;
+    } catch (e) {
+      return emptyProgress();
+    }
+  }
+
+  function save(data) {
+    data.updated_at = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function gradeAccuracy(credit, attempted) {
+    if (!attempted) return 0;
+    return Math.round((1000 * credit) / attempted) / 10;
+  }
+
+  function topicMastery(unaided) {
+    return Math.round((1000 * Math.min(unaided, UNAIDED)) / UNAIDED) / 10;
+  }
+
+  function isMastered(unaided) {
+    return unaided >= UNAIDED;
+  }
+
+  function getProgressView() {
+    const p = load();
+    const topics = {};
+    let masteredCount = 0;
+    Object.keys(p.topics).forEach((key) => {
+      const info = p.topics[key];
+      const unaided = info.unaided_correct || 0;
+      const mastered = isMastered(unaided);
+      if (mastered) masteredCount += 1;
+      topics[key] = {
+        ...info,
+        unaided_correct: unaided,
+        unaided_needed: UNAIDED,
+        mastery: topicMastery(unaided),
+        mastered: mastered,
+        label: Q.TOPICS[key] || info.label,
+      };
+    });
+    return {
+      total_correct: p.total_correct,
+      total_attempted: p.total_attempted,
+      total_credit: Math.round(p.total_credit * 100) / 100,
+      total_unaided_correct: p.total_unaided_correct || 0,
+      accuracy: gradeAccuracy(p.total_credit, p.total_attempted),
+      streak: p.streak,
+      best_streak: p.best_streak,
+      mastered_topics: masteredCount,
+      topic_count: Object.keys(Q.TOPICS).length,
+      unaided_to_master: UNAIDED,
+      topics: topics,
+      history: (p.history || []).slice(-20),
+      updated_at: p.updated_at,
+    };
+  }
+
+  function pickSmartTopic() {
+    const p = load();
+    const keys = Object.keys(Q.TOPICS);
+    const weights = keys.map((t) => {
+      const info = p.topics[t] || { unaided_correct: 0, attempted: 0 };
+      const remaining = Math.max(UNAIDED - (info.unaided_correct || 0), 0);
+      let w = remaining * 12 + (info.attempted < 3 ? 15 : 0);
+      if (remaining === 0) w = 3;
+      return Math.max(w, 3);
+    });
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < keys.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return keys[i];
+    }
+    return keys[keys.length - 1];
+  }
+
+  function recordAnswer(question, userAnswer, hintsUsed) {
+    hintsUsed = Math.max(0, Math.min(2, hintsUsed | 0));
+    const [ok, expected] = Q.checkAnswer(question, userAnswer);
+    const credit = ok ? Q.HINT_CREDIT[hintsUsed] ?? 0.25 : 0;
+    const p = load();
+    const topic = question.topic;
+
+    p.total_attempted += 1;
+    p.total_credit = (p.total_credit || 0) + credit;
+    if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic] || topic);
+    p.topics[topic].attempted += 1;
+    p.topics[topic].credit = (p.topics[topic].credit || 0) + credit;
+
+    if (ok) {
+      p.total_correct += 1;
+      p.topics[topic].correct += 1;
+      if (hintsUsed === 0) {
+        p.streak += 1;
+        p.best_streak = Math.max(p.best_streak || 0, p.streak);
+        p.topics[topic].unaided_correct = (p.topics[topic].unaided_correct || 0) + 1;
+        p.total_unaided_correct = (p.total_unaided_correct || 0) + 1;
+      } else {
+        p.streak = 0;
+      }
+    } else {
+      p.streak = 0;
+    }
+
+    const unaided = p.topics[topic].unaided_correct || 0;
+    const mastered = isMastered(unaided);
+
+    p.history = p.history || [];
+    p.history.push({
+      at: new Date().toISOString(),
+      topic: topic,
+      correct: ok,
+      hints_used: hintsUsed,
+      credit: credit,
+      prompt: String(question.prompt).slice(0, 120),
+    });
+    p.history = p.history.slice(-100);
+    save(p);
+
+    const notes = [];
+    if (ok && hintsUsed) {
+      notes.push(
+        `Hints used → ${Math.round(credit * 100)}% credit (not counted toward mastery)`
+      );
+    } else if (ok) {
+      notes.push(`Unaided · mastery progress ${Math.min(unaided, UNAIDED)}/${UNAIDED}`);
+      if (mastered && unaided === UNAIDED) notes.push("Topic mastered!");
+    }
+
+    return {
+      correct: ok,
+      expected: expected,
+      credit: credit,
+      hints_used: hintsUsed,
+      hint: question.hint || "",
+      streak: p.streak,
+      unaided_correct: unaided,
+      unaided_needed: UNAIDED,
+      topic_mastery: topicMastery(unaided),
+      mastered: mastered,
+      note: notes.join(" · "),
+    };
+  }
+
+  function reset() {
+    save(emptyProgress());
+  }
+
+  window.QuizProgress = {
+    getProgressView: getProgressView,
+    pickSmartTopic: pickSmartTopic,
+    recordAnswer: recordAnswer,
+    reset: reset,
+    STORAGE_KEY: STORAGE_KEY,
+  };
+})();
