@@ -1,0 +1,22 @@
+{
+  "flash.recall": "Formula flashcard — write the formula:\n{front}",
+  "flash.recognize": "Formula flashcard — which is correct for:\n{front}?",
+  "q.circ_c": "The ward has a circular green Jell-O “ring of fire” mold with radius {r} inches (a culinary classic at every potluck from Provo to Pocatello). What is its circumference? {pi_note}",
+  "q.circ_a": "A circular sacrament-meeting clock face (the one that miraculously slows during talks) has radius {r}. What is its area? {pi_note}",
+  "q.soup": "Relief Society is canning a legendary cylinder of funeral potatoes. The base is {d} inches across (diameter) and the can is {h} inches high. (If Nephi could build a ship, you can find a volume.) What is the volume? {pi_note}",
+  "q.map_to_real": "A youth pioneer-trek map uses a scale of 1 inch : {scaleFt} feet. The rest stop (where they rediscover the joy of socks) is {inches} inches away on the map. How many feet down the trail is it?",
+  "q.real_to_map": "A ward “Book of Mormon lands” activity map has scale 1 inch : {scaleFt} feet. A landmark labeled “Zarahemla? (maybe)” is {feet} feet down the trail. How many inches away is it on the map? Round to the nearest hundredth if needed.",
+  "q.carpet_cmp": "Relief Society is comparing carpet options for a {L}'×{W}' room (the one with the mysterious “temporary” craft closet from 1998). Option A: {rollW}'-wide roll at ${costLin}/linear ft. Option B: ${costYd}/sq yd. Which is cheaper?",
+  "c.carpet_roll": "roll",
+  "q.pizza_cmp": "Mutual night pizza debate: which has more pizza area—two {small}-inch personal pizzas or one {large}-inch pizza? (Think feeding the multitude, but with cheese. {pi_note})",
+  "c.pizza_two": "two {small}-inch",
+  "c.pizza_one": "one {large}-inch",
+  "q.compare_sd": "{which}: {ds}. Approximate the standard deviation using the range rule of thumb.",
+  "q.zscore": "A seminary quiz has mean {mean} and standard deviation {sd}. What is the z-score for a score of {score}? Round to the nearest hundredth. (Seek learning by study and also by… z.)",
+  "q.emp_2sd": "Years of church membership for adults in a ward are roughly normal with mean {mean} and SD {sd}. About what percentage fall between {lo} and {hi}?",
+  "q.emp_below": "Missionary ages in a (made-up, PG) data set are roughly normal with mean {mean} and SD {sd}. About what percentage are younger than {cut}?",
+  "q.fence_roll": "Ammon is fencing a garden plot {ft1}' {in1}\" by {ft2}' {in2}\" (smaller than King Lamoni’s fields, thankfully). Fencing comes in 50-ft or 100-ft rolls at the Deseret Industries hardware aisle. Which roll do you need?",
+  "q.drive_slope": "The stake-center driveway rises {rise} ft over a horizontal distance of {run} ft—steeper than a new missionary’s learning curve. What is the slope? Write as a simplified ratio rise:run or as a fraction rise/run.",
+  "q.drive_len": "Lehi’s family, if they had asphalt, might have used a driveway that rises {rise} ft over a horizontal distance of {run} ft. What is the slant length of that driveway? Round to the nearest hundredth. (Hint from Alma: have faith—and use √(a² + b²).)",
+  "h.feet_in_yard": "1 yard = 3 feet"
+}
