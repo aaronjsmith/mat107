@@ -74,9 +74,11 @@
     const p = load();
     const topics = {};
     let masteredCount = 0;
+    let unaidedSum = 0;
     Object.keys(p.topics).forEach((key) => {
       const info = p.topics[key];
       const unaided = info.unaided_correct || 0;
+      unaidedSum += Math.min(unaided, UNAIDED);
       const mastered = isMastered(unaided);
       if (mastered) masteredCount += 1;
       topics[key] = {
@@ -88,6 +90,12 @@
         label: Q.TOPICS[key] || info.label,
       };
     });
+    const topicCount = Object.keys(Q.TOPICS).length;
+    const overallNeeded = topicCount * UNAIDED;
+    const overallMastery =
+      overallNeeded > 0
+        ? Math.round((1000 * unaidedSum) / overallNeeded) / 10
+        : 0;
     return {
       total_correct: p.total_correct,
       total_attempted: p.total_attempted,
@@ -97,7 +105,8 @@
       streak: p.streak,
       best_streak: p.best_streak,
       mastered_topics: masteredCount,
-      topic_count: Object.keys(Q.TOPICS).length,
+      topic_count: topicCount,
+      overall_mastery: overallMastery,
       unaided_to_master: UNAIDED,
       topics: topics,
       history: (p.history || []).slice(-20),
@@ -124,6 +133,20 @@
     return keys[keys.length - 1];
   }
 
+  /** Adjust topic mastery counter; never below 0. Returns actual delta applied. */
+  function adjustUnaided(p, topic, delta) {
+    if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic] || topic);
+    const prev = p.topics[topic].unaided_correct || 0;
+    const next = Math.max(0, prev + delta);
+    const applied = next - prev;
+    p.topics[topic].unaided_correct = next;
+    p.total_unaided_correct = Math.max(
+      0,
+      (p.total_unaided_correct || 0) + applied
+    );
+    return applied;
+  }
+
   function recordAnswer(question, userAnswer, hintsUsed) {
     hintsUsed = Math.max(0, Math.min(3, hintsUsed | 0));
     const [ok, expected] = Q.checkAnswer(question, userAnswer);
@@ -137,19 +160,23 @@
     p.topics[topic].attempted += 1;
     p.topics[topic].credit = (p.topics[topic].credit || 0) + credit;
 
+    let masteryDelta = 0;
     if (ok) {
       p.total_correct += 1;
       p.topics[topic].correct += 1;
       if (hintsUsed === 0) {
         p.streak += 1;
         p.best_streak = Math.max(p.best_streak || 0, p.streak);
-        p.topics[topic].unaided_correct = (p.topics[topic].unaided_correct || 0) + 1;
-        p.total_unaided_correct = (p.total_unaided_correct || 0) + 1;
+        masteryDelta = adjustUnaided(p, topic, 1);
       } else {
         p.streak = 0;
+        masteryDelta = adjustUnaided(p, topic, -1);
       }
     } else {
       p.streak = 0;
+      if (hintsUsed > 0) {
+        masteryDelta = adjustUnaided(p, topic, -1);
+      }
     }
 
     const unaided = p.topics[topic].unaided_correct || 0;
@@ -162,12 +189,12 @@
       correct: ok,
       hints_used: hintsUsed,
       credit: credit,
+      mastery_delta: masteryDelta,
       prompt: String(question.prompt).slice(0, 120),
     });
     p.history = p.history.slice(-100);
     save(p);
 
-    const notes = [];
     // Notes are assembled with i18n in the UI (app.js).
     return {
       correct: ok,
@@ -180,8 +207,43 @@
       unaided_needed: UNAIDED,
       topic_mastery: topicMastery(unaided),
       mastered: mastered,
+      mastery_delta: masteryDelta,
       just_mastered: Boolean(ok && hintsUsed === 0 && mastered && unaided === UNAIDED),
       note: "",
+    };
+  }
+
+  /** Skip after opening hints: same mastery penalty as answering with help. */
+  function recordHintSkip(question, hintsUsed) {
+    hintsUsed = Math.max(0, Math.min(3, hintsUsed | 0));
+    if (!question || hintsUsed <= 0) {
+      return { mastery_delta: 0, unaided_correct: 0, unaided_needed: UNAIDED };
+    }
+    const p = load();
+    const topic = question.topic;
+    if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic] || topic);
+    const masteryDelta = adjustUnaided(p, topic, -1);
+    p.streak = 0;
+    p.history = p.history || [];
+    p.history.push({
+      at: new Date().toISOString(),
+      topic: topic,
+      correct: false,
+      hints_used: hintsUsed,
+      credit: 0,
+      skipped: true,
+      mastery_delta: masteryDelta,
+      prompt: String(question.prompt).slice(0, 120),
+    });
+    p.history = p.history.slice(-100);
+    save(p);
+    const unaided = p.topics[topic].unaided_correct || 0;
+    return {
+      mastery_delta: masteryDelta,
+      unaided_correct: unaided,
+      unaided_needed: UNAIDED,
+      topic_mastery: topicMastery(unaided),
+      mastered: isMastered(unaided),
     };
   }
 
@@ -290,6 +352,7 @@
     getProgressView: getProgressView,
     pickSmartTopic: pickSmartTopic,
     recordAnswer: recordAnswer,
+    recordHintSkip: recordHintSkip,
     awardRetryCredit: awardRetryCredit,
     reset: reset,
     exportProgress: exportProgress,

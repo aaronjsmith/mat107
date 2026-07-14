@@ -53,8 +53,207 @@
     streak: document.getElementById("stat-streak"),
     total: document.getElementById("stat-total"),
     mastery: document.getElementById("mastery-bars"),
+    masteryPie: document.getElementById("mastery-pie"),
     lang: document.getElementById("lang-select"),
   };
+
+  const PIE_COLORS = [
+    "#0f6e56",
+    "#1d4ed8",
+    "#b45309",
+    "#7c3aed",
+    "#0e7490",
+    "#be123c",
+    "#4d7c0f",
+    "#c2410c",
+    "#0369a1",
+    "#a21caf",
+    "#15803d",
+    "#9333ea",
+  ];
+
+  function polar(cx, cy, r, deg) {
+    const rad = ((deg - 90) * Math.PI) / 180;
+    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+  }
+
+  function sectorPath(cx, cy, rInner, rOuter, a0, a1) {
+    if (a1 - a0 < 0.01) return "";
+    const large = a1 - a0 > 180 ? 1 : 0;
+    const [x0, y0] = polar(cx, cy, rOuter, a0);
+    const [x1, y1] = polar(cx, cy, rOuter, a1);
+    if (rInner <= 0.5) {
+      return (
+        "M" +
+        cx +
+        "," +
+        cy +
+        " L" +
+        x0.toFixed(2) +
+        "," +
+        y0.toFixed(2) +
+        " A" +
+        rOuter +
+        "," +
+        rOuter +
+        " 0 " +
+        large +
+        " 1 " +
+        x1.toFixed(2) +
+        "," +
+        y1.toFixed(2) +
+        " Z"
+      );
+    }
+    const [xi0, yi0] = polar(cx, cy, rInner, a0);
+    const [xi1, yi1] = polar(cx, cy, rInner, a1);
+    return (
+      "M" +
+      x0.toFixed(2) +
+      "," +
+      y0.toFixed(2) +
+      " A" +
+      rOuter +
+      "," +
+      rOuter +
+      " 0 " +
+      large +
+      " 1 " +
+      x1.toFixed(2) +
+      "," +
+      y1.toFixed(2) +
+      " L" +
+      xi1.toFixed(2) +
+      "," +
+      yi1.toFixed(2) +
+      " A" +
+      rInner +
+      "," +
+      rInner +
+      " 0 " +
+      large +
+      " 0 " +
+      xi0.toFixed(2) +
+      "," +
+      yi0.toFixed(2) +
+      " Z"
+    );
+  }
+
+  function renderMasteryPie(p) {
+    if (!els.masteryPie) return;
+    const entries = Object.entries(p.topics);
+    const n = entries.length || 1;
+    const size = 220;
+    const cx = size / 2;
+    const cy = size / 2;
+    const rOuter = 96;
+    const rHole = 46;
+    const gap = n > 1 ? 1.2 : 0;
+    const sweep = 360 / n;
+    const overall = p.overall_mastery != null ? p.overall_mastery : 0;
+
+    let slices = "";
+    let legend = "";
+    entries.forEach(([key, info], i) => {
+      const color = PIE_COLORS[i % PIE_COLORS.length];
+      const a0 = i * sweep + gap / 2;
+      const a1 = (i + 1) * sweep - gap / 2;
+      const frac = Math.max(0, Math.min(1, (info.mastery || 0) / 100));
+      // Unmastered remainder (outer ring portion) — ALEKS-style empty tip
+      slices +=
+        '<path d="' +
+        sectorPath(cx, cy, rHole, rOuter, a0, a1) +
+        '" fill="' +
+        color +
+        '" fill-opacity="0.18" stroke="#fff" stroke-width="1"/>';
+      if (frac > 0.02) {
+        const rFilled = rHole + (rOuter - rHole) * frac;
+        slices +=
+          '<path d="' +
+          sectorPath(cx, cy, rHole, rFilled, a0, a1) +
+          '" fill="' +
+          color +
+          '" stroke="#fff" stroke-width="0.75">' +
+          "<title>" +
+          info.label +
+          ": " +
+          info.unaided_correct +
+          "/" +
+          info.unaided_needed +
+          "</title></path>";
+      }
+      legend +=
+        '<li class="pie-legend-item" data-topic="' +
+        key +
+        '" title="' +
+        info.label +
+        '">' +
+        '<i style="background:' +
+        color +
+        '"></i>' +
+        "<span>" +
+        (info.mastered ? "✓ " : "") +
+        info.label +
+        "</span>" +
+        '<em>' +
+        Math.round(info.mastery) +
+        "%</em></li>";
+    });
+
+    els.masteryPie.innerHTML =
+      '<div class="pie-chart-wrap">' +
+      '<svg class="mastery-pie-svg" viewBox="0 0 ' +
+      size +
+      " " +
+      size +
+      '" role="img" aria-label="' +
+      t("mastery_overall_aria", { pct: overall }) +
+      '">' +
+      slices +
+      '<circle cx="' +
+      cx +
+      '" cy="' +
+      cy +
+      '" r="' +
+      (rHole - 2) +
+      '" fill="#fffcf6"/>' +
+      '<text x="' +
+      cx +
+      '" y="' +
+      (cy - 6) +
+      '" text-anchor="middle" class="pie-pct">' +
+      overall +
+      "%</text>" +
+      '<text x="' +
+      cx +
+      '" y="' +
+      (cy + 14) +
+      '" text-anchor="middle" class="pie-sub">' +
+      t("mastery_overall") +
+      "</text>" +
+      "</svg>" +
+      '<p class="pie-summary">' +
+      t("mastery_pie_summary", {
+        mastered: p.mastered_topics,
+        total: p.topic_count,
+      }) +
+      "</p>" +
+      "</div>" +
+      '<ul class="pie-legend">' +
+      legend +
+      "</ul>";
+
+    els.masteryPie.querySelectorAll(".pie-legend-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const key = item.getAttribute("data-topic");
+        if (!key) return;
+        state.mode = key;
+        setModeButtons();
+        loadQuestion();
+      });
+    });
+  }
 
   function setModeButtons() {
     document.querySelectorAll(".topic[data-topic]").forEach((btn) => {
@@ -102,6 +301,7 @@
     }
 
     els.mastery.innerHTML = "";
+    renderMasteryPie(p);
     Object.entries(p.topics)
       .sort((a, b) => a[1].mastery - b[1].mastery)
       .forEach(([, info]) => {
@@ -390,7 +590,11 @@
       const progress = `${result.unaided_correct}/${result.unaided_needed}`;
       let note = "";
       if (result.hints_used) {
-        note = t("feedback_note_hinted", { credit: creditPct }) + " ";
+        note =
+          t("feedback_note_hinted", {
+            credit: creditPct,
+            progress: progress,
+          }) + " ";
       } else {
         note = t("feedback_note_unaided", { progress: progress }) + " ";
       }
@@ -512,6 +716,10 @@
     if (state.retryPhase) {
       finishAfterRetry(false, state.lastExpected);
       return;
+    }
+    if (state.fullQuestion && state.hintsUsed > 0 && !state.answered) {
+      P.recordHintSkip(state.fullQuestion, state.hintsUsed);
+      refreshProgress();
     }
     loadQuestion();
   });

@@ -460,6 +460,92 @@ html[dir="rtl"] .lang-wrap {
 .feedback.ok { background: var(--good-bg); color: var(--good); }
 .feedback.no { background: var(--bad-bg); color: var(--bad); }
 
+.mastery-pie {
+  margin: 0.35rem 0 1.15rem;
+}
+
+.pie-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mastery-pie-svg {
+  width: min(100%, 220px);
+  height: auto;
+  display: block;
+}
+
+.mastery-pie-svg .pie-pct {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+
+.mastery-pie-svg .pie-sub {
+  font-family: var(--font);
+  font-size: 10px;
+  fill: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pie-summary {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.pie-legend {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  max-height: 11rem;
+  overflow: auto;
+}
+
+.pie-legend-item {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  cursor: pointer;
+  padding: 0.2rem 0.15rem;
+  border-radius: 6px;
+}
+
+.pie-legend-item:hover {
+  background: rgba(15, 110, 86, 0.08);
+}
+
+.pie-legend-item i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: block;
+}
+
+.pie-legend-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.pie-legend-item em {
+  font-style: normal;
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
 .mastery-row {
   margin-bottom: 0.85rem;
 }
