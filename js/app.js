@@ -2,16 +2,20 @@
 (function () {
   const Q = window.QuizQuestions;
   const P = window.QuizProgress;
+  const I18n = window.QuizI18n;
+
+  function t(key, vars) {
+    return I18n && I18n.t ? I18n.t(key, vars) : key;
+  }
 
   if (!Q || !P) {
-    document.getElementById("q-prompt").textContent =
-      "Failed to load quiz scripts. Open index.html from the project folder (js/questions.js and js/progress.js must be next to it).";
+    document.getElementById("q-prompt").textContent = t("load_fail");
     return;
   }
 
   const state = {
     mode: "all",
-    fullQuestion: null, // includes answers (kept only in memory)
+    fullQuestion: null,
     publicQ: null,
     answered: false,
     hintsUsed: 0,
@@ -21,10 +25,12 @@
     topicList: document.getElementById("topic-list"),
     prompt: document.getElementById("q-prompt"),
     topic: document.getElementById("q-topic"),
-    hint: document.getElementById("q-hint"),
-    setup: document.getElementById("q-setup"),
-    hintBtn: document.getElementById("btn-hint"),
-    setupBtn: document.getElementById("btn-setup"),
+    hint1: document.getElementById("q-hint1"),
+    hint2: document.getElementById("q-hint2"),
+    hint3: document.getElementById("q-hint3"),
+    hint1Btn: document.getElementById("btn-hint1"),
+    hint2Btn: document.getElementById("btn-hint2"),
+    hint3Btn: document.getElementById("btn-hint3"),
     figure: document.getElementById("q-figure"),
     choices: document.getElementById("q-choices"),
     form: document.getElementById("q-form"),
@@ -34,20 +40,24 @@
     next: document.getElementById("btn-next"),
     skip: document.getElementById("btn-skip"),
     reset: document.getElementById("btn-reset"),
+    save: document.getElementById("btn-save"),
+    load: document.getElementById("btn-load"),
+    progressFile: document.getElementById("progress-file"),
     accuracy: document.getElementById("stat-accuracy"),
     streak: document.getElementById("stat-streak"),
     total: document.getElementById("stat-total"),
     mastery: document.getElementById("mastery-bars"),
+    lang: document.getElementById("lang-select"),
   };
 
   function setModeButtons() {
     document.querySelectorAll(".topic[data-topic]").forEach((btn) => {
-      const t = btn.dataset.topic;
+      const topic = btn.dataset.topic;
       const active =
-        (state.mode === "all" && t === "all") ||
-        (state.mode === "smart" && t === "smart") ||
-        (state.mode === "flashcards" && t === "flashcards") ||
-        state.mode === t;
+        (state.mode === "all" && topic === "all") ||
+        (state.mode === "smart" && topic === "smart") ||
+        (state.mode === "flashcards" && topic === "flashcards") ||
+        state.mode === topic;
       btn.classList.toggle("active", active);
     });
   }
@@ -95,7 +105,7 @@
         row.innerHTML = `
           <header>
             <span>${info.mastered ? "✓ " : ""}${info.label}</span>
-            <span>${info.unaided_correct}/${info.unaided_needed} unaided</span>
+            <span>${info.unaided_correct}/${info.unaided_needed} ${t("mastery_unaided")}</span>
           </header>
           <div class="bar ${cls}"><i style="width:${info.mastery}%"></i></div>
         `;
@@ -103,6 +113,12 @@
       });
 
     setModeButtons();
+  }
+
+  function hideHintControls() {
+    els.hint1Btn.hidden = true;
+    els.hint2Btn.hidden = true;
+    els.hint3Btn.hidden = true;
   }
 
   function resetUI() {
@@ -113,16 +129,19 @@
     els.feedback.className = "feedback";
     els.next.hidden = true;
     els.skip.hidden = false;
-    els.hint.hidden = true;
-    els.hint.textContent = "";
-    els.setup.hidden = true;
-    els.setup.textContent = "";
-    els.hintBtn.hidden = true;
-    els.setupBtn.hidden = true;
-    els.hintBtn.disabled = false;
-    els.setupBtn.disabled = false;
-    els.hintBtn.textContent = "Hint 1 · concept";
-    els.setupBtn.textContent = "Hint 2 · setup equation";
+    els.hint1.hidden = true;
+    els.hint2.hidden = true;
+    els.hint3.hidden = true;
+    els.hint1.textContent = "";
+    els.hint2.textContent = "";
+    els.hint3.textContent = "";
+    els.hint1Btn.disabled = false;
+    els.hint2Btn.disabled = false;
+    els.hint3Btn.disabled = false;
+    els.hint1Btn.textContent = t("btn_hint1");
+    els.hint2Btn.textContent = t("btn_hint2");
+    els.hint3Btn.textContent = t("btn_hint3");
+    hideHintControls();
     els.choices.hidden = true;
     els.choices.innerHTML = "";
     els.form.hidden = true;
@@ -145,11 +164,19 @@
     state.publicQ = pub;
 
     els.topic.textContent =
-      state.mode === "flashcards" ? "Formula flashcards" : pub.topic_label;
+      state.mode === "flashcards" ? t("mode_flashcards") : pub.topic_label;
     els.prompt.textContent = pub.prompt;
-    els.hint.textContent = pub.hint || "";
-    els.setup.textContent = pub.setup || "";
-    els.hintBtn.hidden = !pub.has_hint;
+    els.hint1.textContent = pub.hint1 || "";
+    els.hint2.textContent = pub.hint2 || "";
+    els.hint3.textContent = pub.hint3 || "";
+
+    if (pub.has_hint1) {
+      els.hint1Btn.hidden = false;
+    } else if (pub.has_hint2) {
+      els.hint2Btn.hidden = false;
+    } else if (pub.has_hint3) {
+      els.hint3Btn.hidden = false;
+    }
 
     if (pub.svg) {
       els.figure.hidden = false;
@@ -178,8 +205,7 @@
     if (!state.fullQuestion || state.answered) return;
     state.answered = true;
     els.skip.hidden = true;
-    els.hintBtn.hidden = true;
-    els.setupBtn.hidden = true;
+    hideHintControls();
 
     const result = P.recordAnswer(state.fullQuestion, answer, state.hintsUsed);
     els.feedback.hidden = false;
@@ -188,15 +214,18 @@
       els.feedback.className = "feedback ok";
       const creditPct = Math.round(result.credit * 100);
       const progress = `${result.unaided_correct}/${result.unaided_needed}`;
-      els.feedback.textContent =
-        `Correct · ${creditPct}% credit. ${result.note || ""}\n` +
-        `Unaided streak: ${result.streak}. Mastery: ${progress}` +
-        (result.mastered ? " — mastered!" : "");
+      els.feedback.textContent = t("feedback_correct", {
+        credit: creditPct,
+        note: result.note || "",
+        streak: result.streak,
+        progress: progress,
+        mastered: result.mastered ? t("feedback_mastered") : "",
+      });
     } else {
       els.feedback.className = "feedback no";
       els.feedback.textContent =
-        `Not quite. Expected: ${result.expected}` +
-        (result.hint ? `\nHint: ${result.hint}` : "");
+        t("feedback_wrong", { expected: result.expected }) +
+        (result.hint ? t("feedback_wrong_hint", { hint: result.hint }) : "");
     }
 
     if (state.publicQ.type === "mc") {
@@ -216,21 +245,31 @@
     submitAnswer(els.input.value);
   });
 
-  els.hintBtn.addEventListener("click", () => {
-    if (!els.hint.textContent || state.answered) return;
-    els.hint.hidden = false;
+  els.hint1Btn.addEventListener("click", () => {
+    if (!els.hint1.textContent || state.answered) return;
+    els.hint1.hidden = false;
     state.hintsUsed = Math.max(state.hintsUsed, 1);
-    els.hintBtn.textContent = "Hint 1 used (−50% if correct)";
-    els.hintBtn.disabled = true;
-    if (state.publicQ?.has_setup) els.setupBtn.hidden = false;
+    els.hint1Btn.textContent = t("btn_hint1_used");
+    els.hint1Btn.disabled = true;
+    if (state.publicQ?.has_hint2) els.hint2Btn.hidden = false;
+    else if (state.publicQ?.has_hint3) els.hint3Btn.hidden = false;
   });
 
-  els.setupBtn.addEventListener("click", () => {
-    if (!els.setup.textContent || state.answered) return;
-    els.setup.hidden = false;
+  els.hint2Btn.addEventListener("click", () => {
+    if (!els.hint2.textContent || state.answered) return;
+    els.hint2.hidden = false;
     state.hintsUsed = Math.max(state.hintsUsed, 2);
-    els.setupBtn.textContent = "Hint 2 used (−75% if correct)";
-    els.setupBtn.disabled = true;
+    els.hint2Btn.textContent = t("btn_hint2_used");
+    els.hint2Btn.disabled = true;
+    if (state.publicQ?.has_hint3) els.hint3Btn.hidden = false;
+  });
+
+  els.hint3Btn.addEventListener("click", () => {
+    if (!els.hint3.textContent || state.answered) return;
+    els.hint3.hidden = false;
+    state.hintsUsed = Math.max(state.hintsUsed, 3);
+    els.hint3Btn.textContent = t("btn_hint3_used");
+    els.hint3Btn.disabled = true;
   });
 
   els.next.addEventListener("click", loadQuestion);
@@ -245,13 +284,88 @@
   });
 
   els.reset.addEventListener("click", () => {
-    if (!confirm("Reset all progress stored in this browser?")) return;
+    if (!confirm(t("reset_confirm"))) return;
     P.reset();
     els.topicList.innerHTML = "";
     refreshProgress();
     loadQuestion();
   });
 
-  refreshProgress();
-  loadQuestion();
+  if (els.save) {
+    els.save.addEventListener("click", () => {
+      try {
+        const name = P.downloadProgressFile();
+        els.feedback.hidden = false;
+        els.feedback.className = "feedback ok";
+        els.feedback.textContent = t("save_ok", { file: name });
+      } catch (err) {
+        els.feedback.hidden = false;
+        els.feedback.className = "feedback no";
+        els.feedback.textContent = t("save_fail");
+        console.error(err);
+      }
+    });
+  }
+
+  if (els.load && els.progressFile) {
+    els.load.addEventListener("click", () => {
+      els.progressFile.value = "";
+      els.progressFile.click();
+    });
+    els.progressFile.addEventListener("change", () => {
+      const file = els.progressFile.files && els.progressFile.files[0];
+      if (!file) return;
+      if (!confirm(t("load_confirm"))) {
+        els.progressFile.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          P.importProgress(String(reader.result || ""));
+          els.topicList.innerHTML = "";
+          refreshProgress();
+          loadQuestion();
+          els.feedback.hidden = false;
+          els.feedback.className = "feedback ok";
+          els.feedback.textContent = t("load_ok");
+        } catch (err) {
+          els.feedback.hidden = false;
+          els.feedback.className = "feedback no";
+          els.feedback.textContent = t("progress_load_fail");
+          console.error(err);
+        }
+      };
+      reader.onerror = () => {
+        els.feedback.hidden = false;
+        els.feedback.className = "feedback no";
+        els.feedback.textContent = t("progress_load_fail");
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  if (I18n && els.lang) {
+    I18n.fillSelect(els.lang);
+    els.lang.addEventListener("change", () => {
+      I18n.setLang(els.lang.value);
+    });
+    I18n.onChange(() => {
+      els.topicList.innerHTML = "";
+      refreshProgress();
+      loadQuestion();
+    });
+  }
+
+  function start() {
+    if (I18n && I18n.applyStatic) I18n.applyStatic();
+    refreshProgress();
+    loadQuestion();
+  }
+
+  if (I18n && I18n.ready && typeof I18n.ready.then === "function") {
+    I18n.ready.then(start);
+  } else {
+    start();
+  }
 })();

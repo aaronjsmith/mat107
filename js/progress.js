@@ -125,7 +125,7 @@
   }
 
   function recordAnswer(question, userAnswer, hintsUsed) {
-    hintsUsed = Math.max(0, Math.min(2, hintsUsed | 0));
+    hintsUsed = Math.max(0, Math.min(3, hintsUsed | 0));
     const [ok, expected] = Q.checkAnswer(question, userAnswer);
     const credit = ok ? Q.HINT_CREDIT[hintsUsed] ?? 0.25 : 0;
     const p = load();
@@ -196,11 +196,77 @@
     save(emptyProgress());
   }
 
+  function exportProgress() {
+    const p = load();
+    return {
+      format: "mat107-assessment1-progress",
+      version: 1,
+      exported_at: new Date().toISOString(),
+      progress: p,
+    };
+  }
+
+  function importProgress(raw) {
+    let data = raw;
+    if (typeof raw === "string") data = JSON.parse(raw);
+    if (!data || typeof data !== "object") {
+      throw new Error("Invalid progress file");
+    }
+    const p = data.progress && typeof data.progress === "object" ? data.progress : data;
+    if (typeof p.total_attempted !== "number" || !p.topics || typeof p.topics !== "object") {
+      throw new Error("Invalid progress data");
+    }
+    // Normalize against current topic list
+    const next = emptyProgress();
+    next.total_correct = p.total_correct || 0;
+    next.total_attempted = p.total_attempted || 0;
+    next.total_credit = p.total_credit != null ? p.total_credit : p.total_correct || 0;
+    next.total_unaided_correct = p.total_unaided_correct || 0;
+    next.streak = p.streak || 0;
+    next.best_streak = p.best_streak || 0;
+    next.history = Array.isArray(p.history) ? p.history.slice(-100) : [];
+    Object.keys(Q.TOPICS).forEach((key) => {
+      const src = (p.topics && p.topics[key]) || {};
+      next.topics[key] = {
+        correct: src.correct || 0,
+        attempted: src.attempted || 0,
+        credit: src.credit != null ? src.credit : src.correct || 0,
+        unaided_correct: src.unaided_correct || 0,
+        label: Q.TOPICS[key],
+      };
+    });
+    save(next);
+    return next;
+  }
+
+  function downloadProgressFile(filename) {
+    const payload = exportProgress();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const stamp = new Date().toISOString().slice(0, 10);
+    const name = filename || "mat107-progress-" + stamp + ".json";
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 1000);
+    return name;
+  }
+
   window.QuizProgress = {
     getProgressView: getProgressView,
     pickSmartTopic: pickSmartTopic,
     recordAnswer: recordAnswer,
     reset: reset,
+    exportProgress: exportProgress,
+    importProgress: importProgress,
+    downloadProgressFile: downloadProgressFile,
     STORAGE_KEY: STORAGE_KEY,
   };
 })();

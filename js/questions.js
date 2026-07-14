@@ -5,7 +5,28 @@
 (function () {
   "use strict";
 
-  const TOPICS = {
+  function t(key, vars) {
+    if (window.QuizI18n && window.QuizI18n.t) {
+      return window.QuizI18n.t(key, vars || {});
+    }
+    return key;
+  }
+
+  function buildTopics() {
+    var keys = [
+      "conversions", "formulas", "perimeter_area", "volume", "pythagorean",
+      "scale_rates", "scaling", "stats_center", "stats_spread", "z_scores",
+      "distributions", "literacy"
+    ];
+    var out = {};
+    for (var i = 0; i < keys.length; i++) {
+      out[keys[i]] = t("topic." + keys[i]);
+    }
+    return out;
+  }
+
+
+  const TOPICS_FALLBACK = {
     conversions: "Unit Conversions",
     formulas: "Formulas & Flashcards",
     perimeter_area: "Perimeter & Area",
@@ -21,8 +42,9 @@
   };
 
   const PI = 3.14;
-  const PI_NOTE = "Use π = 3.14. Round to the nearest hundredth.";
-  const HINT_CREDIT = { 0: 1.0, 1: 0.5, 2: 0.25 };
+  function piNote() { return t("pi_note"); }
+  // Credit remaining after hints: 0→100%, 1→75%, 2→50%, 3→25%
+  const HINT_CREDIT = { 0: 1.0, 1: 0.75, 2: 0.5, 3: 0.25 };
   const UNAIDED_TO_MASTER = 10;
 
   // --- Helpers ----------------------------------------------------------------
@@ -36,12 +58,14 @@
   }
 
   function shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
+    // Mutates in place and returns the same array (callers often ignore the return).
+    for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
+      const tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
     }
-    return a;
+    return arr;
   }
 
   function gcd(a, b) {
@@ -69,9 +93,20 @@
     return s;
   }
 
-  function _choice(prompt, choices, answer, topic, hint, setup) {
+  function calcHelp(tiSteps, casioSteps, tip) {
+    tip = tip || t("calc_tip_default");
+    return t("calc_header", { ti: tiSteps, casio: casioSteps, tip: tip });
+  }
+
+  // Generic leftover tip when we only have an equation setup
+  function CALC_GENERIC() {
+    return t("calc_generic");
+  }
+
+  function _choice(prompt, choices, answer, topic, hint, setup, calc) {
     hint = hint || "";
     setup = setup || "";
+    calc = calc || "";
     return {
       id: id(),
       topic: topic,
@@ -81,15 +116,17 @@
       answer: answer,
       hint: hint,
       setup: setup,
+      calc: calc,
       tolerance: 0,
     };
   }
 
-  function _numeric(prompt, answer, topic, tolerance, hint, setup, unit) {
+  function _numeric(prompt, answer, topic, tolerance, hint, setup, unit, calc) {
     tolerance = tolerance === undefined ? 0.05 : tolerance;
     hint = hint || "";
     setup = setup || "";
     unit = unit || "";
+    calc = calc || "";
     return {
       id: id(),
       topic: topic,
@@ -99,13 +136,15 @@
       tolerance: tolerance,
       hint: hint,
       setup: setup,
+      calc: calc,
       unit: unit,
     };
   }
 
-  function _short(prompt, answers, topic, hint, setup) {
+  function _short(prompt, answers, topic, hint, setup, calc) {
     hint = hint || "";
     setup = setup || "";
+    calc = calc || "";
     return {
       id: id(),
       topic: topic,
@@ -116,6 +155,7 @@
       }),
       hint: hint,
       setup: setup,
+      calc: calc,
     };
   }
 
@@ -153,90 +193,32 @@
     return t;
   }
 
-  const FORMULA_CARDS = [
-    {
-      front: "Perimeter of a square with side s",
-      back: "P = 4s",
-      answers: ["4s", "4*s", "s+s+s+s"],
-      hint: "Add all four equal sides.",
-    },
-    {
-      front: "Area of a square with side s",
-      back: "A = s²",
-      answers: ["s^2", "s*s", "s²"],
-      hint: "Side times side.",
-    },
-    {
-      front: "Perimeter of a rectangle with length L and width W",
-      back: "P = 2L + 2W",
-      answers: ["2l+2w", "2(l+w)", "2*l+2*w", "2(l+w)"],
-      hint: "Two lengths plus two widths.",
-    },
-    {
-      front: "Area of a rectangle with length L and width W",
-      back: "A = L × W",
-      answers: ["l*w", "lw", "l×w", "w*l"],
-      hint: "Length times width.",
-    },
-    {
-      front: "Perimeter of a triangle with sides a, b, and c",
-      back: "P = a + b + c",
-      answers: ["a+b+c", "a+b+c"],
-      hint: "Add the three sides.",
-    },
-    {
-      front: "Area of a triangle with base b and height h",
-      back: "A = ½bh",
-      answers: ["0.5bh", "0.5*b*h", "(1/2)bh", "1/2*b*h", "bh/2", "(1/2)*b*h"],
-      hint: "Half of base times height.",
-    },
-    {
-      front: "Circumference of a circle with radius r",
-      back: "C = 2πr",
-      answers: ["2pir", "2*pi*r", "2πr", "pid", "pi*d"],
-      hint: "Also C = πd with diameter d.",
-    },
-    {
-      front: "Area of a circle with radius r",
-      back: "A = πr²",
-      answers: ["pir^2", "pi*r^2", "πr²", "pi*r*r"],
-      hint: "Pi times radius squared.",
-    },
-    {
-      front: "Volume of a cube with side s",
-      back: "V = s³",
-      answers: ["s^3", "s*s*s", "s³"],
-      hint: "Side times side times side.",
-    },
-    {
-      front: "Volume of a sphere with radius r",
-      back: "V = (4/3)πr³",
-      answers: ["(4/3)pir^3", "(4/3)*pi*r^3", "4/3pir^3", "4/3*pi*r^3", "(4/3)πr³"],
-      hint: "Four-thirds pi r-cubed.",
-    },
-    {
-      front: "Volume of a cylinder with radius r and height h",
-      back: "V = πr²h",
-      answers: ["pir^2h", "pi*r^2*h", "πr²h", "pi*r*r*h"],
-      hint: "Area of base circle times height.",
-    },
-    {
-      front: "Pythagorean Theorem (legs a, b; hypotenuse c)",
-      back: "a² + b² = c²",
-      answers: ["a^2+b^2=c^2", "a²+b²=c²", "c^2=a^2+b^2"],
-      hint: "Sum of the squares of the legs equals the square of the hypotenuse.",
-    },
-  ];
+  function getFormulaCards() {
+    return [
+      { front: t("card.sq_p.front"), back: "P = 4s", answers: ["4s", "4*s", "s+s+s+s"], hint: t("card.sq_p.hint") },
+      { front: t("card.sq_a.front"), back: "A = s²", answers: ["s^2", "s*s", "s²"], hint: t("card.sq_a.hint") },
+      { front: t("card.rect_p.front"), back: "P = 2L + 2W", answers: ["2l+2w", "2(l+w)", "2*l+2*w"], hint: t("card.rect_p.hint") },
+      { front: t("card.rect_a.front"), back: "A = L × W", answers: ["l*w", "lw", "l×w", "w*l"], hint: t("card.rect_a.hint") },
+      { front: t("card.tri_p.front"), back: "P = a + b + c", answers: ["a+b+c"], hint: t("card.tri_p.hint") },
+      { front: t("card.tri_a.front"), back: "A = ½bh", answers: ["0.5bh", "0.5*b*h", "(1/2)bh", "1/2*b*h", "bh/2"], hint: t("card.tri_a.hint") },
+      { front: t("card.circ_c.front"), back: "C = 2πr", answers: ["2pir", "2*pi*r", "2πr", "pid", "pi*d"], hint: t("card.circ_c.hint") },
+      { front: t("card.circ_a.front"), back: "A = πr²", answers: ["pir^2", "pi*r^2", "πr²", "pi*r*r"], hint: t("card.circ_a.hint") },
+      { front: t("card.cube.front"), back: "V = s³", answers: ["s^3", "s*s*s", "s³"], hint: t("card.cube.hint") },
+      { front: t("card.sphere.front"), back: "V = (4/3)πr³", answers: ["(4/3)pir^3", "(4/3)*pi*r^3", "4/3pir^3", "4/3*pi*r^3"], hint: t("card.sphere.hint") },
+      { front: t("card.cyl.front"), back: "V = πr²h", answers: ["pir^2h", "pi*r^2*h", "πr²h", "pi*r*r*h"], hint: t("card.cyl.hint") },
+      { front: t("card.pyth.front"), back: "a² + b² = c²", answers: ["a^2+b^2=c^2", "a²+b²=c²", "c^2=a^2+b^2"], hint: t("card.pyth.hint") }
+    ];
+  }
 
   function genFormulaFlashcard() {
-    const card = choice(FORMULA_CARDS);
+    const card = choice(getFormulaCards());
     const direction = choice(["recall", "recognize"]);
     if (direction === "recall") {
       return {
         id: id(),
         topic: "formulas",
         type: "flashcard",
-        prompt: "Formula flashcard — write the formula:\n" + card.front,
+        prompt: t("flash.recall", { front: card.front }),
         answer: card.back,
         answers: (card.answers.concat([card.back])).map(_normFormula),
         hint: card.hint,
@@ -248,7 +230,7 @@
         unit: "",
       };
     }
-    const wrong = FORMULA_CARDS.filter(function (c) {
+    const wrong = getFormulaCards().filter(function (c) {
       return c.back !== card.back;
     }).map(function (c) {
       return c.back;
@@ -256,62 +238,34 @@
     const distractors = shuffle(wrong).slice(0, Math.min(3, wrong.length));
     const choices = [card.back].concat(distractors);
     return _choice(
-      "Formula flashcard — which is correct for:\n" + card.front + "?",
+      t("flash.recognize", { front: card.front }),
       choices,
       card.back,
       "formulas",
       card.hint,
-      "Match the shape name to its formula. Correct pattern starts like: " +
-        card.back.split("=")[0].trim() +
-        " = …"
+      t("flash.match_hint", { left: card.back.split("=")[0].trim() })
     );
   }
 
   // --- Generators -------------------------------------------------------------
 
   function genFeetInYard() {
-    return _numeric(
-      "How many feet are in one yard?",
-      3,
-      "conversions",
-      0,
-      "1 yard = 3 feet",
-      "feet = 1 yard × (3 feet / 1 yard)"
-    );
+    return _numeric(t("q.feet_in_yard"), 3, "conversions", 0, t("h.feet_in_yard"), t("s.feet_in_yard"));
   }
 
   function genSqFtInSqYard() {
-    return _numeric(
-      "How many square feet are in one square yard?",
-      9,
-      "conversions",
-      0,
-      "A square yard is 3 ft × 3 ft",
-      "sq ft = 3 ft × 3 ft"
-    );
+    return _numeric(t("q.sqft_sqyd"), 9, "conversions", 0, t("h.sqft_sqyd"), t("s.sqft_sqyd"));
   }
 
   function genCuFtInCuYard() {
-    return _numeric(
-      "How many cubic feet are in one cubic yard?",
-      27,
-      "conversions",
-      0,
-      "A cubic yard is 3 ft × 3 ft × 3 ft",
-      "cu ft = 3 ft × 3 ft × 3 ft"
-    );
+    return _numeric(t("q.cuft_cuyd"), 27, "conversions", 0, t("h.cuft_cuyd"), t("s.cuft_cuyd"));
   }
 
   function genDimensionConcept() {
     return _choice(
-      "Which statement is correct?",
-      [
-        "Perimeter is 1D, area is 2D, and volume is 3D",
-        "Perimeter is 2D, area is 1D, and volume is 3D",
-        "Perimeter is 1D, area is 3D, and volume is 2D",
-        "Perimeter, area, and volume are all 2D",
-      ],
-      "Perimeter is 1D, area is 2D, and volume is 3D",
+      t("q.dim_concept"),
+      [t("c.dim_a"), t("c.dim_b"), t("c.dim_c"), t("c.dim_d")],
+      t("c.dim_a"),
       "conversions"
     );
   }
@@ -430,23 +384,36 @@
     const ask = choice(["perimeter", "area"]);
     if (ask === "perimeter") {
       return _numeric(
-        "A rectangle measures " + L + " ft by " + W + " ft. What is its perimeter (in feet)?",
+        "The cultural hall needs painter’s tape around a rectangular court marking that measures " +
+          L +
+          " ft by " +
+          W +
+          " ft (yes, the same court where the stake Young Men still think they’re NBA-bound). What is its perimeter in feet?",
         2 * (L + W),
         "perimeter_area",
         0,
-        "P = 2L + 2W (or 2(L+W))",
+        "P = 2L + 2W (or 2(L+W)). On TI-36X Pro / Casio enter the expression, then =.",
         "P = 2(" + L + " + " + W + ")",
-        "ft"
+        t("unit.ft"),
+        calcHelp(
+          "2 × ( " + L + " + " + W + " ) =",
+          "2 × ( " + L + " + " + W + " ) ="
+        )
       );
     }
     return _numeric(
-      "A rectangle measures " + L + " ft by " + W + " ft. What is its area (in square feet)?",
+      "Sister Jensen is measuring linoleum for a rectangular Primary classroom " +
+        L +
+        " ft by " +
+        W +
+        " ft. (She muttered, “And it came to pass… we need more area.”) What is the floor area in square feet?",
       L * W,
       "perimeter_area",
       0,
-      "A = L × W",
+      "A = L × W. On TI-36X Pro / Casio enter length × width, then =.",
       "A = " + L + " × " + W,
-      "sq ft"
+      t("unit.sq_ft"),
+      calcHelp(L + " × " + W + " =", L + " × " + W + " =")
     );
   }
 
@@ -454,12 +421,22 @@
     const b = randInt(6, 24);
     const h = randInt(4, 18);
     return _numeric(
-      "A triangle has base " + b + " units and height " + h + " units. What is its area?",
+      "A youth pioneer-trek map shows a triangular meadow with base " +
+        b +
+        " units and height " +
+        h +
+        " units—basically the only flat place that isn’t a dust storm. What is its area? Round to the nearest hundredth if needed.",
       0.5 * b * h,
       "perimeter_area",
       0.01,
-      "A = ½bh",
-      "A = ½ × " + b + " × " + h
+      "A = ½bh. Enter half × base × height on your calculator.",
+      "A = ½ × " + b + " × " + h,
+      "",
+      calcHelp(
+        "0.5 × " + b + " × " + h + " =",
+        "0.5 × " + b + " × " + h + " =",
+        "Or use the fraction key: TI n/d or Casio ▢/▢ for 1/2, then × base × height."
+      )
     );
   }
 
@@ -468,21 +445,31 @@
     const ask = choice(["circumference", "area"]);
     if (ask === "circumference") {
       return _numeric(
-        "A circle has radius " + r + ". What is its circumference? " + PI_NOTE,
+        "The ward has a circular green Jell-O “ring of fire” mold with radius " +
+          r +
+          " inches (a culinary classic at every potluck from Provo to Pocatello). What is its circumference? " +
+          piNote(),
         num(2 * PI * r),
         "perimeter_area",
         0.02,
-        "C = 2πr",
-        "C = 2 × " + PI + " × " + r
+        "C = 2πr. Type 3.14 for π (do not use the π key—answers are keyed to 3.14).",
+        "C = 2 × " + PI + " × " + r,
+        "",
+        calcHelp("2 × 3.14 × " + r + " =", "2 × 3.14 × " + r + " =")
       );
     }
     return _numeric(
-      "A circle has radius " + r + ". What is its area? " + PI_NOTE,
+      "A circular sacrament-meeting clock face (the one that miraculously slows during talks) has radius " +
+        r +
+        ". What is its area? " +
+        piNote(),
       num(PI * r * r),
       "perimeter_area",
       0.02,
-      "A = πr²",
-      "A = " + PI + " × (" + r + ")²"
+      "A = πr². Type 3.14 for π. Use x² for the square.",
+      "A = " + PI + " × (" + r + ")²",
+      "",
+      calcHelp("3.14 × " + r + " x² =", "3.14 × " + r + " x² =")
     );
   }
 
@@ -560,20 +547,15 @@
         id: id(),
         topic: "perimeter_area",
         type: "numeric",
-        prompt:
-          "An L-shaped figure fits in a " +
-          W +
-          " × " +
-          H +
-          " rectangle. A " +
-          cutW +
-          " × " +
-          cutH +
-          " rectangle is cut from one corner. What is the area of the L-shape?",
+        prompt: t("q.lshape_a", { W: W, H: H, cutW: cutW, cutH: cutH }),
         answer: area,
         tolerance: 0,
-        hint: "Area of L = area of big rectangle − area of cut piece",
+        hint: t("h.lshape_a"),
         setup: "A = (" + W + " × " + H + ") − (" + cutW + " × " + cutH + ")",
+        calc: calcHelp(
+          "( " + W + " × " + H + " ) − ( " + cutW + " × " + cutH + " ) =",
+          "( " + W + " × " + H + " ) − ( " + cutW + " × " + cutH + " ) ="
+        ),
         unit: "sq units",
         svg: _lShapeSvg(W, H, cutW, cutH),
       };
@@ -583,20 +565,23 @@
       topic: "perimeter_area",
       type: "numeric",
       prompt:
-        "An L-shaped figure fits in a " +
+        "Nephi’s handcart storage shed (hypothetically) is an L-shape fitting in a " +
         W +
         " × " +
         H +
-        " rectangle. A " +
+        " rectangle with a " +
         cutW +
         " × " +
         cutH +
-        " rectangle is cut from one corner. What is the outer perimeter of the L-shape?",
+        " corner notch removed—because even prophets need weird floor plans. What is the outer perimeter of the L-shape?",
       answer: perimeter,
       tolerance: 0,
-      hint:
-        "Walking the outside edge: the cut adds and removes edges that cancel — P = 2(W+H)",
+      hint: t("h.lshape_p"),
       setup: "P = 2(" + W + " + " + H + ")",
+      calc: calcHelp(
+        "2 × ( " + W + " + " + H + " ) =",
+        "2 × ( " + W + " + " + H + " ) ="
+      ),
       unit: "units",
       svg: _lShapeSvg(W, H, cutW, cutH),
     };
@@ -614,12 +599,12 @@
     const L = _inches(ft1, in1);
     const W = _inches(ft2, in2);
     const peri = 2 * (L + W);
-    const rolls = peri <= 50 ? "50-foot" : "100-foot";
+    const rolls = peri <= 50 ? t("c.roll_50") : t("c.roll_100");
     const which = choice(["need", "roll"]);
 
     if (which === "need") {
       return _numeric(
-        "You want to fence a garden that is " +
+        "Brother Larsen wants to fence the ward community garden—" +
           ft1 +
           " feet " +
           in1 +
@@ -627,17 +612,21 @@
           ft2 +
           " feet " +
           in2 +
-          " inches. How many feet of fencing do you need to go around it? Round to the nearest hundredth.",
+          " inches—so the zucchini stop “going on missions” into Sister Clark’s yard. How many feet of fencing do you need to go around it? Round to the nearest hundredth.",
         num(peri),
         "perimeter_area",
         0.05,
-        "Convert inches to feet, then P = 2(L+W)",
+        "Convert inches to feet, then P = 2(L+W). Enter inches÷12 on the calculator.",
         "L = " + ft1 + " + " + in1 + "/12,  W = " + ft2 + " + " + in2 + "/12\nP = 2(L + W)",
-        "ft"
+        t("unit.ft"),
+        calcHelp(
+          "2 × ( (" + ft1 + " + " + in1 + " ÷ 12) + (" + ft2 + " + " + in2 + " ÷ 12) ) =",
+          "2 × ( (" + ft1 + " + " + in1 + " ÷ 12) + (" + ft2 + " + " + in2 + " ÷ 12) ) ="
+        )
       );
     }
     return _choice(
-      "A garden is " +
+      "Ammon is fencing a garden plot " +
         ft1 +
         "' " +
         in1 +
@@ -645,14 +634,25 @@
         ft2 +
         "' " +
         in2 +
-        '". Fencing comes in 50-ft or 100-ft rolls. Which roll do you need? (Perimeter ≈ ' +
-        num(peri) +
-        " ft)",
-      ["50-foot", "100-foot"],
+        "\" (smaller than King Lamoni’s fields, thankfully). Fencing comes in 50-ft or 100-ft rolls at the Deseret Industries hardware aisle. Which roll do you need?",
+      [t("c.roll_50"), t("c.roll_100")],
       rolls,
       "perimeter_area",
-      "Buy the smallest roll that is at least as long as the perimeter",
-      "Need about " + num(peri) + " ft of fencing; compare to 50 and 100."
+      "Convert dimensions to feet, find the perimeter P = 2(L+W), then choose the smallest roll that is at least P.",
+      "L = " +
+        ft1 +
+        " + " +
+        in1 +
+        "/12,  W = " +
+        ft2 +
+        " + " +
+        in2 +
+        "/12\nP = 2(L + W)  → compare P to 50 and to 100 (do not skip the comparison).",
+      calcHelp(
+        "2 × ( (" + ft1 + " + " + in1 + " ÷ 12) + (" + ft2 + " + " + in2 + " ÷ 12) ) =",
+        "2 × ( (" + ft1 + " + " + in1 + " ÷ 12) + (" + ft2 + " + " + in2 + " ÷ 12) ) =",
+        "After you get P, pick 50-foot if P ≤ 50, otherwise 100-foot. The hint does not state which roll."
+      )
     );
   }
 
@@ -662,18 +662,22 @@
     const r = dNum / 2;
     const vol = PI * r * r * h;
     return _numeric(
-      "Find the volume of a can if the base is " +
+      "Relief Society is canning a legendary cylinder of funeral potatoes. The base is " +
         dNum +
         " inches across (diameter) and the can is " +
         h +
-        " inches high. " +
-        PI_NOTE,
+        " inches high. (If Nephi could build a ship, you can find a volume.) What is the volume? " +
+        piNote(),
       num(vol),
       "volume",
       0.02,
-      "V = πr²h, and r = diameter/2",
+      "V = πr²h, and r = diameter/2. Type 3.14 for π (not the π key).",
       "r = " + dNum + "/2\nV = " + PI + " × (r)² × " + h,
-      "cubic inches"
+      t("unit.cu_in"),
+      calcHelp(
+        "3.14 × ( " + dNum + " ÷ 2 ) x² × " + h + " =",
+        "3.14 × ( " + dNum + " ÷ 2 ) x² × " + h + " ="
+      )
     );
   }
 
@@ -696,29 +700,38 @@
         sr + " to " + sn,
       ];
       return _short(
-        "A driveway rises " +
+        "The stake-center driveway rises " +
           rise +
           " ft over a horizontal distance of " +
           run +
-          " ft. What is the slope? Write as a simplified ratio rise:run or as a fraction rise/run.",
+          " ft—steeper than a new missionary’s learning curve. What is the slope? Write as a simplified ratio rise:run or as a fraction rise/run.",
         answers,
         "pythagorean",
         "slope = rise / run (vertical change over horizontal change)",
-        "slope = " + rise + "/" + run + "  (simplify if possible)"
+        "slope = " + rise + "/" + run + "  (simplify if possible)",
+        calcHelp(
+          rise + " ÷ " + run + " =   (or leave as " + rise + "/" + run + " and simplify)",
+          rise + " ÷ " + run + " =   (or use fraction key " + rise + " ▢/▢ " + run + ")",
+          "For a ratio answer, write rise:run in simplest form—you may not need the calculator."
+        )
       );
     }
     return _numeric(
-      "A driveway rises " +
+      "Lehi’s family, if they had asphalt, might have used a driveway that rises " +
         rise +
         " ft over a horizontal distance of " +
         run +
-        " ft. What is the slant length of the driveway? Round to the nearest hundredth.",
+        " ft. What is the slant length of that driveway? Round to the nearest hundredth. (Hint from Alma: have faith—and use √(a² + b²).)",
       num(slant),
       "pythagorean",
       0.05,
-      "Use Pythagorean Theorem: c = √(a² + b²)",
+      "Use Pythagorean Theorem: c = √(a² + b²). Square root is 2nd x² on TI-36X Pro; √ on Casio.",
       "c = √(" + rise + "² + " + run + "²)",
-      "ft"
+      t("unit.ft"),
+      calcHelp(
+        "2nd x² ( " + rise + " x² + " + run + " x² ) =   then ◄► if needed",
+        "√ ( " + rise + " x² + " + run + " x² ) =   then S⇔D if needed"
+      )
     );
   }
 
@@ -727,17 +740,22 @@
     const width = num(diagonal * (0.82 + Math.random() * 0.08), 1);
     const height = Math.sqrt(diagonal * diagonal - width * width);
     return _numeric(
-      "A " +
+      "Your family just scored a " +
         diagonal +
-        "-inch TV is " +
+        "-inch TV that is " +
         width +
-        " inches wide. How tall is it? Round to the nearest tenth. (TV size is the diagonal.)",
+        " inches wide—perfect for General Conference (and for arguing over who sits where). How tall is it? Round to the nearest tenth. (TV size is the diagonal, not the spiritual “bigness” of the talks.)",
       num(height, 1),
       "pythagorean",
       0.15,
-      "Diagonal is hypotenuse: height = √(diagonal² − width²)",
+      "Diagonal is hypotenuse: height = √(diagonal² − width²). Round to the nearest tenth.",
       "height = √(" + diagonal + "² − " + width + "²)",
-      "inches"
+      t("unit.inches"),
+      calcHelp(
+        "2nd x² ( " + diagonal + " x² − " + width + " x² ) =   then ◄► ; round to tenth",
+        "√ ( " + diagonal + " x² − " + width + " x² ) =   then S⇔D ; round to tenth",
+        "Round to the nearest tenth (one decimal place)."
+      )
     );
   }
 
@@ -747,21 +765,26 @@
     const liters = gallons * 3.785;
     const bottles = liters / bottleL;
     return _numeric(
-      "You have a " +
+      "You’ve got a " +
         gallons +
-        "-gallon jug. How many " +
+        "-gallon food-storage jug of punch for the ward picnic (the pink kind that always looks vaguely fluorescent). How many " +
         bottleL +
-        "-liter bottles will it take to fill it? (1 gallon = 3.785 liters). Round to the nearest hundredth.",
+        "-liter bottles will it take to fill it? (1 gallon = 3.785 liters). Round to the nearest hundredth. “And it came to pass” that someone bought metric bottles.",
       num(bottles),
       "scale_rates",
       0.05,
-      "Convert gallons → liters, then divide by bottle size",
+      "Convert gallons → liters, then divide by bottle size.",
       "liters = " +
         gallons +
         " × 3.785\nbottles = (" +
         gallons +
         " × 3.785) / " +
-        bottleL
+        bottleL,
+      "",
+      calcHelp(
+        "( " + gallons + " × 3.785 ) ÷ " + bottleL + " =",
+        "( " + gallons + " × 3.785 ) ÷ " + bottleL + " ="
+      )
     );
   }
 
@@ -772,9 +795,9 @@
     if (ask === "map_to_real") {
       const inches = choice([1.5, 2, 2.5, 3, 3.5, 4, 5]);
       return _numeric(
-        "A hiking map has a scale of 1 inch : " +
+        "A youth pioneer-trek map uses a scale of 1 inch : " +
           scaleFt +
-          " feet. A rest spot is " +
+          " feet. The rest stop (where they rediscover the joy of socks) is " +
           inches +
           " inches away on the map. How many feet down the trail is it?",
         inches * scaleFt,
@@ -782,14 +805,18 @@
         0,
         "Multiply map inches by the scale factor (feet per inch).",
         "feet = " + inches + " × " + scaleFt,
-        "ft"
+        t("unit.ft"),
+        calcHelp(
+          inches + " × " + scaleFt + " =",
+          inches + " × " + scaleFt + " ="
+        )
       );
     }
     const feet = choice([100, 150, 200, 220, 250, 300, 400]);
     return _numeric(
-      "A hiking map has a scale of 1 inch : " +
+      "A ward “Book of Mormon lands” activity map has scale 1 inch : " +
         scaleFt +
-        " feet. A landmark is " +
+        " feet. A landmark labeled “Zarahemla? (maybe)” is " +
         feet +
         " feet down the trail. How many inches away is it on the map? Round to the nearest hundredth if needed.",
       num(feet / scaleFt),
@@ -797,7 +824,8 @@
       0.01,
       "Divide real distance by feet-per-inch.",
       "inches = " + feet + " / " + scaleFt,
-      "inches"
+      t("unit.inches"),
+      calcHelp(feet + " ÷ " + scaleFt + " =", feet + " ÷ " + scaleFt + " =")
     );
   }
 
@@ -825,11 +853,11 @@
 
     if (ask === "roll") {
       return _numeric(
-        "A room is " +
+        "The Primary room is " +
           L +
           " ft × " +
           W +
-          " ft. Carpet comes in a roll " +
+          " ft and needs new carpet—preferably something that can survive grape juice and “Head, Shoulders, Knees, and Toes.” Carpet comes in a roll " +
           rollW +
           " ft wide at $" +
           costPerLinear +
@@ -839,18 +867,23 @@
         0.5,
         "Figure how many linear feet of roll you need to cover the room",
         "linear feet needed = " + linear + "\ncost = " + linear + " × " + costPerLinear,
-        "dollars"
+        "dollars",
+        calcHelp(
+          linear + " × " + costPerLinear + " =",
+          linear + " × " + costPerLinear + " =",
+          "Round to the nearest cent."
+        )
       );
     }
     if (ask === "yard") {
       return _numeric(
-        "A room is " +
+        "The cultural hall’s quiet-side classroom is " +
           L +
           " ft × " +
           W +
           " ft. Carpet costs $" +
           costPerSqyd +
-          " per square yard (installed). How much does this choice cost? Round to the nearest cent. (9 sq ft = 1 sq yd)",
+          " per square yard (installed)—cheaper than building a ship like Nephi, still pricey. How much does this choice cost? Round to the nearest cent. (9 sq ft = 1 sq yd)",
         num(costYd),
         "scale_rates",
         0.5,
@@ -865,31 +898,50 @@
           W +
           ") / 9] × " +
           costPerSqyd,
-        "dollars"
+        "dollars",
+        calcHelp(
+          "( " + L + " × " + W + " ÷ 9 ) × " + costPerSqyd + " =",
+          "( " + L + " × " + W + " ÷ 9 ) × " + costPerSqyd + " =",
+          "Round to the nearest cent."
+        )
       );
     }
-    const cheaper = costRoll < costYd ? "roll" : "per square yard";
+    const cheaper = costRoll < costYd ? t("c.carpet_roll") : t("c.carpet_yd");
     return _choice(
-      "Room: " +
+      "Relief Society is comparing carpet options for a " +
         L +
         "'×" +
         W +
-        "'. Option A: " +
+        "' room (the one with the mysterious “temporary” craft closet from 1998). Option A: " +
         rollW +
         "'-wide roll at $" +
         costPerLinear +
-        "/linear ft (≈ $" +
-        num(costRoll) +
-        "). Option B: $" +
+        "/linear ft. Option B: $" +
         costPerSqyd +
-        "/sq yd (≈ $" +
-        num(costYd) +
-        "). Which is cheaper?",
-      ["roll", "per square yard"],
+        "/sq yd. Which is cheaper?",
+      [t("c.carpet_roll"), t("c.carpet_yd")],
       cheaper,
       "scale_rates",
-      "Compare the two computed costs.",
-      "Roll ≈ $" + num(costRoll) + "; per sq yd ≈ $" + num(costYd)
+      "Compute each option’s total cost, then compare. Do not guess from unit price alone.",
+      "Roll: linear feet × " +
+        costPerLinear +
+        " (linear feet depends on covering " +
+        L +
+        "×" +
+        W +
+        " with width " +
+        rollW +
+        ")\nSq yd: ((" +
+        L +
+        " × " +
+        W +
+        ") / 9) × " +
+        costPerSqyd,
+      calcHelp(
+        "Find each total with × and ÷ as in the setup, then compare the two results.",
+        "Find each total with × and ÷ as in the setup, then compare the two results.",
+        "The cheaper option is the one with the smaller total. Hints never state which option wins."
+      )
     );
   }
 
@@ -904,12 +956,12 @@
       const more =
         aOne > aTwo ? "one " + large + "-inch" : "two " + small + "-inch";
       return _choice(
-        "Which has more area: two " +
+        "Mutual night pizza debate: which has more pizza area—two " +
           small +
           "-inch personal pizzas or one " +
           large +
-          "-inch pizza? (" +
-          PI_NOTE +
+          "-inch pizza? (Think feeding the multitude, but with cheese. " +
+          piNote() +
           ")",
         ["two " + small + "-inch", "one " + large + "-inch", "they are equal"],
         Math.abs(aOne - aTwo) > 0.01 ? more : "they are equal",
@@ -927,14 +979,14 @@
       );
     }
     return _choice(
-      "What happens to the area of a pizza when you double the radius?",
+      "What happens to the area of a ward-pizza when you double the radius? (And it came to pizza…)",
       [
-        "Area becomes 4 times as large",
-        "Area doubles",
-        "Area triples",
-        "Area stays the same",
+        t("c.pizza_4x"),
+        t("c.pizza_2x"),
+        t("c.pizza_3x"),
+        t("c.pizza_same"),
       ],
-      "Area becomes 4 times as large",
+      t("c.pizza_4x"),
       "scaling",
       "A = πr², so if r → 2r then A → π(2r)² = 4πr²",
       "A_new = π(2r)² = π·4r² = 4 · (πr²)"
@@ -947,27 +999,37 @@
 
     if (ask === "double") {
       return _numeric(
-        "A toy ball holds " +
+        "Primary Activity Day has a ball holding " +
           base +
-          " cubic inches of air. How much air would a ball with twice the radius hold?",
+          " cubic inches of air. If they somehow get a ball with twice the radius (like a basketball that ate too much funeral potatoes), how much air would it hold?",
         base * 8,
         "scaling",
         0,
-        "Volume of a sphere scales with r³, so 2³ = 8 times the volume",
+        "Volume of a sphere scales with r³, so 2³ = 8 times the volume.",
         "V_new = " + base + " × 2³ = " + base + " × 8",
-        "cubic inches"
+        "cubic inches",
+        calcHelp(
+          base + " × 8 =",
+          base + " × 8 =",
+          "Or compute 2³ first: TI/Casio 2 ^ 3 = (or 2 x³ on Casio), then multiply by " + base + "."
+        )
       );
     }
     return _numeric(
-      "A toy ball holds " +
+      "Young Men brought a ball that holds " +
         base +
-        " cubic inches of air. How much air would a ball with half the radius hold?",
+        " cubic inches of air. A smaller ball with half the radius somehow shows up at Saturday cultural-hall basketball (please don’t tell the bishop how many windows they’ve almost hit). How much air would the smaller ball hold?",
       base / 8,
       "scaling",
       0.01,
-      "Volume scales with r³, so (1/2)³ = 1/8 of the volume",
+      "Volume scales with r³, so (1/2)³ = 1/8 of the volume.",
       "V_new = " + base + " × (1/2)³ = " + base + " × (1/8)",
-      "cubic inches"
+      t("unit.cu_in"),
+      calcHelp(
+        base + " ÷ 8 =",
+        base + " ÷ 8 =",
+        "Or (1÷2) ^ 3 × " + base + " on TI/Casio."
+      )
     );
   }
 
@@ -1030,12 +1092,19 @@
     if (ask === "mean") {
       const terms = data.join(" + ");
       return _numeric(
-        "Find the mean of the data set " + ds + ". Round to the nearest hundredth if needed.",
+        "Seminary Scripture Mastery practice scores for the week: " +
+          ds +
+          ". Find the mean. Round to the nearest hundredth if needed. (No, Brother Jensen, “spiritual GPA” is not a real thing.)",
         num(_mean(data)),
         "stats_center",
         0.05,
-        "Mean = sum of values ÷ number of values",
-        "mean = (" + terms + ") / " + data.length
+        "Mean = sum of values ÷ number of values. Add first, then divide.",
+        "mean = (" + terms + ") / " + data.length,
+        "",
+        calcHelp(
+          "( " + terms + " ) ÷ " + data.length + " =",
+          "( " + terms + " ) ÷ " + data.length + " ="
+        )
       );
     }
     if (ask === "median") {
@@ -1044,7 +1113,9 @@
       });
       const sortedDs = "{" + sorted.join(", ") + "}";
       return _numeric(
-        "Find the median of the data set " + ds + ".",
+        "Young Women activity attendance counts: " +
+          ds +
+          ". Find the median (the “middle” value after sorting—like finding the middle seat in a pew).",
         _median(data),
         "stats_center",
         0.01,
@@ -1056,7 +1127,9 @@
       const m = _mode(data);
       if (m === null) return genMeanMedianModeRange();
       return _numeric(
-        "Find the mode of the data set " + ds + ".",
+        "Primary singing-time song choices (coded as numbers): " +
+          ds +
+          ". Find the mode—the song that got requested most. (Hint: it was probably “I Am a Child of God.”)",
         m,
         "stats_center",
         0,
@@ -1065,7 +1138,9 @@
       );
     }
     return _numeric(
-      "Find the range of the data set " + ds + ".",
+      "Trek snack counts for each family: " +
+        ds +
+        ". Find the range (max − min). Pioneer lesson: extremes happen.",
       _range(data),
       "stats_center",
       0,
@@ -1076,26 +1151,14 @@
 
   function genBestMeasureFixed() {
     const options = [
-      [
-        "Which measure of center is usually best when data has extreme outliers?",
-        "Median",
-        "The median is resistant to outliers; the mean is pulled by extremes.",
-      ],
-      [
-        "Which measure of center is best for favorite-color type (categorical) data?",
-        "Mode",
-        "Mode is the most frequent category.",
-      ],
-      [
-        "Which measure of center uses every numeric value and fits roughly symmetric data well?",
-        "Mean",
-        "The mean is the balancing point of all values.",
-      ],
+      [t("q.best_outliers"), t("c.median"), t("h.best_outliers")],
+      [t("q.best_cat"), t("c.mode"), t("h.best_cat")],
+      [t("q.best_sym"), t("c.mean"), t("h.best_sym")],
     ];
     const picked = choice(options);
     return _choice(
       picked[0],
-      ["Mean", "Median", "Mode", "Range"],
+      [t("c.mean"), t("c.median"), t("c.mode"), t("c.range")],
       picked[1],
       "stats_center",
       picked[2]
@@ -1115,37 +1178,36 @@
       num(approxSd),
       "stats_spread",
       0.05,
-      "Range rule of thumb: s ≈ range / 4",
-      "s ≈ (" + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + ") / 4"
+      "Range rule of thumb: s ≈ range / 4.",
+      "s ≈ (" + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + ") / 4",
+      "",
+      calcHelp(
+        "( " + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + " ) ÷ 4 =",
+        "( " + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + " ) ÷ 4 ="
+      )
     );
   }
 
   function genCompareVariation() {
     const d1 = [10, 2, 38, 23, 38, 23, 21, 23];
     const d2 = [13, 30, 23, 23, 21, 23, 25, 20];
-    let label;
-    if (Math.random() < 0.5) {
-      label = "Data Set #2";
-    } else {
-      label = "Data Set #1";
-    }
     const s1 = _range(d1) / 4;
     const s2 = _range(d2) / 4;
-    const more = s1 > s2 ? "Data Set #1" : "Data Set #2";
+    const more = s1 > s2 ? t("c.ds1") : t("c.ds2");
     const ask = choice(["sd", "which"]);
 
     if (ask === "sd") {
       const which = choice([
-        [d1, "Data Set #1", s1],
-        [d2, "Data Set #2", s2],
+        [d1, t("c.ds1"), s1],
+        [d2, t("c.ds2"), s2],
       ]);
       const ds = "{" + which[0].join(", ") + "}";
       return _numeric(
-        which[1] + ": " + ds + ". Approximate the standard deviation using the range rule of thumb.",
+        t("q.compare_sd", { which: which[1], ds: ds }),
         num(which[2]),
         "stats_spread",
         0.05,
-        "s ≈ range / 4",
+        t("h.compare_sd"),
         "s ≈ (" +
           Math.max.apply(null, which[0]) +
           " − " +
@@ -1154,26 +1216,25 @@
       );
     }
     return _choice(
-      "Data Set #1: {" +
-        d1.join(", ") +
-        "}\nData Set #2: {" +
-        d2.join(", ") +
-        "}\nUsing the range rule of thumb, which has more variation?",
-      ["Data Set #1", "Data Set #2", "They are equal"],
-      Math.abs(s1 - s2) > 0.01 ? more : "They are equal",
+      t("q.compare_which", {
+        d1: "{" + d1.join(", ") + "}",
+        d2: "{" + d2.join(", ") + "}",
+      }),
+      [t("c.ds1"), t("c.ds2"), t("c.equal")],
+      Math.abs(s1 - s2) > 0.01 ? more : t("c.equal"),
       "stats_spread",
-      "Larger approximate SD (range/4) means more variation",
+      t("h.compare_which"),
       "s1 ≈ " + num(s1) + ",  s2 ≈ " + num(s2) + "  (from range/4)"
     );
   }
 
   function genSdTf() {
     return _choice(
-      "True or False: Data points must be exactly 1, 2, or 3 standard deviations above or below the mean.",
-      ["True", "False"],
-      "False",
+      t("q.sd_tf"),
+      [t("c.true"), t("c.false")],
+      t("c.false"),
       "stats_spread",
-      "Z-scores can be any real number — data can sit anywhere relative to the mean."
+      t("h.sd_tf")
     );
   }
 
@@ -1183,18 +1244,17 @@
     const score = choice([55, 60, 65, 70, 78, 85, 92, 95, 105]);
     const z = (score - mean) / sd;
     return _numeric(
-      "A set of scores has mean " +
-        mean +
-        " and standard deviation " +
-        sd +
-        ". What is the z-score for a score of " +
-        score +
-        "? Round to the nearest hundredth.",
+      t("q.zscore", { mean: mean, sd: sd, score: score }),
       num(z),
       "z_scores",
       0.05,
-      "z = (x − mean) / standard deviation",
-      "z = (" + score + " − " + mean + ") / " + sd
+      t("h.zscore"),
+      "z = (" + score + " − " + mean + ") / " + sd,
+      "",
+      calcHelp(
+        "( " + score + " − " + mean + " ) ÷ " + sd + " =",
+        "( " + score + " − " + mean + " ) ÷ " + sd + " ="
+      )
     );
   }
 
@@ -1219,8 +1279,11 @@
   };
 
   function genPercentileFromZ() {
-    const z = choice([-1.3, -1.0, 1.0, 1.3, 2.0, 2.4]);
-    const p = Z_TABLE[String(z)] * 100;
+    // Keep z keys as fixed decimals so Z_TABLE lookup stays stable (String(1.0) === "1").
+    const zKeys = ["-1.3", "-1.0", "1.0", "1.3", "2.0", "2.4"];
+    const zKey = choice(zKeys);
+    const z = parseFloat(zKey);
+    const p = Z_TABLE[zKey] * 100;
     return _numeric(
       "Using a standard normal (Z) table, about what percentile is a data point that is " +
         z +
@@ -1316,17 +1379,17 @@
       const lo = mean - sd;
       const hi = mean + sd;
       return _choice(
-        "Adult lifespans are roughly normal with mean " +
+        "Ages of adults in a (very hypothetical) stake directory are roughly normal with mean " +
           mean +
           " years and SD " +
           sd +
-          " years. About what percentage live between " +
+          " years. About what percentage are between " +
           lo +
           " and " +
           hi +
-          "?",
-        ["about 68%", "about 95%", "about 99.7%", "about 50%"],
-        "about 68%",
+          "? (Don’t say “all of them left the potluck early.”)",
+        [t("c.pct68"), t("c.pct95"), t("c.pct997"), t("c.pct50")],
+        t("c.pct68"),
         "distributions",
         "Empirical rule: ≈68% within 1 SD of the mean"
       );
@@ -1335,17 +1398,17 @@
       const lo = mean - 2 * sd;
       const hi = mean + 2 * sd;
       return _choice(
-        "Adult lifespans are roughly normal with mean " +
+        "Years of church membership for adults in a ward are roughly normal with mean " +
           mean +
-          " years and SD " +
+          " and SD " +
           sd +
-          " years. About what percentage live between " +
+          ". About what percentage fall between " +
           lo +
           " and " +
           hi +
           "?",
-        ["about 95%", "about 68%", "about 99.7%", "about 34%"],
-        "about 95%",
+        [t("c.pct95"), t("c.pct68"), t("c.pct997"), t("c.pct34")],
+        t("c.pct95"),
         "distributions",
         "Empirical rule: ≈95% within 2 SD of the mean"
       );
@@ -1353,30 +1416,30 @@
     if (ask === "3sd_beyond") {
       const cut = mean + 3 * sd;
       return _choice(
-        "Adult lifespans are roughly normal with mean " +
+        "Ages of Gospel Doctrine class members are roughly normal with mean " +
           mean +
           " years and SD " +
           sd +
-          " years. About what percentage live more than " +
+          " years. About what percentage are older than " +
           cut +
-          " years?",
-        ["about 0.15%", "about 2.5%", "about 16%", "about 5%"],
-        "about 0.15%",
+          " (the rare “I’ve read the footnotes in Isaiah” club)?",
+        [t("c.pct015"), t("c.pct25"), t("c.pct16"), t("c.pct5")],
+        t("c.pct015"),
         "distributions",
         "≈99.7% within 3 SD, so about 0.3% outside total → ~0.15% in each tail"
       );
     }
     const cut = mean - sd;
     return _choice(
-      "Adult lifespans are roughly normal with mean " +
+      "Missionary ages in a (made-up, PG) data set are roughly normal with mean " +
         mean +
-        " years and SD " +
+        " and SD " +
         sd +
-        " years. About what percentage live less than " +
+        ". About what percentage are younger than " +
         cut +
-        " years?",
-      ["about 16%", "about 2.5%", "about 0.15%", "about 50%"],
-      "about 16%",
+        "?",
+      [t("c.pct16"), t("c.pct25"), t("c.pct015"), t("c.pct50")],
+      t("c.pct16"),
       "distributions",
       "Below 1 SD left of mean ≈ half of the 32% outside the middle 68% → ~16%"
     );
@@ -1384,16 +1447,11 @@
 
   function genLiteracy() {
     return _choice(
-      "Which practice best helps you use statistics for good decision-making?",
-      [
-        "Check the source, sample, and whether graphs/summaries could be misleading",
-        "Always trust a graph if it looks professional",
-        "Use only the mean and ignore the rest of the data",
-        "Assume correlation always means causation",
-      ],
-      "Check the source, sample, and whether graphs/summaries could be misleading",
+      t("q.literacy"),
+      [t("c.lit_a"), t("c.lit_b"), t("c.lit_c"), t("c.lit_d")],
+      t("c.lit_a"),
       "literacy",
-      "Good questions: Who was surveyed? How big was the sample? What's being compared? Are axes truncated?"
+      t("h.literacy")
     );
   }
 
@@ -1512,23 +1570,34 @@
   }
 
   function publicQuestion(q) {
+    // Three progressive hints — never include the final answer.
+    const hint1 = q.hint || "";
+    const hint2 = q.setup || "";
+    const hint3 = q.calc || (hint2 ? CALC_GENERIC() : "");
     const out = {
       id: q.id,
       topic: q.topic,
-      topic_label: TOPICS[q.topic] || q.topic,
+      topic_label: (buildTopics()[q.topic] || q.topic),
       type: q.type,
       prompt: q.prompt,
-      hint: q.hint || "",
-      setup: q.setup || "",
-      has_hint: Boolean(q.hint),
-      has_setup: Boolean(q.setup),
+      hint1: hint1,
+      hint2: hint2,
+      hint3: hint3,
+      hint: hint1,
+      setup: hint2,
+      calc: hint3,
+      has_hint1: Boolean(hint1),
+      has_hint2: Boolean(hint2),
+      has_hint3: Boolean(hint3),
+      has_hint: Boolean(hint1 || hint2 || hint3),
+      has_setup: Boolean(hint2 || hint3),
       unit: q.unit || "",
     };
     if (q.type === "mc") {
       out.choices = q.choices;
     }
     if (q.type === "flashcard") {
-      out.placeholder = "Type the formula (e.g. 2pir or P = 2L+2W)";
+      out.placeholder = t("flashcard_placeholder");
     }
     if (q.svg) {
       out.svg = q.svg;
@@ -1537,9 +1606,9 @@
   }
 
   window.QuizQuestions = {
-    TOPICS: TOPICS,
+    get TOPICS() { return buildTopics(); },
     PI: PI,
-    PI_NOTE: PI_NOTE,
+    get PI_NOTE() { return piNote(); },
     HINT_CREDIT: HINT_CREDIT,
     UNAIDED_TO_MASTER: UNAIDED_TO_MASTER,
     randInt: randInt,

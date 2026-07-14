@@ -52,6 +52,38 @@ html, body {
   background: rgba(243, 239, 230, 0.75);
 }
 
+.top-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.lang-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.lang-select {
+  font-family: var(--font);
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+  min-width: 11rem;
+  cursor: pointer;
+}
+
+html[dir="rtl"] .lang-wrap {
+  align-items: flex-start;
+}
+
 .brand-mark {
   font-family: var(--display);
   font-weight: 700;
@@ -162,6 +194,18 @@ html, body {
 
 .linkish.danger { color: var(--warn); }
 
+.progress-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-top: 1.25rem;
+}
+
+.progress-actions .linkish {
+  margin-top: 0;
+}
+
 .quiz {
   min-height: 420px;
   display: flex;
@@ -210,12 +254,19 @@ html, body {
   padding: 8px;
 }
 
+.hint-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
 .hint {
   background: rgba(154, 52, 18, 0.08);
   border-left: 3px solid var(--warn);
   padding: 0.65rem 0.85rem;
   font-size: 0.95rem;
-  margin: 0 0 0.75rem;
+  margin: 0;
   white-space: pre-wrap;
 }
 
@@ -226,7 +277,19 @@ html, body {
   background: rgba(15, 110, 86, 0.08);
   border-left: 3px solid var(--accent);
   padding: 0.75rem 0.9rem;
-  margin: 0 0 1rem;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.calc {
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  background: rgba(30, 58, 95, 0.08);
+  border-left: 3px solid #1e3a5f;
+  padding: 0.75rem 0.9rem;
+  margin: 0;
   white-space: pre-wrap;
   overflow-x: auto;
 }
@@ -234,7 +297,7 @@ html, body {
 .hint-btns {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1rem;
+  gap: 0.5rem 0.85rem;
   justify-content: flex-end;
 }
 
