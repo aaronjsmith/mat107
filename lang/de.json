@@ -3,7 +3,7 @@
   "name": "German",
   "native": "Deutsch",
   "strings": {
-    "brand_sub": "Übung Bewertung 1",
+    "brand_sub": "Ensign College MAT 107 · Übungen Assessment 1",
     "btn_check": "Prüfen",
     "btn_check_retry": "Überprüfen Sie es erneut · 5 %",
     "btn_hint1": "Hinweis 1 · Ansatz (−25 %)",
@@ -341,7 +341,7 @@
     "stat_answered": "Beantwortet",
     "stat_grade": "Note",
     "stat_streak": "Serie ohne Hinweise",
-    "title": "MAT107 · Übung Bewertung 1",
+    "title": "Ensign College MAT 107 · Inoffizielle Studierenden-Übung",
     "topic.conversions": "Einheiten umrechnen",
     "topic.distributions": "Verteilungen & empirische Regel",
     "topic.formulas": "Formeln & Karteikarten",
@@ -424,6 +424,9 @@
     "btn_calc_close_aria": "Rechner schließen",
     "calc_title": "Rechner",
     "notes_label": "Notizen",
-    "notes_placeholder": "Notieren Sie hier Rechnungen, Formeln oder Erinnerungen…"
+    "notes_placeholder": "Notieren Sie hier Rechnungen, Formeln oder Erinnerungen…",
+    "disclaimer": "Inoffizielles Übungsangebot eines Studierenden für Ensign College MAT 107, basierend auf einer echten Kursaufgabe. Keine Verbindung, Unterstützung oder Zugehörigkeit zu Ensign College oder der Kirche Jesu Christi der Heiligen der Letzten Tage. Von einem Studierenden für persönliches Lernen erstellt. Erstellt mit Cursor, gehostet auf Cloudflare Workers und versioniert auf GitHub.",
+    "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
+    "scripture_cite": "— 1 Nephi 17:9"
   }
 }

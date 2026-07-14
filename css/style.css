@@ -98,6 +98,49 @@ html[dir="rtl"] .lang-wrap {
   font-size: 0.95rem;
 }
 
+.site-footer {
+  margin: 0 auto;
+  padding: 0.85rem 1.75rem 1.5rem;
+  max-width: 1400px;
+}
+
+.scripture-quote {
+  margin: 0 0 0.85rem;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: rgba(15, 110, 86, 0.06);
+  border-radius: 0 10px 10px 0;
+  max-width: 52rem;
+}
+
+.scripture-quote p {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--ink);
+  font-style: italic;
+  max-width: none;
+}
+
+.scripture-quote cite {
+  display: block;
+  margin-top: 0.45rem;
+  font-family: var(--font);
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.site-footer > p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 52rem;
+}
+
 .stats-bar {
   display: flex;
   gap: 1.5rem;

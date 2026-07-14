@@ -3,7 +3,7 @@
   "name": "Portuguese",
   "native": "Português",
   "strings": {
-    "brand_sub": "Prática Avaliação 1",
+    "brand_sub": "Ensign College MAT 107 · Prática Avaliação 1",
     "btn_check": "Verificar",
     "btn_check_retry": "Verifique novamente · 5%",
     "btn_hint1": "Dica 1 · abordagem (−25%)",
@@ -341,7 +341,7 @@
     "stat_answered": "Respondidas",
     "stat_grade": "Nota",
     "stat_streak": "Sequência sem dicas",
-    "title": "MAT107 · Prática Avaliação 1",
+    "title": "Ensign College MAT 107 · Prática não oficial de estudante",
     "topic.conversions": "Conversões de unidades",
     "topic.distributions": "Distribuições e regra empírica",
     "topic.formulas": "Fórmulas e flashcards",
@@ -424,6 +424,9 @@
     "btn_calc_close_aria": "Fechar calculadora",
     "calc_title": "Calculadora",
     "notes_label": "Anotações",
-    "notes_placeholder": "Anote aqui cálculos, fórmulas ou lembretes…"
+    "notes_placeholder": "Anote aqui cálculos, fórmulas ou lembretes…",
+    "disclaimer": "Ferramenta de prática não oficial de um estudante para Ensign College MAT 107, baseada em uma tarefa real do curso. Sem afiliação, endosso ou ligação com Ensign College ou A Igreja de Jesus Cristo dos Santos dos Últimos Dias. Feita por um estudante para estudo pessoal. Criada com Cursor, hospedada no Cloudflare Workers e versionada no GitHub.",
+    "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
+    "scripture_cite": "— 1 Néfi 17:9"
   }
 }

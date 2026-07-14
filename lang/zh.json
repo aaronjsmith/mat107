@@ -3,8 +3,8 @@
   "name": "Chinese (Mandarin)",
   "native": "中文",
   "strings": {
-    "title": "MAT107 · 评估1练习",
-    "brand_sub": "评估1练习",
+    "title": "Ensign College MAT 107 · Unofficial student practice",
+    "brand_sub": "Ensign College MAT 107 · Assessment 1 practice",
     "lang_label": "语言",
     "stat_grade": "成绩",
     "stat_streak": "无提示连对",
@@ -424,6 +424,9 @@
     "btn_calc_close_aria": "Close calculator",
     "calc_title": "Calculator",
     "notes_label": "Scratch notes",
-    "notes_placeholder": "Jot working, formulas, or reminders here…"
+    "notes_placeholder": "Jot working, formulas, or reminders here…",
+    "disclaimer": "Unofficial student practice tool for Ensign College MAT 107, based on a real course assignment. Not affiliated with, endorsed by, or connected to Ensign College or The Church of Jesus Christ of Latter-day Saints. Made by a student for personal study. Built with Cursor, hosted on Cloudflare Workers, and versioned on GitHub.",
+    "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
+    "scripture_cite": "— 1 Nephi 17:9"
   }
 }

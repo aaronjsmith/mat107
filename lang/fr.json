@@ -3,7 +3,7 @@
   "name": "French",
   "native": "Français",
   "strings": {
-    "brand_sub": "Pratique Évaluation 1",
+    "brand_sub": "Ensign College MAT 107 · Pratique Évaluation 1",
     "btn_check": "Vérifier",
     "btn_check_retry": "Vérifiez à nouveau · 5%",
     "btn_hint1": "Indice 1 · approche (−25 %)",
@@ -341,7 +341,7 @@
     "stat_answered": "Répondues",
     "stat_grade": "Note",
     "stat_streak": "Série sans indices",
-    "title": "MAT107 · Pratique Évaluation 1",
+    "title": "Ensign College MAT 107 · Pratique non officielle d’étudiant",
     "topic.conversions": "Conversions d’unités",
     "topic.distributions": "Distributions et règle empirique",
     "topic.formulas": "Formules et flashcards",
@@ -424,6 +424,9 @@
     "btn_calc_close_aria": "Fermer la calculatrice",
     "calc_title": "Calculatrice",
     "notes_label": "Brouillon",
-    "notes_placeholder": "Notez ici vos calculs, formules ou rappels…"
+    "notes_placeholder": "Notez ici vos calculs, formules ou rappels…",
+    "disclaimer": "Outil de pratique non officiel d’un étudiant pour Ensign College MAT 107, basé sur un vrai devoir du cours. Aucune affiliation, approbation ou lien avec Ensign College ni avec L’Église de Jésus-Christ des Saints des Derniers Jours. Créé par un étudiant pour l’étude personnelle. Construit avec Cursor, hébergé sur Cloudflare Workers et versionné sur GitHub.",
+    "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
+    "scripture_cite": "— 1 Néphi 17:9"
   }
 }
