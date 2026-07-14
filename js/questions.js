@@ -12,6 +12,18 @@
     return key;
   }
 
+  /** Pick a random prompt variant: key, key.v2, key.v3, … when present. */
+  function tVar(key, vars) {
+    const opts = [key];
+    for (let n = 2; n <= 6; n++) {
+      const k = key + ".v" + n;
+      if (window.QuizI18n && window.QuizI18n.has && window.QuizI18n.has(k)) {
+        opts.push(k);
+      }
+    }
+    return t(choice(opts), vars);
+  }
+
   function buildTopics() {
     var keys = [
       "conversions", "formulas", "perimeter_area", "volume", "pythagorean",
@@ -249,7 +261,7 @@
         id: id(),
         topic: "formulas",
         type: "flashcard",
-        prompt: t("flash.recall", { front: card.front }),
+        prompt: tVar("flash.recall", { front: card.front }),
         answer: card.back,
         answers: (card.answers.concat([card.back])).map(_normFormula),
         hint: card.hint,
@@ -268,7 +280,7 @@
     const distractors = shuffle(wrong).slice(0, Math.min(3, wrong.length));
     const choices = [card.back].concat(distractors);
     return _choice(
-      t("flash.recognize", { front: card.front }),
+      tVar("flash.recognize", { front: card.front }),
       choices,
       card.back,
       "formulas",
@@ -280,20 +292,20 @@
   // --- Generators -------------------------------------------------------------
 
   function genFeetInYard() {
-    return _numeric(t("q.feet_in_yard"), 3, "conversions", 0, t("h.feet_in_yard"), t("s.feet_in_yard"));
+    return _numeric(tVar("q.feet_in_yard"), 3, "conversions", 0, t("h.feet_in_yard"), t("s.feet_in_yard"));
   }
 
   function genSqFtInSqYard() {
-    return _numeric(t("q.sqft_sqyd"), 9, "conversions", 0, t("h.sqft_sqyd"), t("s.sqft_sqyd"));
+    return _numeric(tVar("q.sqft_sqyd"), 9, "conversions", 0, t("h.sqft_sqyd"), t("s.sqft_sqyd"));
   }
 
   function genCuFtInCuYard() {
-    return _numeric(t("q.cuft_cuyd"), 27, "conversions", 0, t("h.cuft_cuyd"), t("s.cuft_cuyd"));
+    return _numeric(tVar("q.cuft_cuyd"), 27, "conversions", 0, t("h.cuft_cuyd"), t("s.cuft_cuyd"));
   }
 
   function genDimensionConcept() {
     return _choice(
-      t("q.dim_concept"),
+      tVar("q.dim_concept"),
       [t("c.dim_a"), t("c.dim_b"), t("c.dim_c"), t("c.dim_d")],
       t("c.dim_a"),
       "conversions"
@@ -302,7 +314,7 @@
 
   function genFormulaSquarePerimeter() {
     return _choice(
-      t("q.form_sq_p"),
+      tVar("q.form_sq_p"),
       ["P = 4s", "P = s²", "P = 2s", "P = 6s"],
       "P = 4s",
       "formulas"
@@ -311,7 +323,7 @@
 
   function genFormulaSquareArea() {
     return _choice(
-      t("q.form_sq_a"),
+      tVar("q.form_sq_a"),
       ["A = s²", "A = 4s", "A = 2s", "A = s³"],
       "A = s²",
       "formulas"
@@ -322,14 +334,14 @@
     const which = choice(["perimeter", "area"]);
     if (which === "perimeter") {
       return _choice(
-        t("q.form_rect_p"),
+        tVar("q.form_rect_p"),
         ["P = 2L + 2W", "P = L × W", "P = L + W", "P = 4LW"],
         "P = 2L + 2W",
         "formulas"
       );
     }
     return _choice(
-      t("q.form_rect_a"),
+      tVar("q.form_rect_a"),
       ["A = L × W", "A = 2L + 2W", "A = L + W", "A = L² + W²"],
       "A = L × W",
       "formulas"
@@ -340,14 +352,14 @@
     const which = choice(["perimeter", "area"]);
     if (which === "perimeter") {
       return _choice(
-        t("q.form_tri_p"),
+        tVar("q.form_tri_p"),
         ["P = a + b + c", "P = ½bh", "P = ab + bc + ca", "P = abc"],
         "P = a + b + c",
         "formulas"
       );
     }
     return _choice(
-      t("q.form_tri_a"),
+      tVar("q.form_tri_a"),
       ["A = ½bh", "A = bh", "A = 2bh", "A = b + h"],
       "A = ½bh",
       "formulas"
@@ -358,7 +370,7 @@
     const which = choice(["circumference", "area"]);
     if (which === "circumference") {
       return _choice(
-        t("q.form_circ_c"),
+        tVar("q.form_circ_c"),
         ["C = 2πr", "C = πr²", "C = πr", "C = 4πr"],
         "C = 2πr",
         "formulas",
@@ -366,7 +378,7 @@
       );
     }
     return _choice(
-      t("q.form_circ_a"),
+      tVar("q.form_circ_a"),
       ["A = πr²", "A = 2πr", "A = πd", "A = 4πr²"],
       "A = πr²",
       "formulas"
@@ -377,7 +389,7 @@
     const which = choice(["cube", "sphere", "cylinder"]);
     if (which === "cube") {
       return _choice(
-        t("q.form_cube"),
+        tVar("q.form_cube"),
         ["V = s³", "V = 6s²", "V = s²", "V = 4s"],
         "V = s³",
         "formulas"
@@ -385,14 +397,14 @@
     }
     if (which === "sphere") {
       return _choice(
-        t("q.form_sphere"),
+        tVar("q.form_sphere"),
         ["V = (4/3)πr³", "V = 4πr²", "V = πr²h", "V = (4/3)πr²"],
         "V = (4/3)πr³",
         "formulas"
       );
     }
     return _choice(
-      t("q.form_cyl"),
+      tVar("q.form_cyl"),
       ["V = πr²h", "V = 2πrh", "V = (4/3)πr³", "V = πr²"],
       "V = πr²h",
       "formulas"
@@ -401,7 +413,7 @@
 
   function genPythagoreanFormula() {
     return _choice(
-      t("q.form_pyth"),
+      tVar("q.form_pyth"),
       ["a² + b² = c²", "a + b = c", "a² − b² = c²", "a² + b² = c"],
       "a² + b² = c²",
       "formulas"
@@ -414,7 +426,7 @@
     const ask = choice(["perimeter", "area"]);
     if (ask === "perimeter") {
       return _numeric(
-        t("q.rect_p", { L: L, W: W }),
+        tVar("q.rect_p", { L: L, W: W }),
         2 * (L + W),
         "perimeter_area",
         0,
@@ -428,7 +440,7 @@
       );
     }
     return _numeric(
-      t("q.rect_a", { L: L, W: W }),
+      tVar("q.rect_a", { L: L, W: W }),
       L * W,
       "perimeter_area",
       0,
@@ -443,7 +455,7 @@
     const b = randInt(6, 24);
     const h = randInt(4, 18);
     return _numeric(
-      t("q.tri_area", { b: b, h: h }),
+      tVar("q.tri_area", { b: b, h: h }),
       0.5 * b * h,
       "perimeter_area",
       0.01,
@@ -463,7 +475,7 @@
     const ask = choice(["circumference", "area"]);
     if (ask === "circumference") {
       return _numeric(
-        t("q.circ_c", { r: r, pi_note: piNote() }),
+        tVar("q.circ_c", { r: r, pi_note: piNote() }),
         num(2 * PI * r),
         "perimeter_area",
         0.02,
@@ -474,7 +486,7 @@
       );
     }
     return _numeric(
-      t("q.circ_a", { r: r, pi_note: piNote() }),
+      tVar("q.circ_a", { r: r, pi_note: piNote() }),
       num(PI * r * r),
       "perimeter_area",
       0.02,
@@ -565,6 +577,229 @@
     );
   }
 
+  function _triRectSemiSvg(a, b, r) {
+    // Right triangle (base a) + rectangle (width b, height 2r) + right semicircle (radius r).
+    const h = 2 * r;
+    const padL = 36;
+    const padR = 48;
+    const padT = 28;
+    const padB = 36;
+    const maxDrawW = 340;
+    const maxDrawH = 200;
+    const s = Math.min(maxDrawW / (a + b + r), maxDrawH / h);
+    const A = a * s;
+    const B = b * s;
+    const H = h * s;
+    const R = r * s;
+    const ox = padL;
+    const oy = padT;
+    const x1 = ox; // left of triangle base
+    const x2 = ox + A; // triangle/rect join (bottom)
+    const x3 = ox + A + B; // diameter line (rect right)
+    const yTop = oy;
+    const yBot = oy + H;
+    const cy = oy + H / 2; // semicircle center
+
+    // Outer path: bottom L→R, arc, top R→L, hypotenuse
+    const path =
+      "M" +
+      x1.toFixed(1) +
+      "," +
+      yBot.toFixed(1) +
+      " H" +
+      x3.toFixed(1) +
+      " A" +
+      R.toFixed(1) +
+      "," +
+      R.toFixed(1) +
+      " 0 0 0 " +
+      x3.toFixed(1) +
+      "," +
+      yTop.toFixed(1) +
+      " H" +
+      x2.toFixed(1) +
+      " L" +
+      x1.toFixed(1) +
+      "," +
+      yBot.toFixed(1) +
+      " Z";
+
+    const vbW = padL + A + B + R + padR;
+    const vbH = padT + H + padB;
+
+    return (
+      '<svg viewBox="0 0 ' +
+      vbW.toFixed(1) +
+      " " +
+      vbH.toFixed(1) +
+      '" xmlns="http://www.w3.org/2000/svg" class="q-svg" role="img" aria-label="Triangle, rectangle, and semicircle figure">' +
+      '<path d="' +
+      path +
+      '" fill="#bfdbfe" stroke="#1e3a5f" stroke-width="2.5" stroke-linejoin="round"/>' +
+      // Diameter line (visual cue)
+      '<line x1="' +
+      x3.toFixed(1) +
+      '" y1="' +
+      yTop.toFixed(1) +
+      '" x2="' +
+      x3.toFixed(1) +
+      '" y2="' +
+      yBot.toFixed(1) +
+      '" stroke="#1e3a5f" stroke-width="1.5"/>' +
+      // Center dot
+      '<circle cx="' +
+      x3.toFixed(1) +
+      '" cy="' +
+      cy.toFixed(1) +
+      '" r="3" fill="#1e3a5f"/>' +
+      // Triangle base a
+      '<text x="' +
+      (x1 + A / 2).toFixed(1) +
+      '" y="' +
+      (yBot + 18).toFixed(1) +
+      '" text-anchor="middle" font-size="14" font-family="IBM Plex Sans, sans-serif" fill="#1e3a5f">' +
+      a +
+      "</text>" +
+      // Rectangle width b
+      '<text x="' +
+      (x2 + B / 2).toFixed(1) +
+      '" y="' +
+      (yBot + 18).toFixed(1) +
+      '" text-anchor="middle" font-size="14" font-family="IBM Plex Sans, sans-serif" fill="#1e3a5f">' +
+      b +
+      "</text>" +
+      // Radius r (from center down)
+      '<line x1="' +
+      x3.toFixed(1) +
+      '" y1="' +
+      cy.toFixed(1) +
+      '" x2="' +
+      x3.toFixed(1) +
+      '" y2="' +
+      yBot.toFixed(1) +
+      '" stroke="#b45309" stroke-width="1.25" stroke-dasharray="3 2"/>' +
+      '<text x="' +
+      (x3 + 12).toFixed(1) +
+      '" y="' +
+      ((cy + yBot) / 2).toFixed(1) +
+      '" text-anchor="start" dominant-baseline="middle" font-size="14" font-family="IBM Plex Sans, sans-serif" fill="#b45309">' +
+      r +
+      "</text>" +
+      "</svg>"
+    );
+  }
+
+  function genCompositeTriRectSemi() {
+    // Matches textbook-style composites: △ + rectangle + semicircle (diameter = height).
+    const a = choice([3, 4, 5, 6]);
+    const b = choice([4, 5, 6, 7, 8]);
+    const r = choice([2, 3, 4, 5]);
+    const h = 2 * r;
+    const hypot = Math.sqrt(a * a + h * h);
+    const area = a * r + 2 * b * r + 0.5 * PI * r * r;
+    // Outer path: bottom (a+b) + semicircle arc (πr) + top of rect (b) + hypotenuse
+    const perimeter = a + 2 * b + PI * r + hypot;
+    const ask = choice(["perimeter", "area"]);
+    const svg = _triRectSemiSvg(a, b, r);
+
+    if (ask === "area") {
+      return {
+        id: id(),
+        topic: "perimeter_area",
+        type: "numeric",
+        prompt: tVar("q.combo_trs_a", {
+          a: a,
+          b: b,
+          r: r,
+          pi_note: piNote(),
+        }),
+        answer: num(area),
+        tolerance: 0.05,
+        hint: t("h.combo_trs_a"),
+        setup:
+          "h = 2r = " +
+          h +
+          "\nA = ½·a·h + b·h + ½·π·r²\nA = ½·" +
+          a +
+          "·" +
+          h +
+          " + " +
+          b +
+          "·" +
+          h +
+          " + ½·" +
+          PI +
+          "·(" +
+          r +
+          ")²",
+        calc: calcHelp(
+          "0.5 × " + a + " × " + h + " + " + b + " × " + h + " + 0.5 × 3.14 × " + r + " x² =",
+          "0.5 × " + a + " × " + h + " + " + b + " × " + h + " + 0.5 × 3.14 × " + r + " x² ="
+        ),
+        unit: t("unit.sq_units"),
+        svg: svg,
+      };
+    }
+    return {
+      id: id(),
+      topic: "perimeter_area",
+      type: "numeric",
+      prompt: tVar("q.combo_trs_p", {
+        a: a,
+        b: b,
+        r: r,
+        pi_note: piNote(),
+      }),
+      answer: num(perimeter),
+      tolerance: 0.05,
+      hint: t("h.combo_trs_p"),
+      setup:
+        "h = 2r = " +
+        h +
+        "\nhypotenuse = √(a² + h²) = √(" +
+        a +
+        "² + " +
+        h +
+        "²)\nP = a + 2b + πr + hypotenuse\nP = " +
+        a +
+        " + 2·" +
+        b +
+        " + " +
+        PI +
+        "·" +
+        r +
+        " + √(" +
+        a +
+        "² + " +
+        h +
+        "²)",
+      calc: calcHelp(
+        a +
+          " + 2 × " +
+          b +
+          " + 3.14 × " +
+          r +
+          " + √( " +
+          a +
+          " x² + " +
+          h +
+          " x² ) =",
+        a +
+          " + 2 × " +
+          b +
+          " + 3.14 × " +
+          r +
+          " + √( " +
+          a +
+          " x² + " +
+          h +
+          " x² ) ="
+      ),
+      unit: t("unit.units"),
+      svg: svg,
+    };
+  }
+
   function genCompositeLShape() {
     let W = choice([8, 10, 12, 14, 16]);
     let H = choice([10, 12, 14, 16, 18]);
@@ -584,7 +819,7 @@
         id: id(),
         topic: "perimeter_area",
         type: "numeric",
-        prompt: t("q.lshape_a", { W: W, H: H, cutW: cutW, cutH: cutH }),
+        prompt: tVar("q.lshape_a", { W: W, H: H, cutW: cutW, cutH: cutH }),
         answer: area,
         tolerance: 0,
         hint: t("h.lshape_a"),
@@ -601,7 +836,7 @@
       id: id(),
       topic: "perimeter_area",
       type: "numeric",
-      prompt: t("q.lshape_p", { W: W, H: H, cutW: cutW, cutH: cutH }),
+      prompt: tVar("q.lshape_p", { W: W, H: H, cutW: cutW, cutH: cutH }),
       answer: perimeter,
       tolerance: 0,
       hint: t("h.lshape_p"),
@@ -632,7 +867,7 @@
 
     if (which === "need") {
       return _numeric(
-        t("q.fence_need", { ft1: ft1, in1: in1, ft2: ft2, in2: in2 }),
+        tVar("q.fence_need", { ft1: ft1, in1: in1, ft2: ft2, in2: in2 }),
         num(peri),
         "perimeter_area",
         0.05,
@@ -646,7 +881,7 @@
       );
     }
     return _choice(
-      t("q.fence_roll", { ft1: ft1, in1: in1, ft2: ft2, in2: in2 }),
+      tVar("q.fence_roll", { ft1: ft1, in1: in1, ft2: ft2, in2: in2 }),
       [t("c.roll_50"), t("c.roll_100")],
       rolls,
       "perimeter_area",
@@ -674,7 +909,7 @@
     const r = dNum / 2;
     const vol = PI * r * r * h;
     return _numeric(
-      t("q.soup", { d: dNum, h: h, pi_note: piNote() }),
+      tVar("q.soup", { d: dNum, h: h, pi_note: piNote() }),
       num(vol),
       "volume",
       0.02,
@@ -707,7 +942,7 @@
         sr + " to " + sn,
       ];
       return _short(
-        t("q.drive_slope", { rise: rise, run: run }),
+        tVar("q.drive_slope", { rise: rise, run: run }),
         answers,
         "pythagorean",
         t("h.drive_slope"),
@@ -720,7 +955,7 @@
       );
     }
     return _numeric(
-      t("q.drive_len", { rise: rise, run: run }),
+      tVar("q.drive_len", { rise: rise, run: run }),
       num(slant),
       "pythagorean",
       0.05,
@@ -739,7 +974,7 @@
     const width = num(diagonal * (0.82 + Math.random() * 0.08), 1);
     const height = Math.sqrt(diagonal * diagonal - width * width);
     return _numeric(
-      t("q.tv", { diagonal: diagonal, width: width }),
+      tVar("q.tv", { diagonal: diagonal, width: width }),
       num(height, 1),
       "pythagorean",
       0.15,
@@ -760,7 +995,7 @@
     const liters = gallons * 3.785;
     const bottles = liters / bottleL;
     return _numeric(
-      t("q.gal_l", { gallons: gallons, bottleL: bottleL }),
+      tVar("q.gal_l", { gallons: gallons, bottleL: bottleL }),
       num(bottles),
       "scale_rates",
       0.05,
@@ -787,7 +1022,7 @@
     if (ask === "map_to_real") {
       const inches = choice([1.5, 2, 2.5, 3, 3.5, 4, 5]);
       return _numeric(
-        t("q.map_to_real", { scaleFt: scaleFt, inches: inches }),
+        tVar("q.map_to_real", { scaleFt: scaleFt, inches: inches }),
         inches * scaleFt,
         "scale_rates",
         0,
@@ -802,7 +1037,7 @@
     }
     const feet = choice([100, 150, 200, 220, 250, 300, 400]);
     return _numeric(
-      t("q.real_to_map", { scaleFt: scaleFt, feet: feet }),
+      tVar("q.real_to_map", { scaleFt: scaleFt, feet: feet }),
       num(feet / scaleFt),
       "scale_rates",
       0.01,
@@ -838,7 +1073,7 @@
 
     if (ask === "roll") {
       return _numeric(
-        t("q.carpet_roll", { L: L, W: W, rollW: rollW, cost: costPerLinear }),
+        tVar("q.carpet_roll", { L: L, W: W, rollW: rollW, cost: costPerLinear }),
         num(costRoll),
         "scale_rates",
         0.5,
@@ -854,7 +1089,7 @@
     }
     if (ask === "yard") {
       return _numeric(
-        t("q.carpet_yd", { L: L, W: W, cost: costPerSqyd }),
+        tVar("q.carpet_yd", { L: L, W: W, cost: costPerSqyd }),
         num(costYd),
         "scale_rates",
         0.5,
@@ -879,7 +1114,7 @@
     }
     const cheaper = costRoll < costYd ? t("c.carpet_roll") : t("c.carpet_yd");
     return _choice(
-      t("q.carpet_cmp", {
+      tVar("q.carpet_cmp", {
         L: L,
         W: W,
         rollW: rollW,
@@ -926,7 +1161,7 @@
       const eqLabel = t("c.pizza_eq");
       const more = aOne > aTwo ? oneLabel : twoLabel;
       return _choice(
-        t("q.pizza_cmp", { small: small, large: large, pi_note: piNote() }),
+        tVar("q.pizza_cmp", { small: small, large: large, pi_note: piNote() }),
         [twoLabel, oneLabel, eqLabel],
         Math.abs(aOne - aTwo) > 0.01 ? more : eqLabel,
         "scaling",
@@ -943,7 +1178,7 @@
       );
     }
     return _choice(
-      t("q.pizza_double"),
+      tVar("q.pizza_double"),
       [
         t("c.pizza_4x"),
         t("c.pizza_2x"),
@@ -964,7 +1199,7 @@
 
     if (ask === "double") {
       return _numeric(
-        t("q.ball_double", { base: base }),
+        tVar("q.ball_double", { base: base }),
         base * 8,
         "scaling",
         0,
@@ -979,7 +1214,7 @@
       );
     }
     return _numeric(
-      t("q.ball_half", { base: base }),
+      tVar("q.ball_half", { base: base }),
       base / 8,
       "scaling",
       0.01,
@@ -1054,7 +1289,7 @@
     if (ask === "mean") {
       const terms = data.join(" + ");
       return _numeric(
-        t("q.mean", { ds: ds }),
+        tVar("q.mean", { ds: ds }),
         num(_mean(data)),
         "stats_center",
         0.05,
@@ -1073,7 +1308,7 @@
       });
       const sortedDs = "{" + sorted.join(", ") + "}";
       return _numeric(
-        t("q.median", { ds: ds }),
+        tVar("q.median", { ds: ds }),
         _median(data),
         "stats_center",
         0.01,
@@ -1085,7 +1320,7 @@
       const m = _mode(data);
       if (m === null) return genMeanMedianModeRange();
       return _numeric(
-        t("q.mode", { ds: ds }),
+        tVar("q.mode", { ds: ds }),
         m,
         "stats_center",
         0,
@@ -1094,7 +1329,7 @@
       );
     }
     return _numeric(
-      t("q.range", { ds: ds }),
+      tVar("q.range", { ds: ds }),
       _range(data),
       "stats_center",
       0,
@@ -1105,9 +1340,9 @@
 
   function genBestMeasureFixed() {
     const options = [
-      [t("q.best_outliers"), t("c.median"), t("h.best_outliers")],
-      [t("q.best_cat"), t("c.mode"), t("h.best_cat")],
-      [t("q.best_sym"), t("c.mean"), t("h.best_sym")],
+      [tVar("q.best_outliers"), t("c.median"), t("h.best_outliers")],
+      [tVar("q.best_cat"), t("c.mode"), t("h.best_cat")],
+      [tVar("q.best_sym"), t("c.mean"), t("h.best_sym")],
     ];
     const picked = choice(options);
     return _choice(
@@ -1127,7 +1362,7 @@
     const approxSd = _range(data) / 4;
     const ds = "{" + data.join(", ") + "}";
     return _numeric(
-      t("q.range_rule", { ds: ds }),
+      tVar("q.range_rule", { ds: ds }),
       num(approxSd),
       "stats_spread",
       0.05,
@@ -1156,7 +1391,7 @@
       ]);
       const ds = "{" + which[0].join(", ") + "}";
       return _numeric(
-        t("q.compare_sd", { which: which[1], ds: ds }),
+        tVar("q.compare_sd", { which: which[1], ds: ds }),
         num(which[2]),
         "stats_spread",
         0.05,
@@ -1169,7 +1404,7 @@
       );
     }
     return _choice(
-      t("q.compare_which", {
+      tVar("q.compare_which", {
         d1: "{" + d1.join(", ") + "}",
         d2: "{" + d2.join(", ") + "}",
       }),
@@ -1183,7 +1418,7 @@
 
   function genSdTf() {
     return _choice(
-      t("q.sd_tf"),
+      tVar("q.sd_tf"),
       [t("c.true"), t("c.false")],
       t("c.false"),
       "stats_spread",
@@ -1197,7 +1432,7 @@
     const score = choice([55, 60, 65, 70, 78, 85, 92, 95, 105]);
     const z = (score - mean) / sd;
     return _numeric(
-      t("q.zscore", { mean: mean, sd: sd, score: score }),
+      tVar("q.zscore", { mean: mean, sd: sd, score: score }),
       num(z),
       "z_scores",
       0.05,
@@ -1239,7 +1474,7 @@
     const z = parseFloat(zKey);
     const p = Z_TABLE[zKey] * 100;
     return _numeric(
-      t("q.pct_from_z", { z: z }),
+      tVar("q.pct_from_z", { z: z }),
       Math.round(p),
       "z_scores",
       2,
@@ -1261,7 +1496,7 @@
     const pct = picked[0];
     const z = picked[1];
     return _numeric(
-      t("q.z_from_pct", { pct: pct }),
+      tVar("q.z_from_pct", { pct: pct }),
       z,
       "z_scores",
       0.2,
@@ -1276,15 +1511,15 @@
     let effect;
 
     if (skew === "right") {
-      prompt = t("q.skew_right");
+      prompt = tVar("q.skew_right");
       answer = t("c.skew_right");
       effect = t("h.skew_right_effect");
     } else if (skew === "left") {
-      prompt = t("q.skew_left");
+      prompt = tVar("q.skew_left");
       answer = t("c.skew_left");
       effect = t("h.skew_left_effect");
     } else {
-      prompt = t("q.skew_uniform");
+      prompt = tVar("q.skew_uniform");
       answer = t("c.skew_uniform");
       effect = t("h.skew_uniform_effect");
     }
@@ -1305,7 +1540,7 @@
       );
     }
     return _choice(
-      prompt + " " + t("q.skew_effect_follow"),
+      prompt + " " + tVar("q.skew_effect_follow"),
       [
         effect,
         t("c.skew_wrong_a"),
@@ -1326,7 +1561,7 @@
       const lo = mean - sd;
       const hi = mean + sd;
       return _choice(
-        t("q.emp_1sd", { mean: mean, sd: sd, lo: lo, hi: hi }),
+        tVar("q.emp_1sd", { mean: mean, sd: sd, lo: lo, hi: hi }),
         [t("c.pct68"), t("c.pct95"), t("c.pct997"), t("c.pct50")],
         t("c.pct68"),
         "distributions",
@@ -1337,7 +1572,7 @@
       const lo = mean - 2 * sd;
       const hi = mean + 2 * sd;
       return _choice(
-        t("q.emp_2sd", { mean: mean, sd: sd, lo: lo, hi: hi }),
+        tVar("q.emp_2sd", { mean: mean, sd: sd, lo: lo, hi: hi }),
         [t("c.pct95"), t("c.pct68"), t("c.pct997"), t("c.pct34")],
         t("c.pct95"),
         "distributions",
@@ -1347,7 +1582,7 @@
     if (ask === "3sd_beyond") {
       const cut = mean + 3 * sd;
       return _choice(
-        t("q.emp_3sd", { mean: mean, sd: sd, cut: cut }),
+        tVar("q.emp_3sd", { mean: mean, sd: sd, cut: cut }),
         [t("c.pct015"), t("c.pct25"), t("c.pct16"), t("c.pct5")],
         t("c.pct015"),
         "distributions",
@@ -1356,7 +1591,7 @@
     }
     const cut = mean - sd;
     return _choice(
-      t("q.emp_below", { mean: mean, sd: sd, cut: cut }),
+      tVar("q.emp_below", { mean: mean, sd: sd, cut: cut }),
       [t("c.pct16"), t("c.pct25"), t("c.pct015"), t("c.pct50")],
       t("c.pct16"),
       "distributions",
@@ -1366,7 +1601,7 @@
 
   function genLiteracy() {
     return _choice(
-      t("q.literacy"),
+      tVar("q.literacy"),
       [t("c.lit_a"), t("c.lit_b"), t("c.lit_c"), t("c.lit_d")],
       t("c.lit_a"),
       "literacy",
@@ -1393,6 +1628,8 @@
     genTriangleArea,
     genCirclePa,
     genCompositeLShape,
+    genCompositeTriRectSemi,
+    genCompositeTriRectSemi,
     genFence,
     genSoupCan,
     genDriveway,

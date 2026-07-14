@@ -46,6 +46,13 @@
       return L.code === saved;
     })) {
       lang = saved;
+    } else if (saved) {
+      // Drop removed language codes so the select matches the pack list.
+      try {
+        localStorage.setItem(STORAGE_KEY, defaultLang);
+      } catch (e2) {
+        /* ignore */
+      }
     }
   } catch (e) {
     /* ignore */
