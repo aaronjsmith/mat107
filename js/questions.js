@@ -577,15 +577,31 @@
     );
   }
 
+  function _dimTick(x, y1, y2, color) {
+    return (
+      '<line x1="' +
+      x.toFixed(1) +
+      '" y1="' +
+      y1.toFixed(1) +
+      '" x2="' +
+      x.toFixed(1) +
+      '" y2="' +
+      y2.toFixed(1) +
+      '" stroke="' +
+      color +
+      '" stroke-width="1.5"/>'
+    );
+  }
+
   function _triRectSemiSvg(a, b, r) {
     // Right triangle (base a) + rectangle (width b, height 2r) + right semicircle (radius r).
     const h = 2 * r;
-    const padL = 36;
-    const padR = 48;
+    const padL = 44;
+    const padR = 56;
     const padT = 28;
-    const padB = 36;
+    const padB = 44;
     const maxDrawW = 340;
-    const maxDrawH = 200;
+    const maxDrawH = 190;
     const s = Math.min(maxDrawW / (a + b + r), maxDrawH / h);
     const A = a * s;
     const B = b * s;
@@ -599,6 +615,11 @@
     const yTop = oy;
     const yBot = oy + H;
     const cy = oy + H / 2; // semicircle center
+    const ink = "#1e3a5f";
+    const accent = "#b45309";
+    const dimY = yBot + 14;
+    const tickTop = yBot + 4;
+    const tickBot = yBot + 24;
 
     // Outer path: bottom L→R, arc, top R→L, hypotenuse
     const path =
@@ -627,16 +648,101 @@
     const vbW = padL + A + B + R + padR;
     const vbH = padT + H + padB;
 
+    // Bottom dimension rails for a and b (with end ticks)
+    const bottomDims =
+      '<line x1="' +
+      x1.toFixed(1) +
+      '" y1="' +
+      dimY.toFixed(1) +
+      '" x2="' +
+      x2.toFixed(1) +
+      '" y2="' +
+      dimY.toFixed(1) +
+      '" stroke="' +
+      ink +
+      '" stroke-width="1.25"/>' +
+      '<line x1="' +
+      x2.toFixed(1) +
+      '" y1="' +
+      dimY.toFixed(1) +
+      '" x2="' +
+      x3.toFixed(1) +
+      '" y2="' +
+      dimY.toFixed(1) +
+      '" stroke="' +
+      ink +
+      '" stroke-width="1.25"/>' +
+      _dimTick(x1, tickTop, tickBot, ink) +
+      _dimTick(x2, tickTop, tickBot, ink) +
+      _dimTick(x3, tickTop, tickBot, ink) +
+      '<text x="' +
+      (x1 + A / 2).toFixed(1) +
+      '" y="' +
+      (dimY + 16).toFixed(1) +
+      '" text-anchor="middle" font-size="14" font-weight="600" font-family="IBM Plex Sans, sans-serif" fill="' +
+      ink +
+      '">' +
+      a +
+      "</text>" +
+      '<text x="' +
+      (x2 + B / 2).toFixed(1) +
+      '" y="' +
+      (dimY + 16).toFixed(1) +
+      '" text-anchor="middle" font-size="14" font-weight="600" font-family="IBM Plex Sans, sans-serif" fill="' +
+      ink +
+      '">' +
+      b +
+      "</text>";
+
+    // Radius into the semicircle (horizontal dashed), labeled r
+    const rEndX = x3 + R;
+    const radiusDim =
+      '<line x1="' +
+      x3.toFixed(1) +
+      '" y1="' +
+      cy.toFixed(1) +
+      '" x2="' +
+      rEndX.toFixed(1) +
+      '" y2="' +
+      cy.toFixed(1) +
+      '" stroke="' +
+      accent +
+      '" stroke-width="1.5" stroke-dasharray="4 3"/>' +
+      '<circle cx="' +
+      rEndX.toFixed(1) +
+      '" cy="' +
+      cy.toFixed(1) +
+      '" r="2.5" fill="' +
+      accent +
+      '"/>' +
+      '<text x="' +
+      (x3 + R / 2).toFixed(1) +
+      '" y="' +
+      (cy - 10).toFixed(1) +
+      '" text-anchor="middle" font-size="14" font-weight="600" font-family="IBM Plex Sans, sans-serif" fill="' +
+      accent +
+      '">r = ' +
+      r +
+      "</text>";
+
     return (
       '<svg viewBox="0 0 ' +
       vbW.toFixed(1) +
       " " +
       vbH.toFixed(1) +
-      '" xmlns="http://www.w3.org/2000/svg" class="q-svg" role="img" aria-label="Triangle, rectangle, and semicircle figure">' +
+      '" xmlns="http://www.w3.org/2000/svg" class="q-svg" role="img" aria-label="Triangle, rectangle, and semicircle figure with labeled base ' +
+      a +
+      ", width " +
+      b +
+      ", and radius " +
+      r +
+      '">' +
       '<path d="' +
       path +
-      '" fill="#bfdbfe" stroke="#1e3a5f" stroke-width="2.5" stroke-linejoin="round"/>' +
-      // Diameter line (visual cue)
+      '" fill="#bfdbfe" stroke="' +
+      ink +
+      '" stroke-width="2.5" stroke-linejoin="round"/>' +
+      // Diameter (shared height); faint so radius stays primary
       '<line x1="' +
       x3.toFixed(1) +
       '" y1="' +
@@ -645,46 +751,31 @@
       x3.toFixed(1) +
       '" y2="' +
       yBot.toFixed(1) +
-      '" stroke="#1e3a5f" stroke-width="1.5"/>' +
-      // Center dot
+      '" stroke="' +
+      ink +
+      '" stroke-width="1.5"/>' +
+      // Join line triangle | rectangle (guides reading the base segments)
+      '<line x1="' +
+      x2.toFixed(1) +
+      '" y1="' +
+      yTop.toFixed(1) +
+      '" x2="' +
+      x2.toFixed(1) +
+      '" y2="' +
+      yBot.toFixed(1) +
+      '" stroke="' +
+      ink +
+      '" stroke-width="1" stroke-dasharray="3 3" opacity="0.55"/>' +
+      // Center of semicircle
       '<circle cx="' +
       x3.toFixed(1) +
       '" cy="' +
       cy.toFixed(1) +
-      '" r="3" fill="#1e3a5f"/>' +
-      // Triangle base a
-      '<text x="' +
-      (x1 + A / 2).toFixed(1) +
-      '" y="' +
-      (yBot + 18).toFixed(1) +
-      '" text-anchor="middle" font-size="14" font-family="IBM Plex Sans, sans-serif" fill="#1e3a5f">' +
-      a +
-      "</text>" +
-      // Rectangle width b
-      '<text x="' +
-      (x2 + B / 2).toFixed(1) +
-      '" y="' +
-      (yBot + 18).toFixed(1) +
-      '" text-anchor="middle" font-size="14" font-family="IBM Plex Sans, sans-serif" fill="#1e3a5f">' +
-      b +
-      "</text>" +
-      // Radius r (from center down)
-      '<line x1="' +
-      x3.toFixed(1) +
-      '" y1="' +
-      cy.toFixed(1) +
-      '" x2="' +
-      x3.toFixed(1) +
-      '" y2="' +
-      yBot.toFixed(1) +
-      '" stroke="#b45309" stroke-width="1.25" stroke-dasharray="3 2"/>' +
-      '<text x="' +
-      (x3 + 12).toFixed(1) +
-      '" y="' +
-      ((cy + yBot) / 2).toFixed(1) +
-      '" text-anchor="start" dominant-baseline="middle" font-size="14" font-family="IBM Plex Sans, sans-serif" fill="#b45309">' +
-      r +
-      "</text>" +
+      '" r="3.5" fill="' +
+      ink +
+      '"/>' +
+      bottomDims +
+      radiusDim +
       "</svg>"
     );
   }
