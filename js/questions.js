@@ -21,7 +21,10 @@
         opts.push(k);
       }
     }
-    return t(choice(opts), vars);
+    const last = recentPick.variantByKey[key];
+    const pick = opts.length > 1 ? choiceAvoid(opts, last ? [last] : []) : opts[0];
+    recentPick.variantByKey[key] = pick;
+    return t(pick, vars);
   }
 
   function buildTopics() {
@@ -63,12 +66,65 @@
 
   // --- Helpers ----------------------------------------------------------------
 
-  function randInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  /** Recent rolls — avoid repeating topic / generator / answer fingerprint. */
+  const recentPick = {
+    topics: [],
+    gens: [],
+    fingerprints: [],
+    variantByKey: {},
+  };
+  const RECENT_KEEP = 8;
+
+  function remember(list, value, keep) {
+    keep = keep || RECENT_KEEP;
+    list.unshift(value);
+    if (list.length > keep) list.length = keep;
   }
 
   function choice(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  /** Prefer values not in `exclude` (falls back to full pool if needed). */
+  function choiceAvoid(arr, exclude) {
+    if (!arr || !arr.length) return undefined;
+    const banned = exclude || [];
+    const fresh = arr.filter(function (x) {
+      return banned.indexOf(x) < 0;
+    });
+    return choice(fresh.length ? fresh : arr);
+  }
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  /** Prefer ints not in recent list for this bucket. */
+  function randIntAvoid(min, max, exclude) {
+    const banned = exclude || [];
+    const tries = Math.max(12, max - min + 1);
+    for (let i = 0; i < tries; i++) {
+      const n = randInt(min, max);
+      if (banned.indexOf(n) < 0) return n;
+    }
+    return randInt(min, max);
+  }
+
+  const recentNums = {};
+  function nextInt(bucket, min, max) {
+    const key = bucket || "default";
+    if (!recentNums[key]) recentNums[key] = [];
+    const n = randIntAvoid(min, max, recentNums[key]);
+    remember(recentNums[key], n, 5);
+    return n;
+  }
+
+  function nextChoice(bucket, arr) {
+    const key = bucket || "default";
+    if (!recentNums[key]) recentNums[key] = [];
+    const v = choiceAvoid(arr, recentNums[key]);
+    remember(recentNums[key], v, Math.min(5, Math.max(2, arr.length - 1)));
+    return v;
   }
 
   function shuffle(arr) {
@@ -421,8 +477,8 @@
   }
 
   function genRectanglePa() {
-    const L = randInt(4, 20);
-    const W = randInt(3, 15);
+    const L = nextInt("rectL", 4, 28);
+    const W = nextInt("rectW", 3, 22);
     const ask = choice(["perimeter", "area"]);
     if (ask === "perimeter") {
       return _numeric(
@@ -452,8 +508,8 @@
   }
 
   function genTriangleArea() {
-    const b = randInt(6, 24);
-    const h = randInt(4, 18);
+    const b = nextInt("triB", 5, 30);
+    const h = nextInt("triH", 3, 24);
     return _numeric(
       tVar("q.tri_area", { b: b, h: h }),
       0.5 * b * h,
@@ -471,7 +527,7 @@
   }
 
   function genCirclePa() {
-    const r = choice([2, 3, 4, 5, 6, 7, 8, 10]);
+    const r = nextChoice("circR", [2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 9, 10, 12]);
     const ask = choice(["circumference", "area"]);
     if (ask === "circumference") {
       return _numeric(
@@ -782,9 +838,9 @@
 
   function genCompositeTriRectSemi() {
     // Matches textbook-style composites: △ + rectangle + semicircle (diameter = height).
-    const a = choice([3, 4, 5, 6]);
-    const b = choice([4, 5, 6, 7, 8]);
-    const r = choice([2, 3, 4, 5]);
+    const a = nextChoice("comboA", [3, 4, 5, 6, 7, 8]);
+    const b = nextChoice("comboB", [3, 4, 5, 6, 7, 8, 9, 10]);
+    const r = nextChoice("comboR", [2, 2.5, 3, 3.5, 4, 4.5, 5, 6]);
     const h = 2 * r;
     const hypot = Math.sqrt(a * a + h * h);
     const area = a * r + 2 * b * r + 0.5 * PI * r * r;
@@ -892,10 +948,10 @@
   }
 
   function genCompositeLShape() {
-    let W = choice([8, 10, 12, 14, 16]);
-    let H = choice([10, 12, 14, 16, 18]);
-    let cutW = choice([3, 4, 5, 6]);
-    let cutH = choice([4, 5, 6, 7]);
+    let W = nextChoice("lW", [8, 9, 10, 11, 12, 14, 15, 16, 18]);
+    let H = nextChoice("lH", [9, 10, 12, 13, 14, 15, 16, 18, 20]);
+    let cutW = nextChoice("lCutW", [2, 3, 4, 5, 6, 7]);
+    let cutH = nextChoice("lCutH", [3, 4, 5, 6, 7, 8]);
     while (cutW >= W || cutH >= H) {
       cutW = choice([3, 4, 5]);
       cutH = choice([4, 5, 6]);
@@ -946,10 +1002,10 @@
   }
 
   function genFence() {
-    const ft1 = randInt(8, 18);
-    const in1 = randInt(0, 11);
-    const ft2 = randInt(10, 22);
-    const in2 = randInt(0, 11);
+    const ft1 = nextInt("fenceFt1", 6, 24);
+    const in1 = nextInt("fenceIn1", 0, 11);
+    const ft2 = nextInt("fenceFt2", 8, 28);
+    const in2 = nextInt("fenceIn2", 0, 11);
     const L = _inches(ft1, in1);
     const W = _inches(ft2, in2);
     const peri = 2 * (L + W);
@@ -995,8 +1051,8 @@
   }
 
   function genSoupCan() {
-    const dNum = choice([2.5, 2.75, 3, 3.25, 3.5]);
-    const h = choice([4, 4.5, 5, 5.5, 6]);
+    const dNum = nextChoice("soupD", [2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.5]);
+    const h = nextChoice("soupH", [3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 8]);
     const r = dNum / 2;
     const vol = PI * r * r * h;
     return _numeric(
@@ -1015,8 +1071,8 @@
   }
 
   function genDriveway() {
-    const run = randInt(8, 20);
-    const rise = randInt(2, 6);
+    const run = nextInt("driveRun", 6, 30);
+    const rise = nextInt("driveRise", 1, 10);
     const slant = Math.sqrt(run * run + rise * rise);
     const ask = choice(["slope", "length"]);
 
@@ -1061,7 +1117,7 @@
   }
 
   function genTv() {
-    const diagonal = choice([50, 55, 60, 65, 70, 75]);
+    const diagonal = nextChoice("tvDiag", [42, 48, 50, 55, 60, 65, 70, 75, 77, 85]);
     const width = num(diagonal * (0.82 + Math.random() * 0.08), 1);
     const height = Math.sqrt(diagonal * diagonal - width * width);
     return _numeric(
@@ -1835,13 +1891,10 @@
     genFormulaVolume,
     genPythagoreanFormula,
     genFormulaFlashcard,
-    genFormulaFlashcard,
-    genFormulaFlashcard,
     genRectanglePa,
     genTriangleArea,
     genCirclePa,
     genCompositeLShape,
-    genCompositeTriRectSemi,
     genCompositeTriRectSemi,
     genFence,
     genSoupCan,
@@ -1874,18 +1927,63 @@
     return topicCache[gen];
   }
 
+  function fingerprint(q) {
+    const ans =
+      q.answer != null
+        ? String(q.answer)
+        : Array.isArray(q.answers)
+          ? q.answers.join("|")
+          : "";
+    return (q.topic || "") + "::" + (q.type || "") + "::" + ans;
+  }
+
+  function pickTopicForMix(forcedTopic) {
+    if (forcedTopic && forcedTopic !== "all") return forcedTopic;
+    const keys = Object.keys(buildTopics());
+    if (!keys.length) return null;
+    // Strongly avoid the last 2 topics so mix mode switches often.
+    const avoid = recentPick.topics.slice(0, 2);
+    return choiceAvoid(keys, avoid);
+  }
+
   function generateQuestion(topic) {
     if (topic === "flashcards") {
-      return genFormulaFlashcard();
+      const q = genFormulaFlashcard();
+      remember(recentPick.topics, q.topic);
+      remember(recentPick.fingerprints, fingerprint(q));
+      return q;
     }
-    if (topic && topic !== "all") {
-      let pool = GENERATORS.filter(function (g) {
-        return topicOf(g) === topic;
+
+    const targetTopic = pickTopicForMix(topic);
+    let pool = GENERATORS;
+    if (targetTopic) {
+      const filtered = GENERATORS.filter(function (g) {
+        return topicOf(g) === targetTopic;
       });
-      if (!pool.length) pool = GENERATORS;
-      return choice(pool)();
+      if (filtered.length) pool = filtered;
     }
-    return choice(GENERATORS)();
+
+    // Prefer generators we have not used recently.
+    const avoidGens = recentPick.gens.slice(0, 3);
+    let candidates = pool.filter(function (g) {
+      return avoidGens.indexOf(g) < 0;
+    });
+    if (!candidates.length) candidates = pool.slice();
+
+    let best = null;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const gen = choice(candidates);
+      const q = gen();
+      const fp = fingerprint(q);
+      if (recentPick.fingerprints.indexOf(fp) < 0 || attempt === 9) {
+        best = q;
+        remember(recentPick.gens, gen, 6);
+        remember(recentPick.topics, q.topic, 6);
+        remember(recentPick.fingerprints, fp, RECENT_KEEP);
+        break;
+      }
+    }
+    return best || choice(pool)();
   }
 
   function checkAnswer(question, userAnswer) {
@@ -1939,7 +2037,7 @@
 
   function publicQuestion(q) {
     // Three progressive hints — never include the final answer.
-    const hint1 = q.hint || "";
+    let hint1 = q.hint || "";
     const hint2 = q.setup || "";
     let calc = q.calc || null;
     if (!calc && hint2) calc = CALC_GENERIC();
@@ -1954,6 +2052,32 @@
       hint3casio = calc;
     }
     const hasCalc = Boolean(hint3ti || hint3casio);
+
+    // Topic overview prepended to Hint 1 when available (strategy without answer).
+    const overviewKey = "hint_overview." + (q.topic || "");
+    const overview =
+      window.QuizI18n && window.QuizI18n.has && window.QuizI18n.has(overviewKey)
+        ? t(overviewKey)
+        : t("hint_overview.generic");
+    if (hint1) {
+      hint1 = overview + "\n\n" + hint1;
+    } else if (overview) {
+      hint1 = overview;
+    }
+
+    // Extra clarification layer — walkthrough without the final numeric answer.
+    let clarify = q.clarify || "";
+    if (!clarify) {
+      const steps = [t("clarify_intro")];
+      steps.push(overview);
+      if (q.hint) steps.push(t("clarify_step_idea") + " " + q.hint);
+      if (hint2) {
+        steps.push(t("clarify_step_setup") + "\n" + hint2);
+      }
+      steps.push(t("clarify_step_finish"));
+      clarify = steps.join("\n\n");
+    }
+
     const out = {
       id: q.id,
       topic: q.topic,
@@ -1968,11 +2092,13 @@
       hint: hint1,
       setup: hint2,
       calc: calc,
+      clarify: clarify,
       has_hint1: Boolean(hint1),
       has_hint2: Boolean(hint2),
       has_hint3: hasCalc,
       has_hint: Boolean(hint1 || hint2 || hasCalc),
       has_setup: Boolean(hint2 || hasCalc),
+      has_clarify: Boolean(clarify),
       unit: q.unit || "",
     };
     if (q.type === "mc") {

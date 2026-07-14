@@ -53,6 +53,7 @@
           <button class="linkish" id="btn-hint2" type="button" hidden data-i18n="btn_hint2">Hint 2 · setup (−50%)</button>
           <button class="linkish" id="btn-hint3-ti" type="button" hidden data-i18n="btn_hint3_ti">TI-36X Pro (−75%)</button>
           <button class="linkish" id="btn-hint3-casio" type="button" hidden data-i18n="btn_hint3_casio">Casio (−75%)</button>
+          <button class="linkish" id="btn-clarify" type="button" hidden data-i18n="btn_clarify">Need more clarification?</button>
         </div>
       </div>
       <div id="q-figure" class="figure" hidden></div>
@@ -62,6 +63,7 @@
         <pre class="setup level2" id="q-hint2" hidden></pre>
         <pre class="calc level3" id="q-hint3-ti" hidden></pre>
         <pre class="calc level3" id="q-hint3-casio" hidden></pre>
+        <div class="clarify" id="q-clarify" hidden></div>
       </div>
       <div id="q-choices" class="choices" hidden></div>
       <form id="q-form" class="answer-form" hidden>
@@ -82,17 +84,58 @@
         <button class="primary" id="btn-check" type="submit" form="q-form" hidden data-i18n="btn_check">Check</button>
         <button class="ghost" id="btn-skip" type="button" data-i18n="btn_skip">Skip</button>
         <button class="primary" id="btn-next" type="button" hidden data-i18n="btn_next">Next question</button>
+        <button class="ghost" id="btn-calc-open" type="button" data-i18n="btn_calc_open">Calculator</button>
       </div>
       <div id="feedback" class="feedback" hidden></div>
+      <div class="scratch-pad">
+        <label for="notes-area" data-i18n="notes_label">Scratch notes</label>
+        <textarea id="notes-area" rows="4" spellcheck="false" data-i18n-placeholder="notes_placeholder" placeholder="Jot working here…"></textarea>
+      </div>
     </section>
 
     <aside class="panel mastery">
       <h2 data-i18n="mastery_heading">Mastery</h2>
       <p class="muted" data-i18n="mastery_blurb">Need 10 unaided corrects per topic. Hints never count.</p>
       <div id="mastery-pie" class="mastery-pie" aria-live="polite"></div>
-      <div id="mastery-bars"></div>
     </aside>
   </main>
+
+  <div id="calc-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-calc-close></div>
+    <div class="modal-card calc-card" role="dialog" aria-modal="true" aria-labelledby="calc-title">
+      <header class="modal-head">
+        <h2 id="calc-title" data-i18n="calc_title">Calculator</h2>
+        <button type="button" class="modal-close" id="btn-calc-close" aria-label="Close" data-i18n-aria="btn_calc_close_aria">×</button>
+      </header>
+      <div class="calc-app">
+        <input id="calc-display" class="calc-display" type="text" readonly inputmode="decimal" value="0" aria-live="polite" />
+        <div class="calc-keys" id="calc-keys">
+          <button type="button" data-calc="clear" class="calc-key fn">C</button>
+          <button type="button" data-calc="back" class="calc-key fn">⌫</button>
+          <button type="button" data-calc="sqrt" class="calc-key fn">√</button>
+          <button type="button" data-calc="op" data-op="/" class="calc-key op">÷</button>
+          <button type="button" data-calc="digit" data-digit="7" class="calc-key">7</button>
+          <button type="button" data-calc="digit" data-digit="8" class="calc-key">8</button>
+          <button type="button" data-calc="digit" data-digit="9" class="calc-key">9</button>
+          <button type="button" data-calc="op" data-op="*" class="calc-key op">×</button>
+          <button type="button" data-calc="digit" data-digit="4" class="calc-key">4</button>
+          <button type="button" data-calc="digit" data-digit="5" class="calc-key">5</button>
+          <button type="button" data-calc="digit" data-digit="6" class="calc-key">6</button>
+          <button type="button" data-calc="op" data-op="-" class="calc-key op">−</button>
+          <button type="button" data-calc="digit" data-digit="1" class="calc-key">1</button>
+          <button type="button" data-calc="digit" data-digit="2" class="calc-key">2</button>
+          <button type="button" data-calc="digit" data-digit="3" class="calc-key">3</button>
+          <button type="button" data-calc="op" data-op="+" class="calc-key op">+</button>
+          <button type="button" data-calc="sign" class="calc-key fn">±</button>
+          <button type="button" data-calc="digit" data-digit="0" class="calc-key">0</button>
+          <button type="button" data-calc="dot" class="calc-key">.</button>
+          <button type="button" data-calc="eq" class="calc-key eq">=</button>
+          <button type="button" data-calc="pi" class="calc-key fn">π</button>
+          <button type="button" data-calc="sq" class="calc-key fn">x²</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="lang/languages.js"></script>
   <script src="lang/en.js"></script>

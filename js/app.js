@@ -21,6 +21,9 @@
     retryPhase: false,
     lastExpected: "",
     hintsUsed: 0,
+    lastTopic: null,
+    clarifyShown: false,
+    clarifyAiShown: false,
   };
 
   const els = {
@@ -52,8 +55,16 @@
     accuracy: document.getElementById("stat-accuracy"),
     streak: document.getElementById("stat-streak"),
     total: document.getElementById("stat-total"),
-    mastery: document.getElementById("mastery-bars"),
+    mastery: null,
     masteryPie: document.getElementById("mastery-pie"),
+    clarifyBtn: document.getElementById("btn-clarify"),
+    clarifyPanel: document.getElementById("q-clarify"),
+    calcOpen: document.getElementById("btn-calc-open"),
+    calcModal: document.getElementById("calc-modal"),
+    calcClose: document.getElementById("btn-calc-close"),
+    calcDisplay: document.getElementById("calc-display"),
+    calcKeys: document.getElementById("calc-keys"),
+    notes: document.getElementById("notes-area"),
     lang: document.getElementById("lang-select"),
   };
 
@@ -154,13 +165,15 @@
     const overall = p.overall_mastery != null ? p.overall_mastery : 0;
 
     let slices = "";
-    let legend = "";
+    let rows = "";
     entries.forEach(([key, info], i) => {
       const color = PIE_COLORS[i % PIE_COLORS.length];
       const a0 = i * sweep + gap / 2;
       const a1 = (i + 1) * sweep - gap / 2;
       const frac = Math.max(0, Math.min(1, (info.mastery || 0) / 100));
-      // Unmastered remainder (outer ring portion) — ALEKS-style empty tip
+      const pct = Math.round(info.mastery || 0);
+      const barCls = info.mastered ? "full" : pct >= 50 ? "mid" : "low";
+
       slices +=
         '<path d="' +
         sectorPath(cx, cy, rHole, rOuter, a0, a1) +
@@ -183,12 +196,16 @@
           info.unaided_needed +
           "</title></path>";
       }
-      legend +=
-        '<li class="pie-legend-item" data-topic="' +
+
+      rows +=
+        '<li class="mastery-topic' +
+        (info.mastered ? " mastered" : "") +
+        '" data-topic="' +
         key +
         '" title="' +
         info.label +
         '">' +
+        '<div class="mastery-topic-head">' +
         '<i style="background:' +
         color +
         '"></i>' +
@@ -196,9 +213,22 @@
         (info.mastered ? "✓ " : "") +
         info.label +
         "</span>" +
-        '<em>' +
-        Math.round(info.mastery) +
-        "%</em></li>";
+        "<em>" +
+        info.unaided_correct +
+        "/" +
+        info.unaided_needed +
+        " · " +
+        pct +
+        "%</em>" +
+        "</div>" +
+        '<div class="bar ' +
+        barCls +
+        '"><i style="width:' +
+        pct +
+        "%;background:" +
+        color +
+        '"></i></div>' +
+        "</li>";
     });
 
     els.masteryPie.innerHTML =
@@ -240,11 +270,11 @@
       }) +
       "</p>" +
       "</div>" +
-      '<ul class="pie-legend">' +
-      legend +
+      '<ul class="mastery-topic-list">' +
+      rows +
       "</ul>";
 
-    els.masteryPie.querySelectorAll(".pie-legend-item").forEach((item) => {
+    els.masteryPie.querySelectorAll(".mastery-topic").forEach((item) => {
       item.addEventListener("click", () => {
         const key = item.getAttribute("data-topic");
         if (!key) return;
@@ -300,24 +330,7 @@
       });
     }
 
-    els.mastery.innerHTML = "";
     renderMasteryPie(p);
-    Object.entries(p.topics)
-      .sort((a, b) => a[1].mastery - b[1].mastery)
-      .forEach(([, info]) => {
-        const cls = info.mastered ? "" : info.mastery >= 50 ? "mid" : "low";
-        const row = document.createElement("div");
-        row.className = "mastery-row" + (info.mastered ? " mastered" : "");
-        row.innerHTML = `
-          <header>
-            <span>${info.mastered ? "✓ " : ""}${info.label}</span>
-            <span>${info.unaided_correct}/${info.unaided_needed} ${t("mastery_unaided")}</span>
-          </header>
-          <div class="bar ${cls}"><i style="width:${info.mastery}%"></i></div>
-        `;
-        els.mastery.appendChild(row);
-      });
-
     setModeButtons();
   }
 
@@ -362,6 +375,18 @@
     state.retryPhase = false;
     state.lastExpected = "";
     state.hintsUsed = 0;
+    state.clarifyShown = false;
+    state.clarifyAiShown = false;
+    if (els.clarifyBtn) {
+      els.clarifyBtn.hidden = true;
+      els.clarifyBtn.disabled = false;
+      els.clarifyBtn.textContent = t("btn_clarify");
+    }
+    if (els.clarifyPanel) {
+      els.clarifyPanel.hidden = true;
+      els.clarifyPanel.textContent = "";
+      els.clarifyPanel.className = "clarify";
+    }
     els.feedback.hidden = true;
     els.feedback.textContent = "";
     els.feedback.className = "feedback";
@@ -405,14 +430,19 @@
   function loadQuestion() {
     resetUI();
     let topic = null;
-    if (state.mode === "smart") topic = P.pickSmartTopic();
-    else if (state.mode === "all") topic = "all";
-    else topic = state.mode;
+    if (state.mode === "smart") {
+      topic = P.pickSmartTopic(state.lastTopic);
+    } else if (state.mode === "all") {
+      topic = "all";
+    } else {
+      topic = state.mode;
+    }
 
     const full = Q.generateQuestion(topic);
     const pub = Q.publicQuestion(full);
     state.fullQuestion = full;
     state.publicQ = pub;
+    if (full && full.topic) state.lastTopic = full.topic;
 
     els.topic.textContent =
       state.mode === "flashcards" ? t("mode_flashcards") : pub.topic_label;
@@ -428,6 +458,10 @@
       els.hint2Btn.hidden = false;
     } else if (pub.has_hint3) {
       showCalcButtons(false);
+    }
+    // Clarification is always available when we have any guidance.
+    if (els.clarifyBtn && pub.has_clarify) {
+      els.clarifyBtn.hidden = false;
     }
 
     if (pub.svg) {
@@ -454,6 +488,86 @@
     }
   }
 
+  function detectBrowserAI() {
+    const ua = navigator.userAgent || "";
+    const isEdge = /Edg\//.test(ua);
+    const isChrome = /Chrome\//.test(ua) && !/Edg\//.test(ua) && !/OPR\//.test(ua);
+    const isFirefox = /Firefox\//.test(ua);
+    const isSafari = /Safari\//.test(ua) && !/Chrome\//.test(ua);
+    if (isEdge) {
+      return {
+        key: "clarify_ai_edge",
+        name: "Copilot",
+        url: "https://copilot.microsoft.com/",
+      };
+    }
+    if (isChrome) {
+      return {
+        key: "clarify_ai_chrome",
+        name: "Gemini",
+        url: "https://gemini.google.com/",
+      };
+    }
+    if (isFirefox || isSafari) {
+      return {
+        key: "clarify_ai_other",
+        name: "Copilot or Gemini",
+        url: "https://copilot.microsoft.com/",
+      };
+    }
+    return {
+      key: "clarify_ai_other",
+      name: "Copilot or Gemini",
+      url: "https://gemini.google.com/",
+    };
+  }
+
+  function showClarify() {
+    if (!els.clarifyPanel || !state.publicQ) return;
+    const promptText = state.publicQ.prompt || "";
+
+    if (!state.clarifyShown) {
+      state.clarifyShown = true;
+      els.clarifyPanel.hidden = false;
+      els.clarifyPanel.className = "clarify";
+      els.clarifyPanel.textContent = state.publicQ.clarify || t("clarify_fallback");
+      els.clarifyBtn.textContent = t("btn_clarify_more");
+      // Opening clarification counts as using at least Hint 1 help.
+      if (!state.answered) {
+        state.hintsUsed = Math.max(state.hintsUsed, 1);
+      }
+      return;
+    }
+
+    // Second request — we don't have deeper automated help; route to browser AI.
+    const ai = detectBrowserAI();
+    state.clarifyAiShown = true;
+    els.clarifyPanel.hidden = false;
+    els.clarifyPanel.className = "clarify ai";
+    const msg = t(ai.key, { name: ai.name, url: ai.url });
+    els.clarifyPanel.innerHTML =
+      msg +
+      '\n\n<a class="clarify-link" href="' +
+      ai.url +
+      '" target="_blank" rel="noopener noreferrer">' +
+      t("clarify_ai_open", { name: ai.name }) +
+      "</a>" +
+      '\n\n<details class="clarify-prompt"><summary>' +
+      t("clarify_ai_copy_label") +
+      "</summary><pre>" +
+      escapeHtml(t("clarify_ai_prompt_template", { prompt: promptText })) +
+      "</pre></details>";
+    els.clarifyBtn.textContent = t("btn_clarify_ai_done");
+    els.clarifyBtn.disabled = true;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
   function showHintsAfterMiss() {
     if (els.hint1.textContent) els.hint1.hidden = false;
     if (els.hint2.textContent) els.hint2.hidden = false;
@@ -463,6 +577,9 @@
     els.hint1Btn.hidden = true;
     els.hint2Btn.hidden = true;
     showCalcButtons(true);
+    if (els.clarifyBtn && state.publicQ?.has_clarify) {
+      els.clarifyBtn.hidden = false;
+    }
   }
 
   function lockInputs() {
@@ -684,6 +801,7 @@
     els.hint1Btn.disabled = true;
     if (state.publicQ?.has_hint2) els.hint2Btn.hidden = false;
     else if (state.publicQ?.has_hint3) showCalcButtons(false);
+    if (els.clarifyBtn && state.publicQ?.has_clarify) els.clarifyBtn.hidden = false;
   });
 
   els.hint2Btn.addEventListener("click", () => {
@@ -693,7 +811,14 @@
     els.hint2Btn.textContent = t("btn_hint2_used");
     els.hint2Btn.disabled = true;
     if (state.publicQ?.has_hint3) showCalcButtons(false);
+    if (els.clarifyBtn && state.publicQ?.has_clarify) els.clarifyBtn.hidden = false;
   });
+
+  if (els.clarifyBtn) {
+    els.clarifyBtn.addEventListener("click", () => {
+      showClarify();
+    });
+  }
 
   function openCalcPanel(kind) {
     const panel = kind === "ti" ? els.hint3ti : els.hint3casio;
@@ -808,6 +933,189 @@
       els.topicList.innerHTML = "";
       refreshProgress();
       loadQuestion();
+    });
+  }
+
+  // --- Scratch notes (persisted) --------------------------------------------
+  const NOTES_KEY = "mat107-assessment1-notes";
+  if (els.notes) {
+    try {
+      els.notes.value = localStorage.getItem(NOTES_KEY) || "";
+    } catch (e) {
+      /* ignore */
+    }
+    els.notes.addEventListener("input", () => {
+      try {
+        localStorage.setItem(NOTES_KEY, els.notes.value);
+      } catch (e) {
+        /* ignore */
+      }
+    });
+  }
+
+  // --- Standard calculator modal -------------------------------------------
+  const calcState = {
+    display: "0",
+    left: null,
+    op: null,
+    fresh: true,
+  };
+
+  function calcRender() {
+    if (els.calcDisplay) els.calcDisplay.value = calcState.display;
+  }
+
+  function calcReset() {
+    calcState.display = "0";
+    calcState.left = null;
+    calcState.op = null;
+    calcState.fresh = true;
+    calcRender();
+  }
+
+  function calcApplyOp(a, b, op) {
+    if (op === "+") return a + b;
+    if (op === "-") return a - b;
+    if (op === "*") return a * b;
+    if (op === "/") return b === 0 ? NaN : a / b;
+    return b;
+  }
+
+  function calcFormat(n) {
+    if (!isFinite(n)) return "Error";
+    const rounded = Math.round(n * 1e10) / 1e10;
+    let s = String(rounded);
+    if (s.indexOf("e") >= 0) s = rounded.toPrecision(10);
+    if (s.length > 14) s = String(Number(rounded.toPrecision(12)));
+    return s;
+  }
+
+  function calcInputDigit(d) {
+    if (calcState.display === "Error") calcReset();
+    if (calcState.fresh || calcState.display === "0") {
+      calcState.display = d;
+      calcState.fresh = false;
+    } else if (calcState.display.length < 16) {
+      calcState.display += d;
+    }
+    calcRender();
+  }
+
+  function calcInputDot() {
+    if (calcState.display === "Error") calcReset();
+    if (calcState.fresh) {
+      calcState.display = "0.";
+      calcState.fresh = false;
+    } else if (calcState.display.indexOf(".") < 0) {
+      calcState.display += ".";
+    }
+    calcRender();
+  }
+
+  function calcSetOp(op) {
+    if (calcState.display === "Error") return;
+    const cur = parseFloat(calcState.display);
+    if (calcState.left != null && calcState.op && !calcState.fresh) {
+      const result = calcApplyOp(calcState.left, cur, calcState.op);
+      calcState.display = calcFormat(result);
+      calcState.left = isFinite(result) ? result : null;
+    } else {
+      calcState.left = cur;
+    }
+    calcState.op = op;
+    calcState.fresh = true;
+    calcRender();
+  }
+
+  function calcEquals() {
+    if (calcState.display === "Error") return;
+    if (calcState.left == null || !calcState.op) return;
+    const cur = parseFloat(calcState.display);
+    const result = calcApplyOp(calcState.left, cur, calcState.op);
+    calcState.display = calcFormat(result);
+    calcState.left = null;
+    calcState.op = null;
+    calcState.fresh = true;
+    calcRender();
+  }
+
+  function openCalcModal() {
+    if (!els.calcModal) return;
+    els.calcModal.hidden = false;
+    document.body.style.overflow = "hidden";
+    calcRender();
+  }
+
+  function closeCalcModal() {
+    if (!els.calcModal) return;
+    els.calcModal.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  if (els.calcOpen) {
+    els.calcOpen.addEventListener("click", openCalcModal);
+  }
+  if (els.calcClose) {
+    els.calcClose.addEventListener("click", closeCalcModal);
+  }
+  if (els.calcModal) {
+    els.calcModal.querySelectorAll("[data-calc-close]").forEach((el) => {
+      el.addEventListener("click", closeCalcModal);
+    });
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && els.calcModal && !els.calcModal.hidden) {
+      closeCalcModal();
+    }
+  });
+
+  if (els.calcKeys) {
+    els.calcKeys.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-calc]");
+      if (!btn) return;
+      const action = btn.getAttribute("data-calc");
+      if (action === "digit") calcInputDigit(btn.getAttribute("data-digit"));
+      else if (action === "dot") calcInputDot();
+      else if (action === "clear") calcReset();
+      else if (action === "back") {
+        if (calcState.fresh || calcState.display === "Error") {
+          calcReset();
+        } else if (calcState.display.length <= 1) {
+          calcState.display = "0";
+          calcState.fresh = true;
+          calcRender();
+        } else {
+          calcState.display = calcState.display.slice(0, -1);
+          calcRender();
+        }
+      } else if (action === "op") calcSetOp(btn.getAttribute("data-op"));
+      else if (action === "eq") calcEquals();
+      else if (action === "pi") {
+        calcState.display = "3.14";
+        calcState.fresh = true;
+        calcRender();
+      } else if (action === "sign") {
+        if (calcState.display === "0" || calcState.display === "Error") return;
+        calcState.display =
+          calcState.display.charAt(0) === "-"
+            ? calcState.display.slice(1)
+            : "-" + calcState.display;
+        calcRender();
+      } else if (action === "sq") {
+        const n = parseFloat(calcState.display);
+        calcState.display = calcFormat(n * n);
+        calcState.fresh = true;
+        calcState.left = null;
+        calcState.op = null;
+        calcRender();
+      } else if (action === "sqrt") {
+        const n = parseFloat(calcState.display);
+        calcState.display = n < 0 ? "Error" : calcFormat(Math.sqrt(n));
+        calcState.fresh = true;
+        calcState.left = null;
+        calcState.op = null;
+        calcRender();
+      }
     });
   }
 

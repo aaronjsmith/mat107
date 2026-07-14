@@ -94,6 +94,15 @@
     document.querySelectorAll("[data-i18n-html]").forEach(function (el) {
       el.innerHTML = t(el.getAttribute("data-i18n-html"));
     });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+      el.setAttribute(
+        "placeholder",
+        t(el.getAttribute("data-i18n-placeholder"))
+      );
+    });
+    document.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
+      el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria")));
+    });
     const titleKey = document.documentElement.getAttribute("data-i18n-title");
     if (titleKey) document.title = t(titleKey);
   }

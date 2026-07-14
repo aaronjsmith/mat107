@@ -114,15 +114,18 @@
     };
   }
 
-  function pickSmartTopic() {
+  function pickSmartTopic(avoidTopic) {
     const p = load();
     const keys = Object.keys(Q.TOPICS);
     const weights = keys.map((t) => {
       const info = p.topics[t] || { unaided_correct: 0, attempted: 0 };
       const remaining = Math.max(UNAIDED - (info.unaided_correct || 0), 0);
-      let w = remaining * 12 + (info.attempted < 3 ? 15 : 0);
-      if (remaining === 0) w = 3;
-      return Math.max(w, 3);
+      // Prioritize gaps, but keep rotation lively with jitter.
+      let w = remaining * 8 + (info.attempted < 3 ? 12 : 0) + Math.random() * 6;
+      if (remaining === 0) w = 2 + Math.random() * 2;
+      // Strongly prefer switching away from the topic just practiced.
+      if (avoidTopic && t === avoidTopic) w *= 0.08;
+      return Math.max(w, 0.5);
     });
     const total = weights.reduce((a, b) => a + b, 0);
     let r = Math.random() * total;
