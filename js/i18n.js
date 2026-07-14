@@ -21,7 +21,9 @@
       getLang: function () {
         return "en";
       },
-      setLang: function () {},
+      setLang: function () {
+        return Promise.resolve();
+      },
       languages: function () {
         return [{ code: "en", name: "English", native: "English" }];
       },
@@ -36,6 +38,7 @@
   const listeners = [];
   const defaultLang = meta.default || "en";
   let lang = defaultLang;
+  let langRequestId = 0;
 
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -91,12 +94,30 @@
   function loadPack(code) {
     if (packFor(code)) return Promise.resolve(packFor(code));
     return new Promise(function (resolve, reject) {
-      const existing = document.querySelector('script[data-lang-pack="' + code + '"]');
+      const existing = document.querySelector(
+        'script[data-lang-pack="' + code + '"]'
+      );
       if (existing) {
-        existing.addEventListener("load", function () {
+        // Already loaded successfully.
+        if (packFor(code)) {
           resolve(packFor(code));
+          return;
+        }
+        // Previous failed attempt — don't hang on a completed script's "load".
+        if (existing.getAttribute("data-lang-status") === "error") {
+          reject(new Error("Language pack failed: " + code));
+          return;
+        }
+        existing.addEventListener("load", function onLoad() {
+          existing.removeEventListener("load", onLoad);
+          if (packFor(code)) resolve(packFor(code));
+          else reject(new Error("Language pack empty: " + code));
         });
-        existing.addEventListener("error", reject);
+        existing.addEventListener("error", function onErr() {
+          existing.removeEventListener("error", onErr);
+          existing.setAttribute("data-lang-status", "error");
+          reject(new Error("Failed to load lang/" + code + ".js"));
+        });
         return;
       }
       const s = document.createElement("script");
@@ -104,10 +125,16 @@
       s.async = true;
       s.setAttribute("data-lang-pack", code);
       s.onload = function () {
-        if (packFor(code)) resolve(packFor(code));
-        else reject(new Error("Language pack empty: " + code));
+        if (packFor(code)) {
+          s.setAttribute("data-lang-status", "ok");
+          resolve(packFor(code));
+        } else {
+          s.setAttribute("data-lang-status", "error");
+          reject(new Error("Language pack empty: " + code));
+        }
       };
       s.onerror = function () {
+        s.setAttribute("data-lang-status", "error");
         reject(new Error("Failed to load lang/" + code + ".js"));
       };
       document.head.appendChild(s);
@@ -128,8 +155,9 @@
     if (!meta.languages.some(function (L) {
       return L.code === code;
     })) {
-      return Promise.resolve();
+      return Promise.resolve(lang);
     }
+    const requestId = ++langRequestId;
     return loadPack(code)
       .catch(function () {
         return loadPack(defaultLang).then(function () {
@@ -137,6 +165,8 @@
         });
       })
       .then(function () {
+        // Ignore stale responses from rapid language switching.
+        if (requestId !== langRequestId) return lang;
         lang = code;
         try {
           localStorage.setItem(STORAGE_KEY, lang);
@@ -145,6 +175,7 @@
         }
         applyStatic();
         notify();
+        return lang;
       });
   }
 

@@ -152,6 +152,7 @@
     els.figure.innerHTML = "";
     els.input.value = "";
     els.input.placeholder = "";
+    els.input.disabled = false;
     if (els.mathInsert) {
       els.mathInsert.querySelectorAll("button").forEach((btn) => {
         btn.disabled = false;
@@ -215,6 +216,7 @@
     state.answered = true;
     els.skip.hidden = true;
     els.check.hidden = true;
+    els.input.disabled = true;
     hideHintControls();
     if (els.mathInsert) {
       els.mathInsert.querySelectorAll("button").forEach((btn) => {
@@ -229,12 +231,18 @@
       els.feedback.className = "feedback ok";
       const creditPct = Math.round(result.credit * 100);
       const progress = `${result.unaided_correct}/${result.unaided_needed}`;
+      let note = "";
+      if (result.hints_used) {
+        note = t("feedback_note_hinted", { credit: creditPct }) + " ";
+      } else {
+        note = t("feedback_note_unaided", { progress: progress }) + " ";
+      }
       els.feedback.textContent = t("feedback_correct", {
         credit: creditPct,
-        note: result.note || "",
+        note: note,
         streak: result.streak,
         progress: progress,
-        mastered: result.mastered ? t("feedback_mastered") : "",
+        mastered: result.just_mastered ? t("feedback_mastered") : "",
       });
     } else {
       els.feedback.className = "feedback no";
@@ -417,7 +425,12 @@
   if (I18n && els.lang) {
     I18n.fillSelect(els.lang);
     els.lang.addEventListener("change", () => {
-      I18n.setLang(els.lang.value);
+      const wanted = els.lang.value;
+      I18n.setLang(wanted).then((active) => {
+        if (active && els.lang.value !== active) {
+          els.lang.value = active;
+        }
+      });
     });
     I18n.onChange(() => {
       els.topicList.innerHTML = "";

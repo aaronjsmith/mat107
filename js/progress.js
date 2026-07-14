@@ -168,27 +168,20 @@
     save(p);
 
     const notes = [];
-    if (ok && hintsUsed) {
-      notes.push(
-        `Hints used → ${Math.round(credit * 100)}% credit (not counted toward mastery)`
-      );
-    } else if (ok) {
-      notes.push(`Unaided · mastery progress ${Math.min(unaided, UNAIDED)}/${UNAIDED}`);
-      if (mastered && unaided === UNAIDED) notes.push("Topic mastered!");
-    }
-
+    // Notes are assembled with i18n in the UI (app.js).
     return {
       correct: ok,
       expected: expected,
       credit: credit,
       hints_used: hintsUsed,
-      hint: question.hint || question.setup || "",
+      hint: question.hint || "",
       streak: p.streak,
       unaided_correct: unaided,
       unaided_needed: UNAIDED,
       topic_mastery: topicMastery(unaided),
       mastered: mastered,
-      note: notes.join(" · "),
+      just_mastered: Boolean(ok && hintsUsed === 0 && mastered && unaided === UNAIDED),
+      note: "",
     };
   }
 

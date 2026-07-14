@@ -194,6 +194,27 @@
     return t;
   }
 
+  /** Strict numeric parse: locale decimals, simple a/b, reject trailing junk. */
+  function parseNumericInput(raw) {
+    let s = String(raw == null ? "" : raw)
+      .trim()
+      .replace(/\$/g, "")
+      .replace(/\s/g, "")
+      .replace(/½/g, "0.5");
+    if (!s) return NaN;
+    // European decimal comma (3,14) vs thousands (1,234)
+    if (/^-?\d+,\d+$/.test(s)) s = s.replace(",", ".");
+    else s = s.replace(/,/g, "");
+    const frac = s.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
+    if (frac) {
+      const den = Number(frac[2]);
+      if (!den) return NaN;
+      return Number(frac[1]) / den;
+    }
+    if (!/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(s)) return NaN;
+    return Number(s);
+  }
+
   function getFormulaCards() {
     return [
       { front: t("card.sq_p.front"), back: "P = 4s", answers: ["4s", "4*s", "s+s+s+s"], hint: t("card.sq_p.hint") },
@@ -223,10 +244,9 @@
         answer: card.back,
         answers: (card.answers.concat([card.back])).map(_normFormula),
         hint: card.hint,
-        setup:
-          "Target form: " +
-          card.back.split("=")[0].trim() +
-          " = …  (fill the right-hand side from memory)",
+        setup: t("flash.target_form", {
+          left: card.back.split("=")[0].trim(),
+        }),
         back: card.back,
         unit: "",
       };
@@ -564,7 +584,7 @@
           "( " + W + " × " + H + " ) − ( " + cutW + " × " + cutH + " ) =",
           "( " + W + " × " + H + " ) − ( " + cutW + " × " + cutH + " ) ="
         ),
-        unit: "sq units",
+        unit: t("unit.sq_units"),
         svg: _lShapeSvg(W, H, cutW, cutH),
       };
     }
@@ -581,7 +601,7 @@
         "2 × ( " + W + " + " + H + " ) =",
         "2 × ( " + W + " + " + H + " ) ="
       ),
-      unit: "units",
+      unit: t("unit.units"),
       svg: _lShapeSvg(W, H, cutW, cutH),
     };
   }
@@ -1419,15 +1439,8 @@
     }
 
     if (qtype === "numeric") {
-      let val;
-      try {
-        val = parseFloat(
-          String(userAnswer).replace(/,/g, "").replace(/\$/g, "").trim()
-        );
-        if (isNaN(val)) return [false, String(question.answer)];
-      } catch (e) {
-        return [false, String(question.answer)];
-      }
+      const val = parseNumericInput(userAnswer);
+      if (isNaN(val)) return [false, String(question.answer)];
       const ok =
         Math.abs(val - Number(question.answer)) <=
         Number(question.tolerance !== undefined ? question.tolerance : 0.05);
@@ -1439,15 +1452,21 @@
         qtype === "flashcard"
           ? _normFormula(userAnswer)
           : String(userAnswer).toLowerCase().trim().replace(/ /g, "");
+      if (!raw) {
+        const display = question.answer || (question.answers && question.answers[0]) || "";
+        return [false, String(display)];
+      }
       const answers =
         question.answers ||
-        (question.answer !== undefined ? [String(question.answer)] : [""]);
+        (question.answer !== undefined ? [String(question.answer)] : []);
       for (let i = 0; i < answers.length; i++) {
         const target =
           qtype === "flashcard"
             ? _normFormula(answers[i])
-            : String(answers[i]).replace(/ /g, "");
-        if (raw === target || raw.indexOf(target) !== -1 || target.indexOf(raw) !== -1) {
+            : String(answers[i]).toLowerCase().replace(/ /g, "");
+        if (!target) continue;
+        // Exact match only — substring matches made empty/"s"/"a" count as correct.
+        if (raw === target) {
           const display = question.answer || question.answers[0];
           return [true, String(display)];
         }
