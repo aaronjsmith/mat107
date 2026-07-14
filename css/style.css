@@ -748,8 +748,6 @@ html[dir="rtl"] .lang-wrap {
   padding: 0;
   display: grid;
   gap: 0.55rem;
-  max-height: min(52vh, 28rem);
-  overflow: auto;
 }
 
 .mastery-topic {
