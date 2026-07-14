@@ -10,7 +10,7 @@
     "stat_streak": "힌트 없이 연속 정답",
     "stat_answered": "응답 수",
     "topics_heading": "주제",
-    "topics_blurb": "숙달 = 주제당 <strong>힌트 없이 10문제 정답</strong>. 힌트는 답을 주지 않고 방법만 안내합니다. 정답 시 감점: 힌트1 −25%, 힌트2 −50%, 힌트3 −75%.",
+    "topics_blurb": "Mastery = <strong>10 correct with no hints</strong> per topic. Using a hint (or skipping after a hint) <strong>lowers mastery by 1</strong>. Hints never reveal the answer — only how to work. Grade credit if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%. After a miss you can still enter the right answer once for <strong>5%</strong> credit (not mastery).",
     "mode_all": "모든 주제",
     "mode_smart": "스마트 선택",
     "mode_flashcards": "공식 플래시카드",
@@ -27,7 +27,7 @@
     "btn_next": "다음 문제",
     "btn_skip": "건너뛰기",
     "mastery_heading": "숙달",
-    "mastery_blurb": "주제당 힌트 없이 10회 정답이 필요합니다. 힌트는 인정되지 않습니다.",
+    "mastery_blurb": "Need 10 unaided corrects per topic. Each hinted attempt (or skip after a hint) lowers mastery by 1. 5% retries never add mastery.",
     "mastery_unaided": "힌트 없이",
     "reset_confirm": "이 브라우저에 저장된 모든 진행을 초기화할까요?",
     "load_fail": "스크립트를 불러오지 못했습니다. 프로젝트 폴더에서 index.html을 여세요.",
@@ -256,7 +256,7 @@
     "c.skew_wrong_a": "평균, 중앙값, 모드는 모양에 관계없이 항상 동일합니다.",
     "c.skew_wrong_b": "모드는 항상 범위와 같습니다.",
     "c.skew_wrong_c": "왜도는 표준편차에만 영향을 미치며 중심 측도에는 영향을 미치지 않습니다.",
-    "feedback_note_hinted": "Hints used → {credit}% credit (not counted toward mastery).",
+    "feedback_note_hinted": "Hints used → {credit}% credit; mastery −1 ({progress}).",
     "feedback_note_unaided": "Unaided · mastery progress {progress}.",
     "flash.target_form": "Target form: {left} = …  (fill the right-hand side from memory)",
     "btn_hint3_ti": "TI-36X Pro (−75%)",
@@ -363,6 +363,9 @@
     "flash.recall.v2": "Write the formula for:\n{front}",
     "flash.recall.v3": "Recall mode — formula please:\n{front}",
     "flash.recognize.v2": "Which formula matches:\n{front}?",
-    "flash.recognize.v3": "Pick the correct formula for:\n{front}"
+    "flash.recognize.v3": "Pick the correct formula for:\n{front}",
+    "mastery_overall": "Overall",
+    "mastery_overall_aria": "Overall mastery pie chart, {pct}% complete",
+    "mastery_pie_summary": "{mastered} of {total} topics mastered"
   }
 }

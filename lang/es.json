@@ -107,7 +107,7 @@
     "card.tri_p.hint": "Agrega los tres lados.",
     "feedback_correct": "Correcto · {credit}% de crédito. {note}Racha sin pistas: {streak}. Dominio: {progress}{mastered}",
     "feedback_mastered": " — ¡dominado!",
-    "feedback_note_hinted": "Sugerencias utilizadas → {credit}% de crédito (no cuentan para el dominio).",
+    "feedback_note_hinted": "Hints used → {credit}% credit; mastery −1 ({progress}).",
     "feedback_note_unaided": "Sin ayuda · progreso de dominio {progress}.",
     "feedback_retry_fail": "Todavía no del todo. Esperado: {expected}",
     "feedback_retry_ok": "Correcto al reintentar · 5% de crédito. (No se cuenta para el dominio).",
@@ -179,7 +179,7 @@
     "load_fail": "No se pudieron cargar los scripts. Abre index.html desde la carpeta del proyecto.",
     "load_ok": "Progreso cargado desde el archivo.",
     "loading": "Cargando…",
-    "mastery_blurb": "Necesita 10 correcciones sin ayuda por tema. Las sugerencias y el 5 % de reintentos nunca cuentan.",
+    "mastery_blurb": "Need 10 unaided corrects per topic. Each hinted attempt (or skip after a hint) lowers mastery by 1. 5% retries never add mastery.",
     "mastery_heading": "Dominio",
     "mastery_unaided": "sin pistas",
     "mode_all": "Todos los temas",
@@ -354,7 +354,7 @@
     "topic.stats_spread": "Desviación estándar y variación",
     "topic.volume": "Volumen",
     "topic.z_scores": "Puntuaciones z y percentiles",
-    "topics_blurb": "Dominio = <strong>10 correcto sin sugerencias</strong> por tema. Las sugerencias nunca revelan la respuesta, sólo cómo trabajar. Penalización si es correcto: Pista 1 −25%, Pista 2 −50%, Pista 3 −75%. Después de fallar, aún puedes ingresar la respuesta correcta una vez para obtener crédito <strong>5%</strong> (no dominio).",
+    "topics_blurb": "Mastery = <strong>10 correct with no hints</strong> per topic. Using a hint (or skipping after a hint) <strong>lowers mastery by 1</strong>. Hints never reveal the answer — only how to work. Grade credit if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%. After a miss you can still enter the right answer once for <strong>5%</strong> credit (not mastery).",
     "topics_heading": "Temas",
     "unit.cu_in": "pulgadas cúbicas",
     "unit.dollars": "dólares",
@@ -363,6 +363,9 @@
     "unit.sq_ft": "pie²",
     "unit.sq_units": "unidades cuadradas",
     "unit.units": "unidades",
-    "your_answer": "Tu respuesta"
+    "your_answer": "Tu respuesta",
+    "mastery_overall": "General",
+    "mastery_overall_aria": "Gráfico circular de dominio general, {pct}% completo",
+    "mastery_pie_summary": "{mastered} de {total} temas dominados"
   }
 }

@@ -107,7 +107,7 @@
     "card.tri_p.hint": "Adicione os três lados.",
     "feedback_correct": "Correto · {credit}% de crédito. {note}Sequência sem dicas: {streak}. Domínio: {progress}{mastered}",
     "feedback_mastered": " — dominado!",
-    "feedback_note_hinted": "Dicas usadas → Crédito {credit}% (não contado para maestria).",
+    "feedback_note_hinted": "Hints used → {credit}% credit; mastery −1 ({progress}).",
     "feedback_note_unaided": "Sem ajuda · progresso de domínio {progress}.",
     "feedback_retry_fail": "Ainda não é bem assim. Esperado: {expected}",
     "feedback_retry_ok": "Corrija na nova tentativa · 5% de crédito. (Não contado para maestria.)",
@@ -179,7 +179,7 @@
     "load_fail": "Falha ao carregar os scripts. Abra index.html na pasta do projeto.",
     "load_ok": "Progresso carregado do arquivo.",
     "loading": "Carregando…",
-    "mastery_blurb": "Precisa de 10 correções sem ajuda por tópico. Dicas e tentativas de 5% nunca contam.",
+    "mastery_blurb": "Need 10 unaided corrects per topic. Each hinted attempt (or skip after a hint) lowers mastery by 1. 5% retries never add mastery.",
     "mastery_heading": "Domínio",
     "mastery_unaided": "sem dicas",
     "mode_all": "Todos os tópicos",
@@ -354,7 +354,7 @@
     "topic.stats_spread": "Desvio padrão e variação",
     "topic.volume": "Volume",
     "topic.z_scores": "Escores z e percentis",
-    "topics_blurb": "Domínio = <strong>10 correto sem dicas</strong> por tópico. As dicas nunca revelam a resposta – apenas como trabalhar. Penalidade se correto: Dica 1 −25%, Dica 2 −50%, Dica 3 −75%. Depois de errar, você ainda pode inserir a resposta certa uma vez para obter crédito <strong>5% </strong> (não domínio).",
+    "topics_blurb": "Mastery = <strong>10 correct with no hints</strong> per topic. Using a hint (or skipping after a hint) <strong>lowers mastery by 1</strong>. Hints never reveal the answer — only how to work. Grade credit if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%. After a miss you can still enter the right answer once for <strong>5%</strong> credit (not mastery).",
     "topics_heading": "Tópicos",
     "unit.cu_in": "polegadas cúbicas",
     "unit.dollars": "dólares",
@@ -363,6 +363,9 @@
     "unit.sq_ft": "pés quadrados",
     "unit.sq_units": "unidades quadradas",
     "unit.units": "unidades",
-    "your_answer": "Sua resposta"
+    "your_answer": "Sua resposta",
+    "mastery_overall": "Geral",
+    "mastery_overall_aria": "Gráfico de pizza de domínio geral, {pct}% completo",
+    "mastery_pie_summary": "{mastered} de {total} tópicos dominados"
   }
 }

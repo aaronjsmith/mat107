@@ -107,7 +107,7 @@
     "card.tri_p.hint": "Ajoutez les trois côtés.",
     "feedback_correct": "Correct · {credit} % de crédit. {note}Série sans indices : {streak}. Maîtrise : {progress}{mastered}",
     "feedback_mastered": " — maîtrisé !",
-    "feedback_note_hinted": "Astuces utilisées → Crédit {credit}% (non pris en compte pour la maîtrise).",
+    "feedback_note_hinted": "Hints used → {credit}% credit; mastery −1 ({progress}).",
     "feedback_note_unaided": "Sans aide · progression de la maîtrise {progress}.",
     "feedback_retry_fail": "Pas encore tout à fait. Attendu : {expected}",
     "feedback_retry_ok": "Corriger lors d'une nouvelle tentative · Crédit de 5 %. (Ne compte pas pour la maîtrise.)",
@@ -179,7 +179,7 @@
     "load_fail": "Échec du chargement des scripts. Ouvrez index.html depuis le dossier du projet.",
     "load_ok": "Progression chargée à partir du fichier.",
     "loading": "Chargement…",
-    "mastery_blurb": "Besoin de 10 corrections spontanées par sujet. Les indices et 5 % de tentatives ne comptent jamais.",
+    "mastery_blurb": "Need 10 unaided corrects per topic. Each hinted attempt (or skip after a hint) lowers mastery by 1. 5% retries never add mastery.",
     "mastery_heading": "Maîtrise",
     "mastery_unaided": "sans indices",
     "mode_all": "Tous les sujets",
@@ -354,7 +354,7 @@
     "topic.stats_spread": "Écart type et variation",
     "topic.volume": "Volume",
     "topic.z_scores": "Scores z et percentiles",
-    "topics_blurb": "Maîtrise = <strong>10 correct sans indice</strong> par sujet. Les indices ne révèlent jamais la réponse, mais seulement comment travailler. Pénalité si c'est correct : indice 1 −25 %, indice 2 −50 %, indice 3 −75 %. Après un échec, vous pouvez toujours saisir la bonne réponse une fois pour obtenir un crédit <strong>5%</strong> (pas de maîtrise).",
+    "topics_blurb": "Mastery = <strong>10 correct with no hints</strong> per topic. Using a hint (or skipping after a hint) <strong>lowers mastery by 1</strong>. Hints never reveal the answer — only how to work. Grade credit if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%. After a miss you can still enter the right answer once for <strong>5%</strong> credit (not mastery).",
     "topics_heading": "Sujets",
     "unit.cu_in": "pouces cubes",
     "unit.dollars": "dollars",
@@ -363,6 +363,9 @@
     "unit.sq_ft": "pieds carrés",
     "unit.sq_units": "unités carrées",
     "unit.units": "unités",
-    "your_answer": "Votre réponse"
+    "your_answer": "Votre réponse",
+    "mastery_overall": "Global",
+    "mastery_overall_aria": "Graphique en secteurs de maîtrise globale, {pct}% terminé",
+    "mastery_pie_summary": "{mastered} sujets maîtrisés sur {total}"
   }
 }

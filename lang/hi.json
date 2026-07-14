@@ -10,7 +10,7 @@
     "stat_streak": "बिना संकेत की लकीर",
     "stat_answered": "उत्तर दिए",
     "topics_heading": "विषय",
-    "topics_blurb": "निपुणता = प्रति विषय <strong>10 सही बिना संकेत</strong>। संकेत उत्तर नहीं बताते। सही पर कटौती: संकेत 1 −25%, संकेत 2 −50%, संकेत 3 −75%।",
+    "topics_blurb": "Mastery = <strong>10 correct with no hints</strong> per topic. Using a hint (or skipping after a hint) <strong>lowers mastery by 1</strong>. Hints never reveal the answer — only how to work. Grade credit if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%. After a miss you can still enter the right answer once for <strong>5%</strong> credit (not mastery).",
     "mode_all": "सभी विषय",
     "mode_smart": "स्मार्ट चयन",
     "mode_flashcards": "सूत्र फ्लैशकार्ड",
@@ -27,7 +27,7 @@
     "btn_next": "अगला प्रश्न",
     "btn_skip": "छोड़ें",
     "mastery_heading": "निपुणता",
-    "mastery_blurb": "प्रति विषय 10 बिना संकेत सही चाहिए। संकेत नहीं गिने जाते।",
+    "mastery_blurb": "Need 10 unaided corrects per topic. Each hinted attempt (or skip after a hint) lowers mastery by 1. 5% retries never add mastery.",
     "mastery_unaided": "बिना संकेत",
     "reset_confirm": "इस ब्राउज़र की सारी प्रगति रीसेट करें?",
     "load_fail": "स्क्रिप्ट लोड नहीं हुई। प्रोजेक्ट फ़ोल्डर से index.html खोलें।",
@@ -256,7 +256,7 @@
     "c.skew_wrong_a": "माध्य, माध्यिका और बहुलक हमेशा समान होते हैं चाहे आकार कोई भी हो",
     "c.skew_wrong_b": "मोड हमेशा रेंज के बराबर होता है",
     "c.skew_wrong_c": "तिरछापन केवल मानक विचलन को प्रभावित करता है, केंद्र माप को कभी नहीं",
-    "feedback_note_hinted": "Hints used → {credit}% credit (not counted toward mastery).",
+    "feedback_note_hinted": "Hints used → {credit}% credit; mastery −1 ({progress}).",
     "feedback_note_unaided": "Unaided · mastery progress {progress}.",
     "flash.target_form": "Target form: {left} = …  (fill the right-hand side from memory)",
     "btn_hint3_ti": "TI-36X Pro (−75%)",
@@ -363,6 +363,9 @@
     "flash.recall.v2": "Write the formula for:\n{front}",
     "flash.recall.v3": "Recall mode — formula please:\n{front}",
     "flash.recognize.v2": "Which formula matches:\n{front}?",
-    "flash.recognize.v3": "Pick the correct formula for:\n{front}"
+    "flash.recognize.v3": "Pick the correct formula for:\n{front}",
+    "mastery_overall": "Overall",
+    "mastery_overall_aria": "Overall mastery pie chart, {pct}% complete",
+    "mastery_pie_summary": "{mastered} of {total} topics mastered"
   }
 }

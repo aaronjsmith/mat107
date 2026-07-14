@@ -10,7 +10,7 @@
     "stat_streak": "无提示连对",
     "stat_answered": "已答",
     "topics_heading": "主题",
-    "topics_blurb": "精通 = 每主题<strong>10次无提示答对</strong>。提示从不给出最终答案，只教思路。答对时扣分：提示1 −25%，提示2 −50%，提示3 −75%。",
+    "topics_blurb": "Mastery = <strong>10 correct with no hints</strong> per topic. Using a hint (or skipping after a hint) <strong>lowers mastery by 1</strong>. Hints never reveal the answer — only how to work. Grade credit if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%. After a miss you can still enter the right answer once for <strong>5%</strong> credit (not mastery).",
     "mode_all": "全部主题",
     "mode_smart": "智能选题",
     "mode_flashcards": "公式闪卡",
@@ -27,7 +27,7 @@
     "btn_next": "下一题",
     "btn_skip": "跳过",
     "mastery_heading": "精通",
-    "mastery_blurb": "每主题需10次无提示正确。提示不计分。",
+    "mastery_blurb": "Need 10 unaided corrects per topic. Each hinted attempt (or skip after a hint) lowers mastery by 1. 5% retries never add mastery.",
     "mastery_unaided": "无提示",
     "reset_confirm": "重置本浏览器中保存的全部进度？",
     "load_fail": "无法加载测验脚本。请从项目文件夹打开 index.html。",
@@ -256,7 +256,7 @@
     "c.skew_wrong_a": "无论形状如何，均值、中位数和众数始终相等",
     "c.skew_wrong_b": "众数始终等于范围",
     "c.skew_wrong_c": "偏度仅影响标准差，不会影响中心测量",
-    "feedback_note_hinted": "Hints used → {credit}% credit (not counted toward mastery).",
+    "feedback_note_hinted": "Hints used → {credit}% credit; mastery −1 ({progress}).",
     "feedback_note_unaided": "Unaided · mastery progress {progress}.",
     "flash.target_form": "Target form: {left} = …  (fill the right-hand side from memory)",
     "btn_hint3_ti": "TI-36X Pro (−75%)",
@@ -363,6 +363,9 @@
     "flash.recall.v2": "Write the formula for:\n{front}",
     "flash.recall.v3": "Recall mode — formula please:\n{front}",
     "flash.recognize.v2": "Which formula matches:\n{front}?",
-    "flash.recognize.v3": "Pick the correct formula for:\n{front}"
+    "flash.recognize.v3": "Pick the correct formula for:\n{front}",
+    "mastery_overall": "Overall",
+    "mastery_overall_aria": "Overall mastery pie chart, {pct}% complete",
+    "mastery_pie_summary": "{mastered} of {total} topics mastered"
   }
 }
