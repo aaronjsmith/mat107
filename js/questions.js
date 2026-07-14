@@ -1504,6 +1504,123 @@
     );
   }
 
+  function _skewHistogramSvg(kind, showMarkers) {
+    // Bar heights (relative) — left = long left tail / peak on right; right = opposite.
+    let heights;
+    let label;
+    if (kind === "left") {
+      heights = [1.2, 1.6, 2.2, 3.0, 4.2, 6.0, 8.5, 7.2];
+      label = "Left-skewed histogram";
+    } else if (kind === "right") {
+      heights = [7.2, 8.5, 6.0, 4.2, 3.0, 2.2, 1.6, 1.2];
+      label = "Right-skewed histogram";
+    } else {
+      heights = [5.0, 5.4, 4.9, 5.6, 5.1, 5.5, 4.8, 5.2];
+      label = "Roughly uniform histogram";
+    }
+
+    const padL = 28;
+    const padR = 16;
+    const padT = 18;
+    const padB = showMarkers ? 32 : 22;
+    const plotW = 280;
+    const plotH = 140;
+    const n = heights.length;
+    const gap = 4;
+    const barW = (plotW - gap * (n - 1)) / n;
+    const maxH = Math.max.apply(null, heights);
+    const ox = padL;
+    const oy = padT;
+    const baseY = oy + plotH;
+    const vbW = padL + plotW + padR;
+    const vbH = padT + plotH + padB;
+
+    let bars = "";
+    for (let i = 0; i < n; i++) {
+      const bh = (heights[i] / maxH) * (plotH - 4);
+      const x = ox + i * (barW + gap);
+      const y = baseY - bh;
+      bars +=
+        '<rect x="' +
+        x.toFixed(1) +
+        '" y="' +
+        y.toFixed(1) +
+        '" width="' +
+        barW.toFixed(1) +
+        '" height="' +
+        bh.toFixed(1) +
+        '" fill="#93c5fd" stroke="#1e3a5f" stroke-width="1.25" rx="2"/>';
+    }
+
+    let markers = "";
+    if (showMarkers && (kind === "left" || kind === "right")) {
+      const meanX =
+        kind === "left" ? ox + plotW * 0.28 : ox + plotW * 0.72;
+      const medX = ox + plotW * 0.5;
+      const modeX =
+        kind === "left" ? ox + plotW * 0.78 : ox + plotW * 0.22;
+      const mk = function (x, txt, color) {
+        return (
+          '<line x1="' +
+          x.toFixed(1) +
+          '" y1="' +
+          oy.toFixed(1) +
+          '" x2="' +
+          x.toFixed(1) +
+          '" y2="' +
+          baseY.toFixed(1) +
+          '" stroke="' +
+          color +
+          '" stroke-width="1.5" stroke-dasharray="3 2"/>' +
+          '<text x="' +
+          x.toFixed(1) +
+          '" y="' +
+          (baseY + 16).toFixed(1) +
+          '" text-anchor="middle" font-size="10" font-family="IBM Plex Sans, sans-serif" fill="' +
+          color +
+          '">' +
+          txt +
+          "</text>"
+        );
+      };
+      markers =
+        mk(meanX, "mean", "#b45309") +
+        mk(medX, "median", "#0f6e56") +
+        mk(modeX, "mode", "#1e3a5f");
+    }
+
+    return (
+      '<svg viewBox="0 0 ' +
+      vbW.toFixed(1) +
+      " " +
+      vbH.toFixed(1) +
+      '" xmlns="http://www.w3.org/2000/svg" class="q-svg" role="img" aria-label="' +
+      label +
+      '">' +
+      '<rect x="' +
+      ox.toFixed(1) +
+      '" y="' +
+      oy.toFixed(1) +
+      '" width="' +
+      plotW.toFixed(1) +
+      '" height="' +
+      plotH.toFixed(1) +
+      '" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>' +
+      bars +
+      '<line x1="' +
+      ox.toFixed(1) +
+      '" y1="' +
+      baseY.toFixed(1) +
+      '" x2="' +
+      (ox + plotW).toFixed(1) +
+      '" y2="' +
+      baseY.toFixed(1) +
+      '" stroke="#1e3a5f" stroke-width="1.5"/>' +
+      markers +
+      "</svg>"
+    );
+  }
+
   function genSkewHistogram() {
     const skew = choice(["right", "left", "uniform"]);
     let prompt;
@@ -1525,8 +1642,10 @@
     }
 
     const ask = choice(["shape", "effect"]);
+    const svg = _skewHistogramSvg(skew, ask === "effect");
+    let q;
     if (ask === "shape") {
-      return _choice(
+      q = _choice(
         prompt,
         [
           t("c.skew_left"),
@@ -1538,18 +1657,21 @@
         "distributions",
         t("h.skew_shape")
       );
-    }
-    return _choice(
-      prompt + " " + tVar("q.skew_effect_follow"),
-      [
+    } else {
+      q = _choice(
+        prompt + " " + tVar("q.skew_effect_follow"),
+        [
+          effect,
+          t("c.skew_wrong_a"),
+          t("c.skew_wrong_b"),
+          t("c.skew_wrong_c"),
+        ],
         effect,
-        t("c.skew_wrong_a"),
-        t("c.skew_wrong_b"),
-        t("c.skew_wrong_c"),
-      ],
-      effect,
-      "distributions"
-    );
+        "distributions"
+      );
+    }
+    q.svg = svg;
+    return q;
   }
 
   function genEmpiricalRule() {
