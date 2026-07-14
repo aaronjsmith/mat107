@@ -185,6 +185,40 @@
     };
   }
 
+  /** After a recorded miss, award recovery credit without a new attempt. */
+  function awardRetryCredit(question) {
+    const credit = Q.RETRY_CREDIT != null ? Q.RETRY_CREDIT : 0.05;
+    const p = load();
+    const topic = question.topic;
+    if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic] || topic);
+    p.total_credit = (p.total_credit || 0) + credit;
+    p.total_correct = (p.total_correct || 0) + 1;
+    p.topics[topic].credit = (p.topics[topic].credit || 0) + credit;
+    p.topics[topic].correct = (p.topics[topic].correct || 0) + 1;
+    // No unaided / streak bump — recovery never counts toward mastery.
+    p.history = p.history || [];
+    p.history.push({
+      at: new Date().toISOString(),
+      topic: topic,
+      correct: true,
+      hints_used: -1,
+      credit: credit,
+      retry: true,
+      prompt: String(question.prompt).slice(0, 120),
+    });
+    p.history = p.history.slice(-100);
+    save(p);
+    const unaided = p.topics[topic].unaided_correct || 0;
+    return {
+      correct: true,
+      credit: credit,
+      streak: p.streak,
+      unaided_correct: unaided,
+      unaided_needed: UNAIDED,
+      mastered: isMastered(unaided),
+    };
+  }
+
   function reset() {
     save(emptyProgress());
   }
@@ -256,6 +290,7 @@
     getProgressView: getProgressView,
     pickSmartTopic: pickSmartTopic,
     recordAnswer: recordAnswer,
+    awardRetryCredit: awardRetryCredit,
     reset: reset,
     exportProgress: exportProgress,
     importProgress: importProgress,

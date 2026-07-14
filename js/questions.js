@@ -45,6 +45,8 @@
   function piNote() { return t("pi_note"); }
   // Credit remaining after hints: 0→100%, 1→75%, 2→50%, 3→25%
   const HINT_CREDIT = { 0: 1.0, 1: 0.75, 2: 0.5, 3: 0.25 };
+  /** Credit for correcting a miss on the recovery attempt (not mastery). */
+  const RETRY_CREDIT = 0.05;
   const UNAIDED_TO_MASTER = 10;
 
   // --- Helpers ----------------------------------------------------------------
@@ -95,12 +97,19 @@
 
   function calcHelp(tiSteps, casioSteps, tip) {
     tip = tip || t("calc_tip_default");
-    return t("calc_header", { ti: tiSteps, casio: casioSteps, tip: tip });
+    const tipBlock = tip ? "\n\n" + tip : "";
+    return {
+      ti: t("calc_panel_ti", { steps: tiSteps }) + tipBlock,
+      casio: t("calc_panel_casio", { steps: casioSteps }) + tipBlock,
+    };
   }
 
   // Generic leftover tip when we only have an equation setup
   function CALC_GENERIC() {
-    return t("calc_generic");
+    return {
+      ti: t("calc_generic_ti"),
+      casio: t("calc_generic_casio"),
+    };
   }
 
   function _choice(prompt, choices, answer, topic, hint, setup, calc) {
@@ -1482,7 +1491,19 @@
     // Three progressive hints — never include the final answer.
     const hint1 = q.hint || "";
     const hint2 = q.setup || "";
-    const hint3 = q.calc || (hint2 ? CALC_GENERIC() : "");
+    let calc = q.calc || null;
+    if (!calc && hint2) calc = CALC_GENERIC();
+    let hint3ti = "";
+    let hint3casio = "";
+    if (calc && typeof calc === "object") {
+      hint3ti = calc.ti || "";
+      hint3casio = calc.casio || "";
+    } else if (typeof calc === "string" && calc) {
+      // Legacy single-string calc tips apply to both.
+      hint3ti = calc;
+      hint3casio = calc;
+    }
+    const hasCalc = Boolean(hint3ti || hint3casio);
     const out = {
       id: q.id,
       topic: q.topic,
@@ -1491,15 +1512,17 @@
       prompt: q.prompt,
       hint1: hint1,
       hint2: hint2,
-      hint3: hint3,
+      hint3: hint3ti || hint3casio,
+      hint3_ti: hint3ti,
+      hint3_casio: hint3casio,
       hint: hint1,
       setup: hint2,
-      calc: hint3,
+      calc: calc,
       has_hint1: Boolean(hint1),
       has_hint2: Boolean(hint2),
-      has_hint3: Boolean(hint3),
-      has_hint: Boolean(hint1 || hint2 || hint3),
-      has_setup: Boolean(hint2 || hint3),
+      has_hint3: hasCalc,
+      has_hint: Boolean(hint1 || hint2 || hasCalc),
+      has_setup: Boolean(hint2 || hasCalc),
       unit: q.unit || "",
     };
     if (q.type === "mc") {
@@ -1519,6 +1542,7 @@
     PI: PI,
     get PI_NOTE() { return piNote(); },
     HINT_CREDIT: HINT_CREDIT,
+    RETRY_CREDIT: RETRY_CREDIT,
     UNAIDED_TO_MASTER: UNAIDED_TO_MASTER,
     randInt: randInt,
     choice: choice,

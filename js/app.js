@@ -18,6 +18,8 @@
     fullQuestion: null,
     publicQ: null,
     answered: false,
+    retryPhase: false,
+    lastExpected: "",
     hintsUsed: 0,
   };
 
@@ -27,10 +29,12 @@
     topic: document.getElementById("q-topic"),
     hint1: document.getElementById("q-hint1"),
     hint2: document.getElementById("q-hint2"),
-    hint3: document.getElementById("q-hint3"),
+    hint3ti: document.getElementById("q-hint3-ti"),
+    hint3casio: document.getElementById("q-hint3-casio"),
     hint1Btn: document.getElementById("btn-hint1"),
     hint2Btn: document.getElementById("btn-hint2"),
-    hint3Btn: document.getElementById("btn-hint3"),
+    hint3tiBtn: document.getElementById("btn-hint3-ti"),
+    hint3casioBtn: document.getElementById("btn-hint3-casio"),
     figure: document.getElementById("q-figure"),
     choices: document.getElementById("q-choices"),
     form: document.getElementById("q-form"),
@@ -120,30 +124,68 @@
   function hideHintControls() {
     els.hint1Btn.hidden = true;
     els.hint2Btn.hidden = true;
-    els.hint3Btn.hidden = true;
+    els.hint3tiBtn.hidden = true;
+    els.hint3casioBtn.hidden = true;
+  }
+
+  function showCalcButtons(openStyle) {
+    const hasTi = Boolean(els.hint3ti.textContent);
+    const hasCasio = Boolean(els.hint3casio.textContent);
+    if (hasTi) {
+      els.hint3tiBtn.hidden = false;
+      const opened = !els.hint3ti.hidden;
+      els.hint3tiBtn.disabled = opened;
+      els.hint3tiBtn.textContent = opened
+        ? t("btn_hint3_ti_used")
+        : openStyle
+          ? t("btn_hint3_ti_open")
+          : t("btn_hint3_ti");
+    } else {
+      els.hint3tiBtn.hidden = true;
+    }
+    if (hasCasio) {
+      els.hint3casioBtn.hidden = false;
+      const opened = !els.hint3casio.hidden;
+      els.hint3casioBtn.disabled = opened;
+      els.hint3casioBtn.textContent = opened
+        ? t("btn_hint3_casio_used")
+        : openStyle
+          ? t("btn_hint3_casio_open")
+          : t("btn_hint3_casio");
+    } else {
+      els.hint3casioBtn.hidden = true;
+    }
   }
 
   function resetUI() {
     state.answered = false;
+    state.retryPhase = false;
+    state.lastExpected = "";
     state.hintsUsed = 0;
     els.feedback.hidden = true;
     els.feedback.textContent = "";
     els.feedback.className = "feedback";
     els.check.hidden = true;
+    els.check.textContent = t("btn_check");
     els.next.hidden = true;
     els.skip.hidden = false;
+    els.skip.textContent = t("btn_skip");
     els.hint1.hidden = true;
     els.hint2.hidden = true;
-    els.hint3.hidden = true;
+    els.hint3ti.hidden = true;
+    els.hint3casio.hidden = true;
     els.hint1.textContent = "";
     els.hint2.textContent = "";
-    els.hint3.textContent = "";
+    els.hint3ti.textContent = "";
+    els.hint3casio.textContent = "";
     els.hint1Btn.disabled = false;
     els.hint2Btn.disabled = false;
-    els.hint3Btn.disabled = false;
+    els.hint3tiBtn.disabled = false;
+    els.hint3casioBtn.disabled = false;
     els.hint1Btn.textContent = t("btn_hint1");
     els.hint2Btn.textContent = t("btn_hint2");
-    els.hint3Btn.textContent = t("btn_hint3");
+    els.hint3tiBtn.textContent = t("btn_hint3_ti");
+    els.hint3casioBtn.textContent = t("btn_hint3_casio");
     hideHintControls();
     els.choices.hidden = true;
     els.choices.innerHTML = "";
@@ -177,14 +219,15 @@
     els.prompt.textContent = pub.prompt;
     els.hint1.textContent = pub.hint1 || "";
     els.hint2.textContent = pub.hint2 || "";
-    els.hint3.textContent = pub.hint3 || "";
+    els.hint3ti.textContent = pub.hint3_ti || "";
+    els.hint3casio.textContent = pub.hint3_casio || "";
 
     if (pub.has_hint1) {
       els.hint1Btn.hidden = false;
     } else if (pub.has_hint2) {
       els.hint2Btn.hidden = false;
     } else if (pub.has_hint3) {
-      els.hint3Btn.hidden = false;
+      showCalcButtons(false);
     }
 
     if (pub.svg) {
@@ -211,8 +254,122 @@
     }
   }
 
+  function showHintsAfterMiss() {
+    if (els.hint1.textContent) els.hint1.hidden = false;
+    if (els.hint2.textContent) els.hint2.hidden = false;
+    // Keep each calculator behind its own button until opened.
+    els.hint3ti.hidden = true;
+    els.hint3casio.hidden = true;
+    els.hint1Btn.hidden = true;
+    els.hint2Btn.hidden = true;
+    showCalcButtons(true);
+  }
+
+  function lockInputs() {
+    els.check.hidden = true;
+    els.input.disabled = true;
+    if (els.mathInsert) {
+      els.mathInsert.querySelectorAll("button").forEach((btn) => {
+        btn.disabled = true;
+      });
+    }
+    if (state.publicQ && state.publicQ.type === "mc") {
+      [...els.choices.children].forEach((btn) => {
+        btn.disabled = true;
+      });
+    }
+  }
+
+  function beginRetry(result) {
+    state.retryPhase = true;
+    state.lastExpected = result.expected;
+    els.feedback.className = "feedback no";
+    const tip =
+      result.hint ||
+      state.publicQ?.hint1 ||
+      state.publicQ?.hint2 ||
+      "";
+    els.feedback.textContent =
+      t("feedback_wrong_retry") +
+      (tip ? t("feedback_wrong_hint", { hint: tip }) : "");
+    showHintsAfterMiss();
+
+    els.next.hidden = true;
+    els.skip.hidden = false;
+    els.skip.textContent = t("btn_skip_retry");
+    els.check.textContent = t("btn_check_retry");
+
+    if (state.publicQ.type === "mc") {
+      [...els.choices.children].forEach((btn) => {
+        // Keep the wrong pick marked; allow another choice.
+        if (!btn.classList.contains("wrong")) {
+          btn.disabled = false;
+        }
+      });
+      els.check.hidden = true;
+    } else {
+      els.form.hidden = false;
+      els.check.hidden = false;
+      els.input.disabled = false;
+      els.input.value = "";
+      if (els.mathInsert) {
+        els.mathInsert.querySelectorAll("button").forEach((btn) => {
+          btn.disabled = false;
+        });
+      }
+      els.input.focus();
+    }
+  }
+
+  function finishAfterRetry(ok, expected) {
+    state.retryPhase = false;
+    state.answered = true;
+    lockInputs();
+    els.skip.hidden = true;
+    els.skip.textContent = t("btn_skip");
+    els.check.textContent = t("btn_check");
+    els.next.hidden = false;
+
+    if (ok) {
+      const credited = P.awardRetryCredit(state.fullQuestion);
+      els.feedback.className = "feedback ok";
+      els.feedback.textContent = t("feedback_retry_ok");
+      if (state.publicQ.type === "mc") {
+        [...els.choices.children].forEach((btn) => {
+          btn.disabled = true;
+          if (btn.textContent === expected) btn.classList.add("right");
+        });
+      }
+      refreshProgress();
+      return credited;
+    }
+
+    els.feedback.className = "feedback no";
+    els.feedback.textContent = t("feedback_retry_fail", {
+      expected: expected || state.lastExpected,
+    });
+    if (state.publicQ.type === "mc") {
+      [...els.choices.children].forEach((btn) => {
+        btn.disabled = true;
+        if (btn.textContent === (expected || state.lastExpected)) {
+          btn.classList.add("right");
+        }
+      });
+    }
+    refreshProgress();
+    return null;
+  }
+
   function submitAnswer(answer) {
-    if (!state.fullQuestion || state.answered) return;
+    if (!state.fullQuestion) return;
+
+    if (state.retryPhase) {
+      const [ok, expected] = Q.checkAnswer(state.fullQuestion, answer);
+      finishAfterRetry(ok, expected);
+      return;
+    }
+
+    if (state.answered) return;
     state.answered = true;
     els.skip.hidden = true;
     els.check.hidden = true;
@@ -244,37 +401,31 @@
         progress: progress,
         mastered: result.just_mastered ? t("feedback_mastered") : "",
       });
-    } else {
-      els.feedback.className = "feedback no";
-      const tip =
-        result.hint ||
-        state.publicQ?.hint1 ||
-        state.publicQ?.hint2 ||
-        "";
-      els.feedback.textContent =
-        t("feedback_wrong", { expected: result.expected }) +
-        (tip ? t("feedback_wrong_hint", { hint: tip }) : "");
-      // Show approach/setup hints so the miss is still a learning moment.
-      if (els.hint1.textContent) els.hint1.hidden = false;
-      if (els.hint2.textContent) els.hint2.hidden = false;
-      if (els.hint3.textContent) els.hint3.hidden = false;
+      if (state.publicQ.type === "mc") {
+        [...els.choices.children].forEach((btn) => {
+          btn.disabled = true;
+          if (btn.textContent === result.expected) btn.classList.add("right");
+        });
+      }
+      els.next.hidden = false;
+      refreshProgress();
+      return;
     }
 
+    // First miss → recovery chance for 5% (do not reveal expected yet).
     if (state.publicQ.type === "mc") {
       [...els.choices.children].forEach((btn) => {
         btn.disabled = true;
-        if (btn.textContent === result.expected) btn.classList.add("right");
-        if (btn.textContent === String(answer) && !result.correct) btn.classList.add("wrong");
+        if (btn.textContent === String(answer)) btn.classList.add("wrong");
       });
     }
-
-    els.next.hidden = false;
+    beginRetry(result);
     refreshProgress();
   }
 
   function insertAtCursor(text, cursorOffset) {
     const input = els.input;
-    if (!input || state.answered) return;
+    if (!input || (state.answered && !state.retryPhase)) return;
     const start = input.selectionStart ?? input.value.length;
     const end = input.selectionEnd ?? input.value.length;
     const before = input.value.slice(0, start);
@@ -288,12 +439,11 @@
 
   function insertFraction() {
     const input = els.input;
-    if (!input || state.answered) return;
+    if (!input || (state.answered && !state.retryPhase)) return;
     const start = input.selectionStart ?? 0;
     const end = input.selectionEnd ?? 0;
     const selected = input.value.slice(start, end);
     if (selected) {
-      // Wrap selection as (sel)/() with cursor in the denominator.
       insertAtCursor("(" + selected + ")/()", selected.length + 3);
     } else {
       insertAtCursor("()/()", 1);
@@ -307,7 +457,7 @@
     });
     els.mathInsert.addEventListener("click", (e) => {
       const btn = e.target.closest("button");
-      if (!btn || state.answered) return;
+      if (!btn || (state.answered && !state.retryPhase)) return;
       if (btn.hasAttribute("data-insert-frac")) {
         insertFraction();
         return;
@@ -329,7 +479,7 @@
     els.hint1Btn.textContent = t("btn_hint1_used");
     els.hint1Btn.disabled = true;
     if (state.publicQ?.has_hint2) els.hint2Btn.hidden = false;
-    else if (state.publicQ?.has_hint3) els.hint3Btn.hidden = false;
+    else if (state.publicQ?.has_hint3) showCalcButtons(false);
   });
 
   els.hint2Btn.addEventListener("click", () => {
@@ -338,19 +488,33 @@
     state.hintsUsed = Math.max(state.hintsUsed, 2);
     els.hint2Btn.textContent = t("btn_hint2_used");
     els.hint2Btn.disabled = true;
-    if (state.publicQ?.has_hint3) els.hint3Btn.hidden = false;
+    if (state.publicQ?.has_hint3) showCalcButtons(false);
   });
 
-  els.hint3Btn.addEventListener("click", () => {
-    if (!els.hint3.textContent || state.answered) return;
-    els.hint3.hidden = false;
-    state.hintsUsed = Math.max(state.hintsUsed, 3);
-    els.hint3Btn.textContent = t("btn_hint3_used");
-    els.hint3Btn.disabled = true;
-  });
+  function openCalcPanel(kind) {
+    const panel = kind === "ti" ? els.hint3ti : els.hint3casio;
+    const btn = kind === "ti" ? els.hint3tiBtn : els.hint3casioBtn;
+    if (!panel.textContent || !panel.hidden) return;
+    panel.hidden = false;
+    if (!state.answered) {
+      state.hintsUsed = Math.max(state.hintsUsed, 3);
+    }
+    btn.textContent =
+      kind === "ti" ? t("btn_hint3_ti_used") : t("btn_hint3_casio_used");
+    btn.disabled = true;
+  }
+
+  els.hint3tiBtn.addEventListener("click", () => openCalcPanel("ti"));
+  els.hint3casioBtn.addEventListener("click", () => openCalcPanel("casio"));
 
   els.next.addEventListener("click", loadQuestion);
-  els.skip.addEventListener("click", loadQuestion);
+  els.skip.addEventListener("click", () => {
+    if (state.retryPhase) {
+      finishAfterRetry(false, state.lastExpected);
+      return;
+    }
+    loadQuestion();
+  });
 
   document.querySelectorAll(".topic[data-topic]").forEach((btn) => {
     btn.addEventListener("click", () => {
