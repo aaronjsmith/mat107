@@ -1593,61 +1593,186 @@
     );
   }
 
-  const Z_TABLE = {
-    "-2.5": 0.0062,
-    "-2.4": 0.0082,
-    "-2.3": 0.0107,
-    "-2.0": 0.0228,
-    "-1.5": 0.0668,
-    "-1.3": 0.0968,
-    "-1.0": 0.1587,
-    "-0.5": 0.3085,
-    "0.0": 0.5,
-    "0.5": 0.6915,
-    "1.0": 0.8413,
-    "1.3": 0.9032,
-    "1.5": 0.9332,
-    "2.0": 0.9772,
-    "2.3": 0.9893,
-    "2.4": 0.9918,
-    "2.5": 0.9938,
-  };
+  // Course z → percentile chart (percentiles already ·100, as on the handout).
+  const Z_PERCENTILE_TABLE = [
+    [-3.5, 0.02],
+    [-3.0, 0.13],
+    [-2.9, 0.19],
+    [-2.8, 0.26],
+    [-2.7, 0.35],
+    [-2.6, 0.47],
+    [-2.5, 0.62],
+    [-2.4, 0.82],
+    [-2.3, 1.07],
+    [-2.2, 1.39],
+    [-2.1, 1.79],
+    [-2.0, 2.28],
+    [-1.9, 2.87],
+    [-1.8, 3.59],
+    [-1.7, 4.46],
+    [-1.6, 5.48],
+    [-1.5, 6.68],
+    [-1.4, 8.08],
+    [-1.3, 9.68],
+    [-1.2, 11.51],
+    [-1.1, 13.57],
+    [-1.0, 15.87],
+    [-0.95, 17.11],
+    [-0.9, 18.41],
+    [-0.85, 19.77],
+    [-0.8, 21.19],
+    [-0.75, 22.66],
+    [-0.7, 24.2],
+    [-0.65, 25.78],
+    [-0.6, 27.43],
+    [-0.55, 29.12],
+    [-0.5, 30.85],
+    [-0.45, 32.64],
+    [-0.4, 34.46],
+    [-0.35, 36.32],
+    [-0.3, 38.21],
+    [-0.25, 40.13],
+    [-0.2, 42.07],
+    [-0.15, 44.04],
+    [-0.1, 46.02],
+    [-0.05, 48.01],
+    [0.0, 50.0],
+    [0.05, 51.99],
+    [0.1, 53.98],
+    [0.15, 55.96],
+    [0.2, 57.93],
+    [0.25, 59.87],
+    [0.3, 61.79],
+    [0.35, 63.68],
+    [0.4, 65.54],
+    [0.45, 67.36],
+    [0.5, 69.15],
+    [0.55, 70.88],
+    [0.6, 72.57],
+    [0.65, 74.22],
+    [0.7, 75.8],
+    [0.75, 77.34],
+    [0.8, 78.81],
+    [0.85, 80.23],
+    [0.9, 81.59],
+    [0.95, 82.89],
+    [1.0, 84.13],
+    [1.1, 86.43],
+    [1.2, 88.49],
+    [1.3, 90.32],
+    [1.4, 91.92],
+    [1.5, 93.32],
+    [1.6, 94.52],
+    [1.7, 95.54],
+    [1.8, 96.41],
+    [1.9, 97.13],
+    [2.0, 97.72],
+    [2.1, 98.21],
+    [2.2, 98.61],
+    [2.3, 98.93],
+    [2.4, 99.18],
+    [2.5, 99.38],
+    [2.6, 99.53],
+    [2.7, 99.65],
+    [2.8, 99.74],
+    [2.9, 99.81],
+    [3.0, 99.87],
+    [3.5, 99.98],
+  ];
 
+  function _zTableHtml() {
+    // Four columns matching the course handout (0.00 repeated at the join).
+    const zeroIdx = Z_PERCENTILE_TABLE.findIndex(function (row) {
+      return row[0] === 0;
+    });
+    const colSlices = [
+      Z_PERCENTILE_TABLE.slice(0, zeroIdx - 20), // -3.50 … -1.10
+      Z_PERCENTILE_TABLE.slice(zeroIdx - 20, zeroIdx + 1), // -1.00 … 0.00
+      Z_PERCENTILE_TABLE.slice(zeroIdx, zeroIdx + 21), // 0.00 … 1.00
+      Z_PERCENTILE_TABLE.slice(zeroIdx + 21), // 1.10 … 3.50
+    ];
 
-  function genPercentileFromZ() {
-    // Keep z keys as fixed decimals so Z_TABLE lookup stays stable (String(1.0) === "1").
-    const zKeys = ["-1.3", "-1.0", "1.0", "1.3", "2.0", "2.4"];
-    const zKey = choice(zKeys);
-    const z = parseFloat(zKey);
-    const p = Z_TABLE[zKey] * 100;
-    return _numeric(
-      tVar("q.pct_from_z", { z: z }),
-      Math.round(p),
-      "z_scores",
-      2,
-      t("h.pct_from_z")
+    let cols = "";
+    colSlices.forEach(function (slice) {
+      let rows = "";
+      slice.forEach(function (row, i) {
+        rows +=
+          "<tr" +
+          (i % 2 ? ' class="alt"' : "") +
+          "><td>" +
+          row[0].toFixed(2) +
+          "</td><td>" +
+          row[1].toFixed(2) +
+          "</td></tr>";
+      });
+      cols +=
+        '<table class="z-col">' +
+        "<thead><tr><th>" +
+        t("z_table_z") +
+        "</th><th>" +
+        t("z_table_pct") +
+        "</th></tr></thead><tbody>" +
+        rows +
+        "</tbody></table>";
+    });
+
+    return (
+      '<div class="z-table-wrap" role="region" aria-label="' +
+      t("z_table_aria") +
+      '">' +
+      '<p class="z-table-caption">' +
+      t("z_table_caption") +
+      "</p>" +
+      '<div class="z-table">' +
+      cols +
+      "</div></div>"
     );
   }
 
+  function withZTable(q) {
+    q.svg = _zTableHtml();
+    return q;
+  }
+
+  function genPercentileFromZ() {
+    // Ask from table rows so the handout on screen is usable.
+    const pool = Z_PERCENTILE_TABLE.filter(function (row) {
+      const z = row[0];
+      return Math.abs(z) >= 0.5 && Math.abs(z) <= 2.5;
+    });
+    const picked = choice(pool);
+    const z = picked[0];
+    const pct = picked[1];
+    return withZTable(
+      _numeric(
+        tVar("q.pct_from_z", { z: z }),
+        Math.round(pct),
+        "z_scores",
+        1,
+        t("h.pct_from_z")
+      )
+    );
+  }
 
   function genZFromPercentile() {
-    const pairs = [
-      [50, 0.0],
-      [56, 0.15],
-      [84, 1.0],
-      [16, -1.0],
-      [97.5, 2.0],
-      [2.5, -2.0],
-    ];
-    const picked = choice(pairs);
-    const pct = picked[0];
-    const z = picked[1];
-    return _numeric(
-      tVar("q.z_from_pct", { pct: pct }),
-      z,
-      "z_scores",
-      0.2,
-      "≈50th → z≈0; ≈84th → z≈1; ≈16th → z≈−1"
+    const pool = Z_PERCENTILE_TABLE.filter(function (row) {
+      const z = row[0];
+      return (
+        z === 0 ||
+        (Math.abs(z) >= 0.5 && Math.abs(z) <= 2.5)
+      );
+    });
+    const picked = choice(pool);
+    const z = picked[0];
+    const pct = picked[1];
+    return withZTable(
+      _numeric(
+        tVar("q.z_from_pct", { pct: pct }),
+        z,
+        "z_scores",
+        0.05,
+        t("h.z_from_pct", { pct: pct })
+      )
     );
   }
 

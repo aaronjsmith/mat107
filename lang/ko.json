@@ -194,9 +194,9 @@
     "h.sd_tf": "Z-점수는 임의의 실수일 수 있습니다. 즉, 데이터는 평균을 기준으로 어디에나 있을 수 있습니다.",
     "q.zscore": "세미나리 평균 {mean}, 표준편차 {sd}. 점수 {score}의 z점수는?",
     "h.zscore": "z = (x − 평균) / 표준편차. 괄호를 사용하여 주의 깊게 입력하세요.",
-    "q.pct_from_z": "표준 정규(Z) 테이블을 사용하면 평균에서 {z} 표준 편차인 데이터 포인트는 대략 몇 백분위수입니까? 백분위수를 숫자로 입력합니다(예: 84번째 백분위수의 경우 84). 가장 가까운 정수로 반올림합니다.",
-    "h.pct_from_z": "표는 z의 왼쪽에 누적 면적을 제공합니다. 백분위수에 100을 곱합니다.",
-    "q.z_from_pct": "{pct}번째 백분위수(표준 정규)에 있는 데이터 포인트의 z-점수를 대략적으로 계산합니다. 필요한 경우 가장 가까운 10분의 1까지 반올림합니다.",
+    "q.pct_from_z": "Using the standard normal (Z) table shown with this question, about what percentile is a data point that is {z} standard deviations from the mean? Enter the percentile as a number (e.g. 84 for the 84th percentile). Round to the nearest whole number.",
+    "h.pct_from_z": "Use the z-score / percentile table shown with this question. Find your z in the left column; the percentile is listed beside it. Round to the nearest whole number if asked.",
+    "q.z_from_pct": "Using the z-score / percentile table shown, what z-score corresponds to percentile {pct}?",
     "q.skew": "데이터 분포는 평균을 높이는 드문 \"초장기\" 회의처럼 오른쪽으로 치우쳐 있습니다(오른쪽 꼬리). 일반적으로 어느 것이 사실입니까?",
     "c.skew_a": "평균 > 중앙값",
     "c.skew_b": "평균 < 중앙값",
@@ -427,6 +427,11 @@
     "notes_placeholder": "Jot working, formulas, or reminders here…",
     "disclaimer": "Unofficial student practice tool for Ensign College MAT 107, based on a real course assignment. Not affiliated with, endorsed by, or connected to Ensign College or The Church of Jesus Christ of Latter-day Saints. Made by a student for personal study. Built with Cursor, hosted on Cloudflare Workers, and versioned on GitHub.",
     "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
-    "scripture_cite": "— 1 Nephi 17:9"
+    "scripture_cite": "— 1 Nephi 17:9",
+    "h.z_from_pct": "Scan the Percentile column on the table shown until you find {pct} (or the closest listed value), then read the matching z-score.",
+    "z_table_z": "z-score",
+    "z_table_pct": "Percentile",
+    "z_table_caption": "Standard normal table — lookup z-score ↔ percentile",
+    "z_table_aria": "Z-score to percentile reference table"
   }
 }

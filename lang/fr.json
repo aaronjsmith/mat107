@@ -155,7 +155,7 @@
     "h.mean": "Moyenne = somme des valeurs ÷ nombre de valeurs. Ajoutez d'abord, puis divisez.",
     "h.median": "Trier les données ; la médiane est la valeur moyenne (ou la moyenne de deux valeurs moyennes)",
     "h.mode": "Mode = valeur qui apparaît le plus souvent",
-    "h.pct_from_z": "Le tableau donne l'aire cumulée à gauche de z ; multipliez par 100 pour un percentile.",
+    "h.pct_from_z": "Use the z-score / percentile table shown with this question. Find your z in the left column; the percentile is listed beside it. Round to the nearest whole number if asked.",
     "h.pizza_cmp": "Aire = πr². Doubler le diamètre (ou le rayon) multiplie la surface par 4.",
     "h.pizza_double": "A = πr², donc si r → 2r alors A → π(2r)² = 4πr²",
     "h.range": "Plage = maximum − minimum",
@@ -288,7 +288,7 @@
     "q.mode": "Choix de chansons primaires au moment du chant (codés sous forme de chiffres) : {ds}. Recherchez le mode : la chanson la plus demandée. (Indice : c’était probablement « Je suis un enfant de Dieu. »)",
     "q.mode.v2": "Données : {ds}. Quel est le mode ?",
     "q.mode.v3": "Quelle valeur apparaît le plus souvent dans {ds} ?",
-    "q.pct_from_z": "À l'aide d'un tableau normal standard (Z), à quel percentile correspond un point de données qui correspond à des écarts types {z} par rapport à la moyenne ? Entrez le centile sous forme de nombre (par exemple, 84 pour le 84e centile). Arrondissez au nombre entier le plus proche.",
+    "q.pct_from_z": "Using the standard normal (Z) table shown with this question, about what percentile is a data point that is {z} standard deviations from the mean? Enter the percentile as a number (e.g. 84 for the 84th percentile). Round to the nearest whole number.",
     "q.pizza_cmp": "Débat pizza Mutual : quelle aire est plus grande — deux pizzas de {small} pouces ou une de {large} pouces ? {pi_note}",
     "q.pizza_cmp.v2": "Plus de surface pizza : deux pizzas {small} pouces ou une pizza {large} pouces ? {pi_note}",
     "q.pizza_cmp.v3": "Comparez les zones : 2 × (pizzas à rayon {small}\") vs 1 × (pizza {large}\"). Lequel gagne ? {pi_note}",
@@ -328,7 +328,7 @@
     "q.tv": "Votre famille vient d'acquérir un téléviseur {diagonal} pouces d'une largeur {width} pouces, parfait pour la conférence générale (et pour se disputer pour savoir qui est assis où). Quelle est sa taille ? Arrondissez au dixième près. (La taille de la télévision est la diagonale, et non la « grandeur » spirituelle des discussions.)",
     "q.tv.v2": "Un téléviseur est étiqueté {diagonal} pouces (diagonale) et mesure {width} pouces de largeur. Quelle est sa taille ? Arrondissez au dixième près.",
     "q.tv.v3": "Diagonale {diagonal}\", largeur {width}\". Trouvez la hauteur au dixième près.",
-    "q.z_from_pct": "Calculez approximativement le score z pour un point de données sur le centile {pct}th (normal standard). Arrondissez au dixième le plus proche si nécessaire.",
+    "q.z_from_pct": "Using the z-score / percentile table shown, what z-score corresponds to percentile {pct}?",
     "q.zscore": "Un quiz de séminaire a moyenne {mean} et écart type {sd}. Quel est le z-score pour {score} ? Arrondissez au centième.",
     "q.zscore.v2": "Moyenne {mean}, SD {sd}. Score Z pour x = {score} ? Arrondir aux centièmes.",
     "q.zscore.v3": "Trouvez z pour le score {score} lorsque μ={mean} et σ={sd}. Arrondissez au centième près.",
@@ -427,6 +427,11 @@
     "notes_placeholder": "Notez ici vos calculs, formules ou rappels…",
     "disclaimer": "Outil de pratique non officiel d’un étudiant pour Ensign College MAT 107, basé sur un vrai devoir du cours. Aucune affiliation, approbation ou lien avec Ensign College ni avec L’Église de Jésus-Christ des Saints des Derniers Jours. Créé par un étudiant pour l’étude personnelle. Construit avec Cursor, hébergé sur Cloudflare Workers et versionné sur GitHub.",
     "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
-    "scripture_cite": "— 1 Néphi 17:9"
+    "scripture_cite": "— 1 Néphi 17:9",
+    "h.z_from_pct": "Scan the Percentile column on the table shown until you find {pct} (or the closest listed value), then read the matching z-score.",
+    "z_table_z": "z-score",
+    "z_table_pct": "Percentile",
+    "z_table_caption": "Standard normal table — lookup z-score ↔ percentile",
+    "z_table_aria": "Z-score to percentile reference table"
   }
 }

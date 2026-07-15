@@ -155,7 +155,7 @@
     "h.mean": "Média = soma dos valores ÷ número de valores. Adicione primeiro e depois divida.",
     "h.median": "Classifique os dados; mediana é o valor médio (ou média de dois valores médios)",
     "h.mode": "Moda = valor que aparece com mais frequência",
-    "h.pct_from_z": "A tabela fornece a área acumulada à esquerda de z; multiplique por 100 para obter um percentil.",
+    "h.pct_from_z": "Use the z-score / percentile table shown with this question. Find your z in the left column; the percentile is listed beside it. Round to the nearest whole number if asked.",
     "h.pizza_cmp": "Área = πr². Duplicar o diâmetro (ou raio) multiplica a área por 4.",
     "h.pizza_double": "A = πr², então se r → 2r então A → π(2r)² = 4πr²",
     "h.range": "Faixa = máximo - mínimo",
@@ -288,7 +288,7 @@
     "q.mode": "Escolhas primárias de músicas para cantar (codificadas como números): {ds}. Encontre o modo – a música mais solicitada. (Dica: provavelmente era “Eu sou um filho de Deus”.)",
     "q.mode.v2": "Dados: {ds}. Qual é o modo?",
     "q.mode.v3": "Qual valor aparece com mais frequência em {ds}?",
-    "q.pct_from_z": "Usando uma tabela normal padrão (Z), qual é o percentil aproximado de um ponto de dados que está nos desvios padrão {z} da média? Insira o percentil como um número (por exemplo, 84 para o 84º percentil). Arredonde para o número inteiro mais próximo.",
+    "q.pct_from_z": "Using the standard normal (Z) table shown with this question, about what percentile is a data point that is {z} standard deviations from the mean? Enter the percentile as a number (e.g. 84 for the 84th percentile). Round to the nearest whole number.",
     "q.pizza_cmp": "Debate de pizza no Mutual: qual tem mais área—duas pizzas de {small} polegadas ou uma de {large}? {pi_note}",
     "q.pizza_cmp.v2": "Mais área de pizza: duas pizzas {small} polegadas ou uma pizza {large} polegadas? {pi_note}",
     "q.pizza_cmp.v3": "Compare áreas: 2×(pizzas de raio {small}”) vs 1×(pizza {large}”). Qual vence? {pi_note}",
@@ -328,7 +328,7 @@
     "q.tv": "Sua família acabou de comprar uma TV {diagonal} de polegadas com {width} polegadas de largura – perfeita para a Conferência Geral (e para discutir sobre quem senta onde). Qual é a altura? Arredonde para o décimo mais próximo. (O tamanho da TV é a diagonal, não a “grandeza” espiritual das palestras.)",
     "q.tv.v2": "Uma TV é rotulada como {diagonal} polegadas (diagonal) e tem {width} polegadas de largura. Qual é a altura? Arredonde para o décimo mais próximo.",
     "q.tv.v3": "Diagonal {diagonal}\", largura {width}\". Encontre a altura até o décimo mais próximo.",
-    "q.z_from_pct": "Aproxime a pontuação z para um ponto de dados no percentil {pct}th (padrão normal). Arredonde para o décimo mais próximo, se necessário.",
+    "q.z_from_pct": "Using the z-score / percentile table shown, what z-score corresponds to percentile {pct}?",
     "q.zscore": "Um questionário do seminário tem média {mean} e desvio padrão {sd}. Qual é o escore-z de {score}?",
     "q.zscore.v2": "Média {mean}, SD {sd}. Pontuação Z para x = {score}? Arredondar para centésimos.",
     "q.zscore.v3": "Encontre z para pontuação {score} quando μ={mean} e σ={sd}. Arredonde para o centésimo mais próximo.",
@@ -427,6 +427,11 @@
     "notes_placeholder": "Anote aqui cálculos, fórmulas ou lembretes…",
     "disclaimer": "Ferramenta de prática não oficial de um estudante para Ensign College MAT 107, baseada em uma tarefa real do curso. Sem afiliação, endosso ou ligação com Ensign College ou A Igreja de Jesus Cristo dos Santos dos Últimos Dias. Feita por um estudante para estudo pessoal. Criada com Cursor, hospedada no Cloudflare Workers e versionada no GitHub.",
     "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
-    "scripture_cite": "— 1 Néfi 17:9"
+    "scripture_cite": "— 1 Néfi 17:9",
+    "h.z_from_pct": "Scan the Percentile column on the table shown until you find {pct} (or the closest listed value), then read the matching z-score.",
+    "z_table_z": "z-score",
+    "z_table_pct": "Percentile",
+    "z_table_caption": "Standard normal table — lookup z-score ↔ percentile",
+    "z_table_aria": "Z-score to percentile reference table"
   }
 }

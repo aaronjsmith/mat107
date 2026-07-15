@@ -194,9 +194,9 @@
     "h.sd_tf": "Z-स्कोर कोई भी वास्तविक संख्या हो सकता है - डेटा माध्य के सापेक्ष कहीं भी बैठ सकता है।",
     "q.zscore": "सेमिनरी क्विज़ माध्य {mean}, मानक विचलन {sd}। अंक {score} का z-स्कोर?",
     "h.zscore": "z = (x − माध्य) / मानक विचलन। कोष्ठक के साथ ध्यानपूर्वक दर्ज करें।",
-    "q.pct_from_z": "एक मानक सामान्य (Z) तालिका का उपयोग करते हुए, एक डेटा बिंदु कौन सा प्रतिशतक है जो माध्य से {z} मानक विचलन है? प्रतिशतक को एक संख्या के रूप में दर्ज करें (उदाहरण के लिए 84वें प्रतिशतक के लिए 84)। निकटतम पूर्ण संख्या तक पूर्णांकित करें।",
-    "h.pct_from_z": "तालिका z के बाईं ओर संचयी क्षेत्र देती है; एक प्रतिशतक के लिए 100 से गुणा करें।",
-    "q.z_from_pct": "{pct}वें प्रतिशतक (मानक सामान्य) पर डेटा बिंदु के लिए अनुमानित z-स्कोर। यदि आवश्यक हो तो निकटतम दसवें तक पूर्णांकित करें।",
+    "q.pct_from_z": "Using the standard normal (Z) table shown with this question, about what percentile is a data point that is {z} standard deviations from the mean? Enter the percentile as a number (e.g. 84 for the 84th percentile). Round to the nearest whole number.",
+    "h.pct_from_z": "Use the z-score / percentile table shown with this question. Find your z in the left column; the percentile is listed beside it. Round to the nearest whole number if asked.",
+    "q.z_from_pct": "Using the z-score / percentile table shown, what z-score corresponds to percentile {pct}?",
     "q.skew": "एक डेटा वितरण दाईं ओर (दाहिनी ओर पूंछ) तिरछा होता है, एक दुर्लभ \"सुपर-लॉन्ग\" मीटिंग की तरह जो औसत को ऊपर खींचती है। कौन सा आम तौर पर सच है?",
     "c.skew_a": "माध्य > माध्यिका",
     "c.skew_b": "माध्य < माध्यिका",
@@ -427,6 +427,11 @@
     "notes_placeholder": "Jot working, formulas, or reminders here…",
     "disclaimer": "Unofficial student practice tool for Ensign College MAT 107, based on a real course assignment. Not affiliated with, endorsed by, or connected to Ensign College or The Church of Jesus Christ of Latter-day Saints. Made by a student for personal study. Built with Cursor, hosted on Cloudflare Workers, and versioned on GitHub.",
     "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
-    "scripture_cite": "— 1 Nephi 17:9"
+    "scripture_cite": "— 1 Nephi 17:9",
+    "h.z_from_pct": "Scan the Percentile column on the table shown until you find {pct} (or the closest listed value), then read the matching z-score.",
+    "z_table_z": "z-score",
+    "z_table_pct": "Percentile",
+    "z_table_caption": "Standard normal table — lookup z-score ↔ percentile",
+    "z_table_aria": "Z-score to percentile reference table"
   }
 }

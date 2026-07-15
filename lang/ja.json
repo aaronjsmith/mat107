@@ -194,9 +194,9 @@
     "h.sd_tf": "Z スコアは任意の実数にすることができます。データは平均に対して相対的な任意の位置に存在する可能性があります。",
     "q.zscore": "セミナリーの平均 {mean}・標準偏差 {sd}。得点 {score} の z は？",
     "h.zscore": "z = (x − 平均) / 標準偏差。括弧を含めて慎重に入力してください。",
-    "q.pct_from_z": "標準正規 (Z) テーブルを使用すると、平均から {z} 標準偏差であるデータ ポイントはおよそ何パーセンタイルになりますか?パーセンタイルを数値として入力します (例: 84 番目のパーセンタイルの場合は 84)。最も近い整数に丸めます。",
-    "h.pct_from_z": "表には、z の左側の累積領域が示されています。 100 を掛けるとパーセンタイルになります。",
-    "q.z_from_pct": "Approximate the z-score for a data point on the {pct}th percentile (standard normal).必要に応じて、10 分の 1 に四捨五入します。",
+    "q.pct_from_z": "Using the standard normal (Z) table shown with this question, about what percentile is a data point that is {z} standard deviations from the mean? Enter the percentile as a number (e.g. 84 for the 84th percentile). Round to the nearest whole number.",
+    "h.pct_from_z": "Use the z-score / percentile table shown with this question. Find your z in the left column; the percentile is listed beside it. Round to the nearest whole number if asked.",
+    "q.z_from_pct": "Using the z-score / percentile table shown, what z-score corresponds to percentile {pct}?",
     "q.skew": "データの分布は右に偏っています（末尾が右）。これは、平均を引き上げる稀な「超長時間」会議のようになります。一般的に正しいのはどれですか?",
     "c.skew_a": "平均値 > 中央値",
     "c.skew_b": "平均値 < 中央値",
@@ -427,6 +427,11 @@
     "notes_placeholder": "Jot working, formulas, or reminders here…",
     "disclaimer": "Unofficial student practice tool for Ensign College MAT 107, based on a real course assignment. Not affiliated with, endorsed by, or connected to Ensign College or The Church of Jesus Christ of Latter-day Saints. Made by a student for personal study. Built with Cursor, hosted on Cloudflare Workers, and versioned on GitHub.",
     "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
-    "scripture_cite": "— 1 Nephi 17:9"
+    "scripture_cite": "— 1 Nephi 17:9",
+    "h.z_from_pct": "Scan the Percentile column on the table shown until you find {pct} (or the closest listed value), then read the matching z-score.",
+    "z_table_z": "z-score",
+    "z_table_pct": "Percentile",
+    "z_table_caption": "Standard normal table — lookup z-score ↔ percentile",
+    "z_table_aria": "Z-score to percentile reference table"
   }
 }
