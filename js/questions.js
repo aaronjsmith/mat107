@@ -360,12 +360,54 @@
     return _numeric(tVar("q.feet_in_yard"), 3, "conversions", 0, t("h.feet_in_yard"), t("s.feet_in_yard"));
   }
 
+  function genYardsToFeet() {
+    const yards = nextChoice("ydAmt", [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15]);
+    return _numeric(
+      tVar("q.yd_to_ft", { yards: yards }),
+      yards * 3,
+      "conversions",
+      0,
+      t("h.yd_to_ft"),
+      "feet = " + yards + " × 3",
+      t("unit.ft"),
+      calcHelp(yards + " × 3 =", yards + " × 3 =")
+    );
+  }
+
   function genSqFtInSqYard() {
     return _numeric(tVar("q.sqft_sqyd"), 9, "conversions", 0, t("h.sqft_sqyd"), t("s.sqft_sqyd"));
   }
 
+  function genSqYdToSqFt() {
+    const sqYd = nextChoice("sqYdAmt", [2, 3, 4, 5, 6, 8, 10, 12]);
+    return _numeric(
+      tVar("q.sqyd_to_sqft", { sqYd: sqYd }),
+      sqYd * 9,
+      "conversions",
+      0,
+      t("h.sqyd_to_sqft"),
+      "sq ft = " + sqYd + " × 9",
+      t("unit.sq_ft"),
+      calcHelp(sqYd + " × 9 =", sqYd + " × 9 =")
+    );
+  }
+
   function genCuFtInCuYard() {
     return _numeric(tVar("q.cuft_cuyd"), 27, "conversions", 0, t("h.cuft_cuyd"), t("s.cuft_cuyd"));
+  }
+
+  function genCuYdToCuFt() {
+    const cuYd = nextChoice("cuYdAmt", [2, 3, 4, 5, 6, 8]);
+    return _numeric(
+      tVar("q.cuyd_to_cuft", { cuYd: cuYd }),
+      cuYd * 27,
+      "conversions",
+      0,
+      t("h.cuyd_to_cuft"),
+      "cu ft = " + cuYd + " × 27",
+      "",
+      calcHelp(cuYd + " × 27 =", cuYd + " × 27 =")
+    );
   }
 
   function genDimensionConcept() {
@@ -1180,14 +1222,14 @@
   }
 
   function genGallonsLiters() {
-    const gallons = choice([1, 2, 5, 10]);
-    const bottleL = choice([1, 1.5, 2]);
+    const gallons = nextChoice("galAmt", [1, 2, 3, 4, 5, 6, 8, 10, 12]);
+    const bottleL = nextChoice("bottleL", [0.5, 1, 1.5, 2, 2.5]);
     const liters = gallons * 3.785;
     const bottles = liters / bottleL;
     return _numeric(
       tVar("q.gal_l", { gallons: gallons, bottleL: bottleL }),
       num(bottles),
-      "scale_rates",
+      "conversions",
       0.05,
       t("h.gal_l"),
       "liters = " +
@@ -2242,8 +2284,11 @@
 
   const GENERATORS = [
     genFeetInYard,
+    genYardsToFeet,
     genSqFtInSqYard,
+    genSqYdToSqFt,
     genCuFtInCuYard,
+    genCuYdToCuFt,
     genDimensionConcept,
     genFormulaSquarePerimeter,
     genFormulaSquareArea,

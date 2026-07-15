@@ -265,8 +265,8 @@
     "q.form_tri_a": "Wie lautet die Formel für die Fläche eines Dreiecks mit der Basis b und der Höhe h?",
     "q.form_tri_p": "Wie lautet die Formel für den Umfang eines Dreiecks mit den Seiten a, b und c?",
     "q.gal_l": "Sie haben einen {gallons}-Gallonen-Vorratsbehälter mit Punsch für das Stationspicknick (die rosa Sorte, die immer leicht fluoreszierend aussieht). Wie viele {bottleL}-Liter-Flaschen braucht man, um es zu füllen? (1 Gallone = 3,785 Liter). Auf das nächste Hundertstel runden. „Und es begab sich“, dass jemand metrische Flaschen kaufte.",
-    "q.gal_l.v2": "Sie haben {gallons} Gallonen Punsch. Wie viele {bottleL}-Liter-Flaschen füllen es? (1 Gallone = 3,785 l). Auf Hundertstel runden.",
-    "q.gal_l.v3": "Konvertieren Sie {gallons}-Gallone in {bottleL}-L-Flaschen (1 Gallone = 3,785 l). Auf das nächste Hundertstel runden.",
+    "q.gal_l.v2": "A {gallons}-gallon water cooler for trek needs emptying into {bottleL}-liter bottles. How many bottles? (1 gal = 3.785 L). Round to the nearest hundredth.",
+    "q.gal_l.v3": "You bought {gallons} gallons of paint for the scout room. How many {bottleL}-liter cans is that equivalent to? (1 gal = 3.785 L). Round to hundredths.",
     "q.literacy": "„Sucht Lernen … durch Studium und auch durch Glauben“ (LuB 88:118)—welche Praxis hilft am besten bei guter Statistik-Nutzung?",
     "q.literacy.v2": "Welche Angewohnheit unterstützt am besten den klugen Umgang mit Statistiken?",
     "q.literacy.v3": "Best Practice zum Lesen von Studien und Grafiken?",
@@ -444,6 +444,21 @@
     "q.sphere_vol": "A spherical Primary punch bowl has radius {r} inches. What is its volume? {pi_note}",
     "q.sphere_vol.v2": "Sphere radius {r}. What is the volume? {pi_note}",
     "q.sphere_vol.v3": "Compute V = (4/3)πr³ for r = {r}. {pi_note}",
-    "h.sphere_vol": "V = (4/3)πr³. Type 3.14 for π (not the π key). Use parentheses: (4÷3)×3.14×r³."
+    "h.sphere_vol": "V = (4/3)πr³. Type 3.14 for π (not the π key). Use parentheses: (4÷3)×3.14×r³.",
+    "q.yd_to_ft": "A Primary streamer needs to be {yards} yards long for the cultural-hall wall. How many feet is that?",
+    "q.yd_to_ft.v2": "Convert {yards} yards to feet.",
+    "q.yd_to_ft.v3": "A fabric remnant is {yards} yards. What is that length in feet?",
+    "h.yd_to_ft": "1 yard = 3 feet, so multiply yards by 3.",
+    "q.sqyd_to_sqft": "Sister Jensen ordered {sqYd} square yards of linoleum for a classroom. How many square feet is that?",
+    "q.sqyd_to_sqft.v2": "Convert {sqYd} square yards to square feet.",
+    "q.sqyd_to_sqft.v3": "A floor section is {sqYd} sq yd. How many square feet?",
+    "h.sqyd_to_sqft": "1 square yard = 9 square feet, so multiply by 9.",
+    "q.cuyd_to_cuft": "The stake bought {cuYd} cubic yards of mulch for the meetinghouse landscaping. How many cubic feet is that?",
+    "q.cuyd_to_cuft.v2": "Convert {cuYd} cubic yards to cubic feet.",
+    "q.cuyd_to_cuft.v3": "A delivery of {cuYd} cu yd — how many cubic feet?",
+    "h.cuyd_to_cuft": "1 cubic yard = 27 cubic feet, so multiply by 27.",
+    "q.gal_l.v4": "A food-storage drum holds {gallons} gallons of wheat-free… wait, milk for the breakfast. How many {bottleL}-liter bottles fill it? (1 gal = 3.785 L). Round to the nearest hundredth.",
+    "q.gal_l.v5": "Convert {gallons} gallons to {bottleL}-liter bottles (1 gal = 3.785 L). Round to the nearest hundredth.",
+    "q.gal_l.v6": "The cultural-hall mop bucket recipe calls for {gallons} gallons of cleaner concentrate. How many {bottleL}-liter bottles is that? (1 gal = 3.785 L). Round to hundredths."
   }
 }
