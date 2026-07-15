@@ -1508,17 +1508,19 @@
     data[1] = 40;
     const approxSd = _range(data) / 4;
     const ds = "{" + data.join(", ") + "}";
-    return _numeric(
-      tVar("q.range_rule", { ds: ds }),
-      num(approxSd),
-      "stats_spread",
-      0.05,
-      t("h.range_rule"),
-      "s ≈ (" + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + ") / 4",
-      "",
-      calcHelp(
-        "( " + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + " ) ÷ 4 =",
-        "( " + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + " ) ÷ 4 ="
+    return withEmpChart(
+      _numeric(
+        tVar("q.range_rule", { ds: ds }),
+        num(approxSd),
+        "stats_spread",
+        0.05,
+        t("h.range_rule"),
+        "s ≈ (" + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + ") / 4",
+        "",
+        calcHelp(
+          "( " + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + " ) ÷ 4 =",
+          "( " + Math.max.apply(null, data) + " − " + Math.min.apply(null, data) + " ) ÷ 4 ="
+        )
       )
     );
   }
@@ -1537,39 +1539,45 @@
         [d2, t("c.ds2"), s2],
       ]);
       const ds = "{" + which[0].join(", ") + "}";
-      return _numeric(
-        tVar("q.compare_sd", { which: which[1], ds: ds }),
-        num(which[2]),
-        "stats_spread",
-        0.05,
-        t("h.compare_sd"),
-        "s ≈ (" +
-          Math.max.apply(null, which[0]) +
-          " − " +
-          Math.min.apply(null, which[0]) +
-          ") / 4"
+      return withEmpChart(
+        _numeric(
+          tVar("q.compare_sd", { which: which[1], ds: ds }),
+          num(which[2]),
+          "stats_spread",
+          0.05,
+          t("h.compare_sd"),
+          "s ≈ (" +
+            Math.max.apply(null, which[0]) +
+            " − " +
+            Math.min.apply(null, which[0]) +
+            ") / 4"
+        )
       );
     }
-    return _choice(
-      tVar("q.compare_which", {
-        d1: "{" + d1.join(", ") + "}",
-        d2: "{" + d2.join(", ") + "}",
-      }),
-      [t("c.ds1"), t("c.ds2"), t("c.equal")],
-      Math.abs(s1 - s2) > 0.01 ? more : t("c.equal"),
-      "stats_spread",
-      t("h.compare_which"),
-      "s1 ≈ " + num(s1) + ",  s2 ≈ " + num(s2) + "  (from range/4)"
+    return withEmpChart(
+      _choice(
+        tVar("q.compare_which", {
+          d1: "{" + d1.join(", ") + "}",
+          d2: "{" + d2.join(", ") + "}",
+        }),
+        [t("c.ds1"), t("c.ds2"), t("c.equal")],
+        Math.abs(s1 - s2) > 0.01 ? more : t("c.equal"),
+        "stats_spread",
+        t("h.compare_which"),
+        "s1 ≈ " + num(s1) + ",  s2 ≈ " + num(s2) + "  (from range/4)"
+      )
     );
   }
 
   function genSdTf() {
-    return _choice(
-      tVar("q.sd_tf"),
-      [t("c.true"), t("c.false")],
-      t("c.false"),
-      "stats_spread",
-      t("h.sd_tf")
+    return withEmpChart(
+      _choice(
+        tVar("q.sd_tf"),
+        [t("c.true"), t("c.false")],
+        t("c.false"),
+        "stats_spread",
+        t("h.sd_tf")
+      )
     );
   }
 
@@ -1578,17 +1586,19 @@
     const sd = choice([5, 8, 10, 12, 13.33, 15]);
     const score = choice([55, 60, 65, 70, 78, 85, 92, 95, 105]);
     const z = (score - mean) / sd;
-    return _numeric(
-      tVar("q.zscore", { mean: mean, sd: sd, score: score }),
-      num(z),
-      "z_scores",
-      0.05,
-      t("h.zscore"),
-      "z = (" + score + " − " + mean + ") / " + sd,
-      "",
-      calcHelp(
-        "( " + score + " − " + mean + " ) ÷ " + sd + " =",
-        "( " + score + " − " + mean + " ) ÷ " + sd + " ="
+    return withEmpChart(
+      _numeric(
+        tVar("q.zscore", { mean: mean, sd: sd, score: score }),
+        num(z),
+        "z_scores",
+        0.05,
+        t("h.zscore"),
+        "z = (" + score + " − " + mean + ") / " + sd,
+        "",
+        calcHelp(
+          "( " + score + " − " + mean + " ) ÷ " + sd + " =",
+          "( " + score + " − " + mean + " ) ÷ " + sd + " ="
+        )
       )
     );
   }
@@ -1743,13 +1753,15 @@
     const picked = choice(pool);
     const z = picked[0];
     const pct = picked[1];
-    return withZTable(
-      _numeric(
-        tVar("q.pct_from_z", { z: z }),
-        Math.round(pct),
-        "z_scores",
-        1,
-        t("h.pct_from_z")
+    return withEmpChart(
+      withZTable(
+        _numeric(
+          tVar("q.pct_from_z", { z: z }),
+          Math.round(pct),
+          "z_scores",
+          1,
+          t("h.pct_from_z")
+        )
       )
     );
   }
@@ -1765,13 +1777,15 @@
     const picked = choice(pool);
     const z = picked[0];
     const pct = picked[1];
-    return withZTable(
-      _numeric(
-        tVar("q.z_from_pct", { pct: pct }),
-        z,
-        "z_scores",
-        0.05,
-        t("h.z_from_pct", { pct: pct })
+    return withEmpChart(
+      withZTable(
+        _numeric(
+          tVar("q.z_from_pct", { pct: pct }),
+          z,
+          "z_scores",
+          0.05,
+          t("h.z_from_pct", { pct: pct })
+        )
       )
     );
   }
@@ -2110,7 +2124,11 @@
   }
 
   function withEmpChart(q) {
-    q.svg = _empChartHtml();
+    // Prepend so the collapsible curve sits above any other figure (e.g. z-table).
+    const chart = _empChartHtml();
+    q.svg = q.svg
+      ? '<div class="q-refs">' + chart + q.svg + "</div>"
+      : chart;
     return q;
   }
 

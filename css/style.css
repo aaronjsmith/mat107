@@ -292,8 +292,16 @@ html[dir="rtl"] .lang-wrap {
 }
 
 .figure:has(.emp-chart),
-.figure:has(.z-table-wrap) {
+.figure:has(.z-table-wrap),
+.figure:has(.q-refs) {
   display: block;
+}
+
+.q-refs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
 }
 
 .z-table-wrap {
