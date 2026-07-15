@@ -436,6 +436,14 @@
     "emp_chart_show": "Show normal curve / empirical rule chart",
     "emp_chart_caption": "Normal distribution — percentage of data in each standard-deviation band",
     "emp_chart_aria": "Normal curve showing empirical rule percentages",
-    "emp_chart_axis": "Standard Deviations"
+    "emp_chart_axis": "Standard Deviations",
+    "q.cube_vol": "The Young Men found a cubic storage box with side length {s} inches (for the eternally missing volleyball). What is its volume?",
+    "q.cube_vol.v2": "A cube has side {s} inches. What is its volume?",
+    "q.cube_vol.v3": "Cube volume: side {s}. Compute V = s³.",
+    "h.cube_vol": "V = s³. Multiply side × side × side (or use x³).",
+    "q.sphere_vol": "A spherical Primary punch bowl has radius {r} inches. What is its volume? {pi_note}",
+    "q.sphere_vol.v2": "Sphere radius {r}. What is the volume? {pi_note}",
+    "q.sphere_vol.v3": "Compute V = (4/3)πr³ for r = {r}. {pi_note}",
+    "h.sphere_vol": "V = (4/3)πr³. Type 3.14 for π (not the π key). Use parentheses: (4÷3)×3.14×r³."
   }
 }

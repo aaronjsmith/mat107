@@ -72,6 +72,7 @@
     gens: [],
     fingerprints: [],
     variantByKey: {},
+    flashFronts: [],
   };
   const RECENT_KEEP = 8;
 
@@ -310,7 +311,15 @@
   }
 
   function genFormulaFlashcard() {
-    const card = choice(getFormulaCards());
+    const cards = getFormulaCards();
+    // Rotate through the deck so cylinder / one shape does not dominate.
+    const avoidFronts = recentPick.flashFronts || [];
+    const fresh = cards.filter(function (c) {
+      return avoidFronts.indexOf(c.front) < 0;
+    });
+    const card = choice(fresh.length ? fresh : cards);
+    remember(recentPick.flashFronts, card.front, Math.max(6, cards.length - 2));
+
     const direction = choice(["recall", "recognize"]);
     if (direction === "recall") {
       return {
@@ -328,7 +337,7 @@
         unit: "",
       };
     }
-    const wrong = getFormulaCards().filter(function (c) {
+    const wrong = cards.filter(function (c) {
       return c.back !== card.back;
     }).map(function (c) {
       return c.back;
@@ -441,24 +450,25 @@
     );
   }
 
-  function genFormulaVolume() {
-    const which = choice(["cube", "sphere", "cylinder"]);
-    if (which === "cube") {
-      return _choice(
-        tVar("q.form_cube"),
-        ["V = s³", "V = 6s²", "V = s²", "V = 4s"],
-        "V = s³",
-        "formulas"
-      );
-    }
-    if (which === "sphere") {
-      return _choice(
-        tVar("q.form_sphere"),
-        ["V = (4/3)πr³", "V = 4πr²", "V = πr²h", "V = (4/3)πr²"],
-        "V = (4/3)πr³",
-        "formulas"
-      );
-    }
+  function genFormulaCube() {
+    return _choice(
+      tVar("q.form_cube"),
+      ["V = s³", "V = 6s²", "V = s²", "V = 4s"],
+      "V = s³",
+      "formulas"
+    );
+  }
+
+  function genFormulaSphere() {
+    return _choice(
+      tVar("q.form_sphere"),
+      ["V = (4/3)πr³", "V = 4πr²", "V = πr²h", "V = (4/3)πr²"],
+      "V = (4/3)πr³",
+      "formulas"
+    );
+  }
+
+  function genFormulaCylinder() {
     return _choice(
       tVar("q.form_cyl"),
       ["V = πr²h", "V = 2πrh", "V = (4/3)πr³", "V = πr²"],
@@ -1066,6 +1076,39 @@
       calcHelp(
         "3.14 × ( " + dNum + " ÷ 2 ) x² × " + h + " =",
         "3.14 × ( " + dNum + " ÷ 2 ) x² × " + h + " ="
+      )
+    );
+  }
+
+  function genCubeVolume() {
+    const s = nextChoice("cubeS", [2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8]);
+    const vol = s * s * s;
+    return _numeric(
+      tVar("q.cube_vol", { s: s }),
+      num(vol),
+      "volume",
+      0.02,
+      t("h.cube_vol"),
+      "V = s³ = " + s + "³",
+      t("unit.cu_in"),
+      calcHelp(s + " x³ =", s + " x³ =", "Or multiply " + s + " × " + s + " × " + s + ".")
+    );
+  }
+
+  function genSphereVolume() {
+    const r = nextChoice("sphereR", [2, 2.5, 3, 3.5, 4, 4.5, 5, 6]);
+    const vol = (4 / 3) * PI * r * r * r;
+    return _numeric(
+      tVar("q.sphere_vol", { r: r, pi_note: piNote() }),
+      num(vol),
+      "volume",
+      0.05,
+      t("h.sphere_vol"),
+      "V = (4/3) × " + PI + " × (" + r + ")³",
+      t("unit.cu_in"),
+      calcHelp(
+        "( 4 ÷ 3 ) × 3.14 × " + r + " x³ =",
+        "( 4 ÷ 3 ) × 3.14 × " + r + " x³ ="
       )
     );
   }
@@ -2207,7 +2250,9 @@
     genFormulaRectangle,
     genFormulaTriangle,
     genFormulaCircle,
-    genFormulaVolume,
+    genFormulaCube,
+    genFormulaSphere,
+    genFormulaCylinder,
     genPythagoreanFormula,
     genFormulaFlashcard,
     genRectanglePa,
@@ -2217,6 +2262,8 @@
     genCompositeTriRectSemi,
     genFence,
     genSoupCan,
+    genCubeVolume,
+    genSphereVolume,
     genDriveway,
     genTv,
     genGallonsLiters,
@@ -2262,7 +2309,14 @@
     if (!keys.length) return null;
     // Strongly avoid the last 2 topics so mix mode switches often.
     const avoid = recentPick.topics.slice(0, 2);
-    return choiceAvoid(keys, avoid);
+    // Slight formulas bias in mix mode — flashcard practice needs more reps.
+    const weighted = [];
+    keys.forEach(function (k) {
+      if (avoid.indexOf(k) >= 0) return;
+      const copies = k === "formulas" ? 2 : 1;
+      for (let i = 0; i < copies; i++) weighted.push(k);
+    });
+    return choice(weighted.length ? weighted : keys);
   }
 
   function generateQuestion(topic) {
@@ -2270,10 +2324,21 @@
       const q = genFormulaFlashcard();
       remember(recentPick.topics, q.topic);
       remember(recentPick.fingerprints, fingerprint(q));
+      remember(recentPick.gens, genFormulaFlashcard, 6);
       return q;
     }
 
     const targetTopic = pickTopicForMix(topic);
+
+    // Within Formulas, prefer flashcards so every formula gets typed/recalled.
+    if (targetTopic === "formulas" && Math.random() < 0.55) {
+      const q = genFormulaFlashcard();
+      remember(recentPick.gens, genFormulaFlashcard, 6);
+      remember(recentPick.topics, q.topic, 6);
+      remember(recentPick.fingerprints, fingerprint(q), RECENT_KEEP);
+      return q;
+    }
+
     let pool = GENERATORS;
     if (targetTopic) {
       const filtered = GENERATORS.filter(function (g) {
@@ -2283,7 +2348,7 @@
     }
 
     // Prefer generators we have not used recently.
-    const avoidGens = recentPick.gens.slice(0, 3);
+    const avoidGens = recentPick.gens.slice(0, 4);
     let candidates = pool.filter(function (g) {
       return avoidGens.indexOf(g) < 0;
     });
@@ -2296,7 +2361,7 @@
       const fp = fingerprint(q);
       if (recentPick.fingerprints.indexOf(fp) < 0 || attempt === 9) {
         best = q;
-        remember(recentPick.gens, gen, 6);
+        remember(recentPick.gens, gen, 8);
         remember(recentPick.topics, q.topic, 6);
         remember(recentPick.fingerprints, fp, RECENT_KEEP);
         break;
