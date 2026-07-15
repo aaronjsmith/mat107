@@ -291,6 +291,11 @@ html[dir="rtl"] .lang-wrap {
   padding: 0.5rem 0;
 }
 
+.figure:has(.emp-chart),
+.figure:has(.z-table-wrap) {
+  display: block;
+}
+
 .z-table-wrap {
   width: 100%;
   max-width: 100%;
@@ -359,6 +364,63 @@ html[dir="rtl"] .lang-wrap {
   border: 1px solid var(--line);
   border-radius: 10px;
   box-sizing: content-box;
+}
+
+.emp-chart {
+  width: 100%;
+  max-width: 100%;
+}
+
+.emp-chart-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--accent-deep);
+  background: rgba(15, 110, 86, 0.08);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  user-select: none;
+}
+
+.emp-chart-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.emp-chart-toggle::before {
+  content: "▸";
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.emp-chart[open] .emp-chart-toggle::before {
+  content: "▾";
+}
+
+.emp-chart-body {
+  margin-top: 0.75rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.55rem 0.45rem 0.65rem;
+}
+
+.emp-chart-caption {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.emp-curve-svg {
+  width: min(100%, 640px);
+  border: none;
 }
 
 .hint-stack {

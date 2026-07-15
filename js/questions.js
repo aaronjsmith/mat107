@@ -1946,6 +1946,174 @@
     return q;
   }
 
+  function _normalPdfY(z) {
+    // Unnormalized height for drawing (peak ≈ 1 at z=0).
+    return Math.exp(-0.5 * z * z);
+  }
+
+  function _empChartSvg() {
+    // Handout-style standard normal curve with section % and ±1/±2/±3 spans.
+    const W = 640;
+    const H = 300;
+    const axisY = 250;
+    const peakY = 78;
+    const xAt = function (z) {
+      return 70 + ((z + 3.6) / 7.2) * 520;
+    };
+    const yAt = function (z) {
+      return axisY - _normalPdfY(z) * (axisY - peakY);
+    };
+
+    let curve = "";
+    for (let i = 0; i <= 72; i++) {
+      const z = -3.6 + (i / 72) * 7.2;
+      const cmd = i === 0 ? "M" : "L";
+      curve += cmd + " " + xAt(z).toFixed(1) + " " + yAt(z).toFixed(1) + " ";
+    }
+
+    const ticks = [-3, -2, -1, 0, 1, 2, 3];
+    let tickLines = "";
+    let tickLabels = "";
+    ticks.forEach(function (z) {
+      const x = xAt(z);
+      const yTop = yAt(z);
+      tickLines +=
+        '<line x1="' +
+        x.toFixed(1) +
+        '" y1="' +
+        yTop.toFixed(1) +
+        '" x2="' +
+        x.toFixed(1) +
+        '" y2="' +
+        axisY +
+        '" stroke="#7eb6d9" stroke-width="' +
+        (z === 0 ? "1.6" : "1.2") +
+        '" />';
+      const label = z > 0 ? "+" + z : String(z);
+      tickLabels +=
+        '<text x="' +
+        x.toFixed(1) +
+        '" y="' +
+        (axisY + 18) +
+        '" text-anchor="middle" font-size="13" fill="#1a2332">' +
+        label +
+        "</text>";
+    });
+
+    // Segment % labels (handout values) placed in each band.
+    const segs = [
+      { z: -3.35, pct: ".13%", dy: -8 },
+      { z: -2.5, pct: "2.15%", dy: -14 },
+      { z: -1.5, pct: "13.59%", dy: -28 },
+      { z: -0.5, pct: "34.13%", dy: -50 },
+      { z: 0.5, pct: "34.13%", dy: -50 },
+      { z: 1.5, pct: "13.59%", dy: -28 },
+      { z: 2.5, pct: "2.15%", dy: -14 },
+      { z: 3.35, pct: ".13%", dy: -8 },
+    ];
+    let segLabels = "";
+    segs.forEach(function (s) {
+      const x = xAt(s.z);
+      const y = yAt(s.z) + s.dy;
+      segLabels +=
+        '<text x="' +
+        x.toFixed(1) +
+        '" y="' +
+        y.toFixed(1) +
+        '" text-anchor="middle" font-size="12" font-weight="600" fill="#1a2332">' +
+        s.pct +
+        "</text>";
+    });
+
+    // Cumulative range arrows above the curve (68.26 / 95.44 / 99.74).
+    const ranges = [
+      { lo: -1, hi: 1, label: "68.26", y: 52 },
+      { lo: -2, hi: 2, label: "95.44", y: 34 },
+      { lo: -3, hi: 3, label: "99.74", y: 16 },
+    ];
+    let rangeMarks = "";
+    ranges.forEach(function (r) {
+      const x1 = xAt(r.lo);
+      const x2 = xAt(r.hi);
+      const mid = (x1 + x2) / 2;
+      rangeMarks +=
+        '<line x1="' +
+        x1.toFixed(1) +
+        '" y1="' +
+        r.y +
+        '" x2="' +
+        x2.toFixed(1) +
+        '" y2="' +
+        r.y +
+        '" stroke="#7eb6d9" stroke-width="1.4" marker-start="url(#emp-arrow-start)" marker-end="url(#emp-arrow-end)" />' +
+        '<text x="' +
+        mid.toFixed(1) +
+        '" y="' +
+        (r.y - 5) +
+        '" text-anchor="middle" font-size="13" font-weight="600" fill="#1a2332">' +
+        r.label +
+        "</text>";
+    });
+
+    return (
+      '<svg viewBox="0 0 ' +
+      W +
+      " " +
+      H +
+      '" xmlns="http://www.w3.org/2000/svg" class="q-svg emp-curve-svg" role="img" aria-label="' +
+      t("emp_chart_aria") +
+      '">' +
+      "<defs>" +
+      '<marker id="emp-arrow-end" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">' +
+      '<path d="M0,1 L7,4 L0,7 Z" fill="#7eb6d9" />' +
+      "</marker>" +
+      '<marker id="emp-arrow-start" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto">' +
+      '<path d="M7,1 L0,4 L7,7 Z" fill="#7eb6d9" />' +
+      "</marker>" +
+      "</defs>" +
+      '<line x1="48" y1="' +
+      axisY +
+      '" x2="598" y2="' +
+      axisY +
+      '" stroke="#1a2332" stroke-width="1.5" />' +
+      '<text x="50" y="' +
+      (axisY + 36) +
+      '" font-size="12" fill="#5c6b7a">' +
+      t("emp_chart_axis") +
+      "</text>" +
+      tickLines +
+      '<path d="' +
+      curve.trim() +
+      '" fill="none" stroke="#6b3fa0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />' +
+      rangeMarks +
+      segLabels +
+      tickLabels +
+      "</svg>"
+    );
+  }
+
+  function _empChartHtml() {
+    return (
+      '<details class="emp-chart">' +
+      '<summary class="emp-chart-toggle">' +
+      t("emp_chart_show") +
+      "</summary>" +
+      '<div class="emp-chart-body" role="region" aria-label="' +
+      t("emp_chart_aria") +
+      '">' +
+      '<p class="emp-chart-caption">' +
+      t("emp_chart_caption") +
+      "</p>" +
+      _empChartSvg() +
+      "</div></details>"
+    );
+  }
+
+  function withEmpChart(q) {
+    q.svg = _empChartHtml();
+    return q;
+  }
+
   function genEmpiricalRule() {
     const mean = choice([70, 75, 80]);
     const sd = choice([5, 10, 15]);
@@ -1954,42 +2122,50 @@
     if (ask === "1sd") {
       const lo = mean - sd;
       const hi = mean + sd;
-      return _choice(
-        tVar("q.emp_1sd", { mean: mean, sd: sd, lo: lo, hi: hi }),
-        [t("c.pct68"), t("c.pct95"), t("c.pct997"), t("c.pct50")],
-        t("c.pct68"),
-        "distributions",
-        t("h.emp_1sd")
+      return withEmpChart(
+        _choice(
+          tVar("q.emp_1sd", { mean: mean, sd: sd, lo: lo, hi: hi }),
+          [t("c.pct68"), t("c.pct95"), t("c.pct997"), t("c.pct50")],
+          t("c.pct68"),
+          "distributions",
+          t("h.emp_1sd")
+        )
       );
     }
     if (ask === "2sd") {
       const lo = mean - 2 * sd;
       const hi = mean + 2 * sd;
-      return _choice(
-        tVar("q.emp_2sd", { mean: mean, sd: sd, lo: lo, hi: hi }),
-        [t("c.pct95"), t("c.pct68"), t("c.pct997"), t("c.pct34")],
-        t("c.pct95"),
-        "distributions",
-        t("h.emp_2sd")
+      return withEmpChart(
+        _choice(
+          tVar("q.emp_2sd", { mean: mean, sd: sd, lo: lo, hi: hi }),
+          [t("c.pct95"), t("c.pct68"), t("c.pct997"), t("c.pct34")],
+          t("c.pct95"),
+          "distributions",
+          t("h.emp_2sd")
+        )
       );
     }
     if (ask === "3sd_beyond") {
       const cut = mean + 3 * sd;
-      return _choice(
-        tVar("q.emp_3sd", { mean: mean, sd: sd, cut: cut }),
-        [t("c.pct015"), t("c.pct25"), t("c.pct16"), t("c.pct5")],
-        t("c.pct015"),
-        "distributions",
-        t("h.emp_3sd")
+      return withEmpChart(
+        _choice(
+          tVar("q.emp_3sd", { mean: mean, sd: sd, cut: cut }),
+          [t("c.pct015"), t("c.pct25"), t("c.pct16"), t("c.pct5")],
+          t("c.pct015"),
+          "distributions",
+          t("h.emp_3sd")
+        )
       );
     }
     const cut = mean - sd;
-    return _choice(
-      tVar("q.emp_below", { mean: mean, sd: sd, cut: cut }),
-      [t("c.pct16"), t("c.pct25"), t("c.pct015"), t("c.pct50")],
-      t("c.pct16"),
-      "distributions",
-      t("h.emp_below")
+    return withEmpChart(
+      _choice(
+        tVar("q.emp_below", { mean: mean, sd: sd, cut: cut }),
+        [t("c.pct16"), t("c.pct25"), t("c.pct015"), t("c.pct50")],
+        t("c.pct16"),
+        "distributions",
+        t("h.emp_below")
+      )
     );
   }
 

@@ -432,6 +432,10 @@
     "z_table_z": "z-score",
     "z_table_pct": "Percentile",
     "z_table_caption": "Standard normal table — lookup z-score ↔ percentile",
-    "z_table_aria": "Z-score to percentile reference table"
+    "z_table_aria": "Z-score to percentile reference table",
+    "emp_chart_show": "Show normal curve / empirical rule chart",
+    "emp_chart_caption": "Normal distribution — percentage of data in each standard-deviation band",
+    "emp_chart_aria": "Normal curve showing empirical rule percentages",
+    "emp_chart_axis": "Standard Deviations"
   }
 }
