@@ -26,8 +26,10 @@
     clarifyAiShown: false,
     /** After a miss, serve a remix of the same generator next. */
     remixAfterFail: false,
-    /** Question to remix after a boss retreat modal. */
+    /** Question to remix after a boss miss / retreat modal. */
     pendingBossRemix: null,
+    /** After a miss modal, stay in the fight and remix. */
+    bossContinueAfterMiss: false,
     boss: {
       active: false,
       queue: [],
@@ -496,9 +498,11 @@
     persistBossRun();
     setBossFace("😈");
     updateFinalBossButton(P.getProgressView());
+    if (P.clearBossDrillTopic) P.clearBossDrillTopic();
   }
 
   function failBoss() {
+    // Abandon the run (e.g. Skip) — leave the fight and train the missed skill.
     const missedQ = state.fullQuestion;
     const missedTopic =
       (missedQ && missedQ.topic) ||
@@ -516,6 +520,8 @@
     if (P.clearBossRun) P.clearBossRun();
     state.answered = true;
     state.pendingBossRemix = missedQ;
+    state.bossContinueAfterMiss = false;
+    if (missedTopic && P.setBossDrillTopic) P.setBossDrillTopic(missedTopic);
     hideBossFace();
     lockInputs();
     hideHintControls();
@@ -530,8 +536,41 @@
     setModeButtons();
     refreshProgress();
     openBossRetreatModal({
+      continueFight: false,
       topicLabel: topicLabel,
       real: real,
+      progress: penalty.dropped_to + "/10",
+    });
+  }
+
+  /** Wrong answer / hint in boss: knock 1 mastery, stay in fight, remix same question. */
+  function bossMissAndRemix() {
+    const missedQ = state.fullQuestion;
+    const missedTopic =
+      (missedQ && missedQ.topic) ||
+      (state.boss.queue && state.boss.queue[state.boss.index]) ||
+      null;
+    const topicLabel =
+      missedTopic && Q.TOPICS[missedTopic] ? Q.TOPICS[missedTopic] : t("mode_finalboss");
+    const penalty =
+      P.penalizeBossMiss && missedTopic
+        ? P.penalizeBossMiss(missedTopic)
+        : { dropped_to: 0, topics_affected: 0 };
+    state.answered = true;
+    state.pendingBossRemix = missedQ;
+    state.bossContinueAfterMiss = true;
+    persistBossRun();
+    lockInputs();
+    hideHintControls();
+    els.skip.hidden = true;
+    if (els.remix) els.remix.hidden = true;
+    els.check.hidden = true;
+    els.next.hidden = true;
+    els.feedback.hidden = true;
+    refreshProgress();
+    openBossRetreatModal({
+      continueFight: true,
+      topicLabel: topicLabel,
       progress: penalty.dropped_to + "/10",
     });
   }
@@ -544,14 +583,34 @@
       return;
     }
     opts = opts || {};
-    if (els.bossRetreatMsg) {
-      els.bossRetreatMsg.textContent = opts.real
-        ? t("boss_retreat_msg_real", {
-            topic: opts.topicLabel || "",
-            progress: opts.progress || "9/10",
-          })
-        : t("boss_retreat_msg", { topic: opts.topicLabel || "" });
+    const titleEl = document.getElementById("boss-retreat-title");
+    if (titleEl) {
+      titleEl.textContent = opts.continueFight
+        ? t("boss_miss_title")
+        : t("boss_retreat_title");
     }
+    if (els.bossRetreatMsg) {
+      if (opts.continueFight) {
+        els.bossRetreatMsg.textContent = t("boss_miss_msg", {
+          topic: opts.topicLabel || "",
+          progress: opts.progress || "—",
+        });
+      } else {
+        els.bossRetreatMsg.textContent = opts.real
+          ? t("boss_retreat_msg_real", {
+              topic: opts.topicLabel || "",
+              progress: opts.progress || "9/10",
+            })
+          : t("boss_retreat_msg", { topic: opts.topicLabel || "" });
+      }
+    }
+    if (els.bossRetreatOk) {
+      els.bossRetreatOk.textContent = opts.continueFight
+        ? t("boss_miss_ok")
+        : t("boss_retreat_ok");
+    }
+    const face = els.bossRetreatModal.querySelector(".boss-invite-face");
+    if (face) face.textContent = opts.continueFight ? "👹" : "🏃";
     bossRetreatOpen = true;
     els.bossRetreatModal.hidden = false;
     const focusBtn = els.bossRetreatOk;
@@ -566,8 +625,24 @@
     if (els.bossRetreatModal) els.bossRetreatModal.hidden = true;
     bossRetreatOpen = false;
     const missedQ = state.pendingBossRemix;
+    const continueFight = Boolean(state.bossContinueAfterMiss);
     state.pendingBossRemix = null;
+    state.bossContinueAfterMiss = false;
     state.remixAfterFail = false;
+
+    if (continueFight && state.boss && state.boss.active && state.boss.status === "running") {
+      if (Q.setBossTheme) Q.setBossTheme(true);
+      setModeButtons();
+      updateFinalBossButton(P.getProgressView());
+      if (missedQ && typeof missedQ._gen === "function") {
+        state.fullQuestion = missedQ;
+        loadRemix();
+        return;
+      }
+      loadQuestion();
+      return;
+    }
+
     if (Q.setBossTheme) Q.setBossTheme(false);
     setModeButtons();
     refreshProgress();
@@ -606,6 +681,7 @@
       els.feedback.textContent = t("boss_win_practice");
       els.topic.textContent = t("mode_finalboss");
     }
+    if (P.clearBossDrillTopic) P.clearBossDrillTopic();
     refreshProgress();
   }
 
@@ -845,7 +921,16 @@
     }
 
     let topic = null;
-    if (state.mode === "finalboss") {
+    // After a boss defeat, drill only the missed topic until it is remastered.
+    const drillTopic =
+      state.mode !== "finalboss" && P.syncBossDrillTopic
+        ? P.syncBossDrillTopic()
+        : null;
+    if (drillTopic) {
+      topic = drillTopic;
+      state.mode = drillTopic;
+      setModeButtons();
+    } else if (state.mode === "finalboss") {
       if (!state.boss.active || state.boss.status === "failed" || state.boss.status === "won") {
         // Resume a saved mid-fight run after refresh / leaving the mode.
         if (!restoreBossRunFromStorage()) {
@@ -1206,7 +1291,7 @@
       });
     }
 
-    // Final Boss: one-shot unaided gauntlet — miss drops that topic to 9/10.
+    // Final Boss: miss knocks 1 mastery off that topic, then remix same question to continue.
     if (state.mode === "finalboss" && state.boss.active) {
       const [ok, expected] = Q.checkAnswer(state.fullQuestion, answer);
       els.feedback.hidden = false;
@@ -1218,7 +1303,7 @@
         });
       }
       if (!ok || state.hintsUsed > 0) {
-        failBoss();
+        bossMissAndRemix();
         return;
       }
       advanceBossAfterCorrect();
@@ -1398,12 +1483,38 @@
     btn.addEventListener("click", () => {
       if (btn.disabled) return;
       const nextMode = btn.dataset.topic;
-      state.mode = nextMode;
       state.remixAfterFail = false;
+
+      // Leaving an active fight pauses it (progress is persisted).
+      if (bossFightActive() && nextMode !== "finalboss") {
+        state.mode = nextMode;
+        setModeButtons();
+        loadQuestion();
+        return;
+      }
+
       if (nextMode === "finalboss") {
+        const drill = P.syncBossDrillTopic && P.syncBossDrillTopic();
+        if (drill && !restoreBossRunFromStorage()) {
+          // Remaster the missed topic before starting a new fight.
+          state.mode = drill;
+          setModeButtons();
+          loadQuestion();
+          els.feedback.hidden = false;
+          els.feedback.className = "feedback no";
+          els.feedback.textContent = t("boss_drill_blocked", {
+            topic: Q.TOPICS[drill] || drill,
+          });
+          return;
+        }
         if (!restoreBossRunFromStorage()) {
           state.boss = { active: false, queue: [], index: 0, status: null, real: false };
         }
+        state.mode = "finalboss";
+      } else {
+        const drill = P.syncBossDrillTopic && P.syncBossDrillTopic();
+        // While rebuilding after a defeat, stay on the missed topic only.
+        state.mode = drill || nextMode;
       }
       setModeButtons();
       loadQuestion();

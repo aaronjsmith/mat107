@@ -33,6 +33,7 @@
       final_boss_cleared: false,
       final_boss_cleared_at: null,
       boss_run: null,
+      boss_drill_topic: null,
       updated_at: null,
     };
   }
@@ -52,6 +53,10 @@
       data.final_boss_cleared = Boolean(data.final_boss_cleared);
       data.final_boss_cleared_at = data.final_boss_cleared_at || null;
       data.boss_run = normalizeBossRun(data.boss_run);
+      data.boss_drill_topic =
+        data.boss_drill_topic && Q.TOPICS[data.boss_drill_topic]
+          ? data.boss_drill_topic
+          : null;
       Object.keys(Q.TOPICS).forEach((key) => {
         const t = data.topics[key] || emptyTopic(Q.TOPICS[key]);
         t.label = Q.TOPICS[key];
@@ -111,6 +116,38 @@
     if (p.boss_run == null) return;
     p.boss_run = null;
     save(p);
+  }
+
+  function getBossDrillTopic() {
+    const key = load().boss_drill_topic;
+    return key && Q.TOPICS[key] ? key : null;
+  }
+
+  function setBossDrillTopic(topic) {
+    const p = load();
+    p.boss_drill_topic = topic && Q.TOPICS[topic] ? topic : null;
+    save(p);
+    return p.boss_drill_topic;
+  }
+
+  function clearBossDrillTopic() {
+    const p = load();
+    if (p.boss_drill_topic == null) return;
+    p.boss_drill_topic = null;
+    save(p);
+  }
+
+  /** Clear drill when the topic is remastered. Returns true if still drilling. */
+  function syncBossDrillTopic() {
+    const key = getBossDrillTopic();
+    if (!key) return null;
+    const p = load();
+    const unaided = Number((p.topics[key] || {}).unaided_correct) || 0;
+    if (unaided >= MASTER) {
+      clearBossDrillTopic();
+      return null;
+    }
+    return key;
   }
 
   function gradeAccuracy(credit, attempted) {
@@ -190,7 +227,28 @@
     return p;
   }
 
-  /** Boss fail: missed topic drops to 9/10 if it was mastered. */
+  /** Boss miss: knock exactly one unaided point off the topic (if any). */
+  function penalizeBossMiss(topic) {
+    const p = load();
+    if (!topic || !Q.TOPICS[topic]) {
+      return { dropped_to: 0, topic: null, topics_affected: 0, prev: 0 };
+    }
+    if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic]);
+    const rec = p.topics[topic];
+    const prev = Number(rec.unaided_correct) || 0;
+    if (prev <= 0) {
+      save(p);
+      return { dropped_to: 0, topic: topic, topics_affected: 0, prev: prev };
+    }
+    const droppedTo = prev - 1;
+    rec.unaided_correct = droppedTo;
+    syncMasteredFlag(rec);
+    p.total_unaided_correct = Math.max(0, (p.total_unaided_correct || 0) - 1);
+    save(p);
+    return { dropped_to: droppedTo, topic: topic, topics_affected: 1, prev: prev };
+  }
+
+  /** Full boss abandon (e.g. skip): missed topic drops to 9/10 if it was mastered. */
   function penalizeBossFail(topic) {
     const p = load();
     const droppedTo = MASTER - 1;
@@ -211,7 +269,7 @@
       return { dropped_to: droppedTo, topic: topic, topics_affected: 1 };
     }
     save(p);
-    return { dropped_to: droppedTo, topic: topic, topics_affected: 0 };
+    return { dropped_to: Math.min(prev, droppedTo), topic: topic, topics_affected: 0 };
   }
 
   function shuffleTopics() {
@@ -446,6 +504,10 @@
     next.final_boss_cleared = Boolean(p.final_boss_cleared);
     next.final_boss_cleared_at = p.final_boss_cleared_at || null;
     next.boss_run = normalizeBossRun(p.boss_run);
+    next.boss_drill_topic =
+      p.boss_drill_topic && Q.TOPICS[p.boss_drill_topic]
+        ? p.boss_drill_topic
+        : null;
     next.history = Array.isArray(p.history) ? p.history.slice(-100) : [];
     Object.keys(Q.TOPICS).forEach((key) => {
       const src = (p.topics && p.topics[key]) || {};
@@ -492,9 +554,14 @@
     shuffleTopics: shuffleTopics,
     markFinalBossCleared: markFinalBossCleared,
     penalizeBossFail: penalizeBossFail,
+    penalizeBossMiss: penalizeBossMiss,
     getBossRun: getBossRun,
     saveBossRun: saveBossRun,
     clearBossRun: clearBossRun,
+    getBossDrillTopic: getBossDrillTopic,
+    setBossDrillTopic: setBossDrillTopic,
+    clearBossDrillTopic: clearBossDrillTopic,
+    syncBossDrillTopic: syncBossDrillTopic,
     recordAnswer: recordAnswer,
     recordHintSkip: recordHintSkip,
     awardRetryCredit: awardRetryCredit,
