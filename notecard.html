@@ -13,8 +13,10 @@
       --muted: #5c6b7a;
       --line: #c9bba3;
       --accent: #0f6e56;
+      --accent-deep: #0a4f3d;
       --paper: #fffcf6;
       --wash: #f3efe6;
+      --z: #1e3a5f;
     }
 
     * { box-sizing: border-box; }
@@ -24,7 +26,7 @@
       font-family: "IBM Plex Sans", system-ui, sans-serif;
       color: var(--ink);
       background: var(--wash);
-      line-height: 1.3;
+      line-height: 1.28;
     }
 
     .toolbar {
@@ -76,8 +78,6 @@
       color: #fff;
     }
 
-    .btn:hover { filter: brightness(0.97); }
-
     .deck {
       display: flex;
       flex-direction: column;
@@ -86,7 +86,6 @@
       padding: 0.75rem 1rem 2rem;
     }
 
-    /* Landscape 5×7 = 7in wide × 5in tall */
     .side {
       width: 7in;
       height: 5in;
@@ -94,16 +93,16 @@
       border: 1px solid var(--line);
       border-radius: 6px;
       box-shadow: 0 12px 28px rgba(26, 35, 50, 0.08);
-      padding: 0.22in 0.26in 0.18in;
+      padding: 0.18in 0.22in 0.14in;
       overflow: hidden;
       position: relative;
     }
 
     .side-label {
       position: absolute;
-      top: 0.1in;
-      right: 0.16in;
-      font-size: 0.58rem;
+      top: 0.08in;
+      right: 0.14in;
+      font-size: 0.54rem;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--muted);
@@ -111,125 +110,207 @@
     }
 
     .side h2 {
-      margin: 0 0 0.1rem;
+      margin: 0 0 0.06rem;
       font-family: "Fraunces", Georgia, serif;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: var(--accent);
-      padding-right: 1.6in;
+      padding-right: 1.5in;
     }
 
     .side h3 {
-      margin: 0.18rem 0 0.08rem;
-      font-size: 0.62rem;
+      margin: 0.12rem 0 0.05rem;
+      font-size: 0.58rem;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       color: var(--muted);
       font-weight: 600;
       border-bottom: 1px solid rgba(201, 187, 163, 0.7);
-      padding-bottom: 0.05rem;
+      padding-bottom: 0.03rem;
     }
 
     .front-grid {
       display: grid;
-      grid-template-columns: 1.05fr 0.95fr 1.15fr;
-      gap: 0.14in;
-      height: calc(100% - 0.55in);
+      grid-template-columns: 0.95fr 1.05fr 1.15fr;
+      gap: 0.12in;
+      height: calc(100% - 0.42in);
     }
 
     .back-grid {
       display: grid;
-      grid-template-columns: 1.15fr 1fr;
-      gap: 0.16in;
+      grid-template-columns: 1.05fr 1.1fr;
+      gap: 0.14in;
       align-items: start;
-      height: calc(100% - 0.55in);
+      height: calc(100% - 0.42in);
     }
 
-    .formulas {
+    .formulas,
+    .defs {
       font-family: "IBM Plex Mono", ui-monospace, monospace;
-      font-size: 0.58rem;
+      font-size: 0.54rem;
       margin: 0;
-      padding-left: 0.85rem;
+      padding-left: 0.8rem;
     }
 
-    .formulas li { margin: 0.05rem 0; }
+    .formulas li,
+    .defs li { margin: 0.03rem 0; }
 
     .formulas .lbl {
       font-family: "IBM Plex Sans", system-ui, sans-serif;
       color: var(--muted);
-      font-size: 0.54rem;
+      font-size: 0.5rem;
+    }
+
+    .defs .lbl {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      color: var(--ink);
+      font-size: 0.56rem;
+      font-weight: 600;
+      display: inline-block;
+      min-width: 1.55rem;
+    }
+
+    .defs {
+      columns: 2;
+      column-gap: 0.12in;
+      padding-left: 0.75rem;
+    }
+
+    .defs li {
+      break-inside: avoid;
     }
 
     .steps {
       margin: 0;
-      padding-left: 0.95rem;
-      font-size: 0.62rem;
+      padding-left: 0.9rem;
+      font-size: 0.56rem;
     }
 
-    .steps li { margin: 0.06rem 0; }
+    .steps li { margin: 0.04rem 0; }
+
+    .z-box {
+      margin-top: 0.1rem;
+      padding: 0.18rem 0.28rem;
+      border: 1.5px solid var(--z);
+      border-radius: 6px;
+      background: rgba(30, 58, 95, 0.06);
+    }
+
+    .z-box .z-title {
+      margin: 0 0 0.08rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--z);
+      letter-spacing: 0.02em;
+    }
+
+    .z-box .z-formula {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin: 0 0 0.08rem;
+      text-align: center;
+    }
+
+    .z-box p {
+      margin: 0;
+      font-size: 0.52rem;
+      color: var(--ink);
+    }
+
+    .z-box ul {
+      margin: 0.06rem 0 0;
+      padding-left: 0.85rem;
+      font-size: 0.5rem;
+    }
 
     .ex {
-      margin: 0.12rem 0 0;
-      padding: 0.2rem 0.32rem;
+      margin: 0.08rem 0 0;
+      padding: 0.14rem 0.26rem;
       background: rgba(15, 110, 86, 0.06);
       border-left: 2px solid var(--accent);
-      border-radius: 0 5px 5px 0;
-      font-size: 0.56rem;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.5rem;
     }
 
     .ex strong {
       display: block;
-      margin-bottom: 0.04rem;
-      font-size: 0.58rem;
+      margin-bottom: 0.02rem;
+      font-size: 0.52rem;
     }
 
     .ex code {
       font-family: "IBM Plex Mono", ui-monospace, monospace;
-      font-size: 0.54rem;
+      font-size: 0.5rem;
     }
 
     .note {
-      margin: 0.08rem 0 0.12rem;
-      font-size: 0.56rem;
+      margin: 0.04rem 0 0.08rem;
+      font-size: 0.52rem;
       color: var(--muted);
     }
 
-    .curve-wrap {
-      text-align: center;
+    .explain {
       margin: 0;
+      font-size: 0.52rem;
+      color: var(--ink);
     }
+
+    .explain strong { color: var(--accent-deep); }
+
+    .pct-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.5rem;
+      margin: 0.08rem 0;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    .pct-table th,
+    .pct-table td {
+      border: 1px solid rgba(201, 187, 163, 0.75);
+      padding: 0.1rem 0.18rem;
+      text-align: left;
+    }
+
+    .pct-table th {
+      background: rgba(15, 110, 86, 0.1);
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      font-size: 0.48rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .curve-wrap { text-align: center; margin: 0; }
 
     .curve-wrap svg {
       width: 100%;
-      max-height: 2.35in;
+      max-height: 1.85in;
       height: auto;
     }
 
-    .examples {
-      display: grid;
-      gap: 0.1rem;
-    }
+    .examples { display: grid; gap: 0.08rem; }
 
     .eg {
       border: 1px solid rgba(201, 187, 163, 0.65);
       border-radius: 5px;
-      padding: 0.22rem 0.32rem;
-      font-size: 0.56rem;
+      padding: 0.16rem 0.26rem;
+      font-size: 0.5rem;
     }
 
     .eg strong {
       color: var(--accent);
-      font-size: 0.58rem;
+      font-size: 0.52rem;
     }
 
     .eg .ans {
       font-family: "IBM Plex Mono", ui-monospace, monospace;
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .footer-tiny {
-      margin-top: 0.12rem;
-      font-size: 0.48rem;
+      margin-top: 0.08rem;
+      font-size: 0.46rem;
       color: var(--muted);
       text-align: center;
     }
@@ -237,10 +318,7 @@
     @media print {
       body { background: #fff; }
       .toolbar { display: none !important; }
-      .deck {
-        padding: 0;
-        gap: 0;
-      }
+      .deck { padding: 0; gap: 0; }
       .side {
         box-shadow: none;
         border: none;
@@ -267,6 +345,7 @@
         grid-template-columns: 1fr;
         height: auto;
       }
+      .defs { columns: 1; }
     }
   </style>
 </head>
@@ -285,7 +364,7 @@
   <div class="deck">
     <!-- FRONT -->
     <article class="side" aria-label="Notecard front">
-      <span class="side-label">Front · Formulas &amp; steps</span>
+      <span class="side-label">Front · Formulas &amp; symbols</span>
       <h2>MAT 107 cheat card</h2>
       <p class="note">Use π = <strong>3.14</strong> (type 3.14 — don’t use the π key). Round only at the end.</p>
 
@@ -304,30 +383,25 @@
             <li><span class="lbl">Cylinder</span> V=πr²h</li>
             <li><span class="lbl">Sphere</span> V=(4/3)πr³</li>
           </ul>
-          <h3>Other</h3>
+          <h3>Other formulas</h3>
           <ul class="formulas">
             <li><span class="lbl">Pythagorean</span> a²+b²=c²</li>
-            <li><span class="lbl">Slope</span> rise/run</li>
-            <li><span class="lbl">Z-score</span> z=(x−μ)/σ</li>
+            <li><span class="lbl">Slope</span> rise ÷ run</li>
+            <li><span class="lbl">s (approx)</span> range ÷ 4</li>
           </ul>
-        </div>
-
-        <div>
           <h3>Conversions</h3>
           <ul class="formulas">
             <li>1 yd = 3 ft</li>
             <li>1 sq yd = 9 sq ft</li>
             <li>1 cu yd = 27 cu ft</li>
             <li>1 gal = 3.785 L</li>
-            <li>9 sq ft = 1 sq yd</li>
           </ul>
-          <h3>Stats quick</h3>
+          <h3>Stats centers</h3>
           <ul class="formulas">
             <li>mean = sum ÷ n</li>
             <li>median = middle (sorted)</li>
             <li>mode = most frequent</li>
             <li>range = max − min</li>
-            <li>s ≈ range ÷ 4</li>
           </ul>
           <h3>Scaling</h3>
           <ul class="formulas">
@@ -337,25 +411,81 @@
         </div>
 
         <div>
+          <h3>Math symbols</h3>
+          <ul class="defs">
+            <li><span class="lbl">∝</span> proportional to</li>
+            <li><span class="lbl">≈</span> approximately equal</li>
+            <li><span class="lbl">=</span> equal to</li>
+            <li><span class="lbl">≠</span> not equal to</li>
+            <li><span class="lbl">±</span> plus or minus</li>
+            <li><span class="lbl">≤ ≥</span> less/greater or equal</li>
+            <li><span class="lbl">&lt; &gt;</span> less / greater than</li>
+            <li><span class="lbl">× ·</span> multiply</li>
+            <li><span class="lbl">÷ /</span> divide</li>
+            <li><span class="lbl">² ³</span> squared / cubed</li>
+            <li><span class="lbl">√</span> square root</li>
+            <li><span class="lbl">½</span> one half (0.5)</li>
+            <li><span class="lbl">π</span> pi (= 3.14 here)</li>
+            <li><span class="lbl">μ</span> mu · mean</li>
+            <li><span class="lbl">σ</span> sigma · std. dev.</li>
+            <li><span class="lbl">Δ</span> triangle (shape)</li>
+          </ul>
+
+          <h3>Common variables</h3>
+          <ul class="defs">
+            <li><span class="lbl">P</span> perimeter</li>
+            <li><span class="lbl">A</span> area</li>
+            <li><span class="lbl">V</span> volume</li>
+            <li><span class="lbl">C</span> circumference</li>
+            <li><span class="lbl">s</span> side (or sample SD)</li>
+            <li><span class="lbl">L, W</span> length, width</li>
+            <li><span class="lbl">b, h</span> base, height</li>
+            <li><span class="lbl">r, d</span> radius, diameter</li>
+            <li><span class="lbl">a, b</span> legs of right Δ</li>
+            <li><span class="lbl">c</span> hypotenuse</li>
+            <li><span class="lbl">n</span> count / sample size</li>
+            <li><span class="lbl">x</span> a data value</li>
+            <li><span class="lbl">z</span> z-score</li>
+          </ul>
+          <p class="note" style="margin-top:0.08rem;">
+            <strong>∝ tip:</strong> “Area ∝ (scale)²” means if you double the scale,
+            area becomes 2² = <strong>4 times</strong> as large (not 2×).
+          </p>
+        </div>
+
+        <div>
           <h3>Steps to solve</h3>
           <ol class="steps">
-            <li><strong>Read</strong> — underline what is asked; list knowns.</li>
-            <li><strong>Choose</strong> — pick the matching formula / rule.</li>
-            <li><strong>Substitute</strong> — plug numbers (r = d/2 if needed).</li>
-            <li><strong>Compute</strong> — left→right; parentheses; π=3.14.</li>
-            <li><strong>Finish</strong> — convert units; round as asked.</li>
+            <li><strong>Read</strong> — what is asked? list knowns.</li>
+            <li><strong>Choose</strong> — pick the formula / rule.</li>
+            <li><strong>Substitute</strong> — plug in (r = d/2 if needed).</li>
+            <li><strong>Compute</strong> — parentheses; π=3.14.</li>
+            <li><strong>Finish</strong> — units; round as asked.</li>
           </ol>
-          <div class="ex">
-            <strong>Example A · Rectangle area</strong>
-            12 ft × 9 ft → A = L×W = 12×9 = <code>108 sq ft</code>
+
+          <div class="z-box">
+            <p class="z-title">Z-SCORE (standardized score)</p>
+            <p class="z-formula">z = (x − μ) / σ</p>
+            <p>
+              <strong>Meaning:</strong> how many standard deviations the value
+              <em>x</em> is above (+) or below (−) the mean.
+            </p>
+            <ul>
+              <li>z = 0 → exactly at the mean</li>
+              <li>z = +1 → 1 SD above the mean</li>
+              <li>z = −2 → 2 SD below the mean</li>
+              <li>Larger |z| → farther from typical</li>
+            </ul>
+            <div class="ex" style="margin-top:0.1rem;background:#fff;">
+              <strong>Example · Z-score</strong>
+              x=85, μ=70, σ=10 → z=(85−70)/10 = <code>+1.50</code>
+              (1½ SD above the mean)
+            </div>
           </div>
+
           <div class="ex">
-            <strong>Example B · Cylinder volume</strong>
-            d=4 in, h=6 in → r=2 → V=3.14×2²×6 = <code>75.36 cu in</code>
-          </div>
-          <div class="ex">
-            <strong>Example C · Z-score</strong>
-            x=85, μ=70, σ=10 → z=(85−70)/10 = <code>1.50</code>
+            <strong>Geometry check · Cylinder</strong>
+            d=4, h=6 → r=2 → V=3.14×2²×6 = <code>75.36</code>
           </div>
         </div>
       </div>
@@ -364,74 +494,134 @@
 
     <!-- BACK -->
     <article class="side" aria-label="Notecard back">
-      <span class="side-label">Back · Normal curve</span>
-      <h2>Empirical rule (≈normal data)</h2>
-      <p class="note">About <strong>68%</strong> within 1 SD · <strong>95%</strong> within 2 SD · <strong>99.7%</strong> within 3 SD of the mean.</p>
+      <span class="side-label">Back · SD percentages</span>
+      <h2>Percentages of standard deviations (empirical rule)</h2>
+      <p class="explain">
+        For data that is <strong>roughly normal</strong> (bell-shaped), the
+        <strong>empirical rule</strong> tells what <em>percent of the data</em>
+        falls within a certain number of standard deviations of the mean μ.
+        Think: mark μ at the center, then step left/right by σ.
+      </p>
 
       <div class="back-grid">
-        <div class="curve-wrap">
-          <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Normal curve with standard deviation bands">
-            <defs>
-              <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                <path d="M0,1 L6,3 L0,5 Z" fill="#7eb6d9"/>
-              </marker>
-              <marker id="arrL" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto">
-                <path d="M6,1 L0,3 L6,5 Z" fill="#7eb6d9"/>
-              </marker>
-            </defs>
-            <line x1="48" y1="200" x2="592" y2="200" stroke="#1a2332" stroke-width="1.4"/>
-            <g stroke="#7eb6d9" stroke-width="1.1">
-              <line x1="100" y1="188" x2="100" y2="200"/>
-              <line x1="172" y1="155" x2="172" y2="200"/>
-              <line x1="244" y1="95" x2="244" y2="200"/>
-              <line x1="316" y1="52" x2="316" y2="200" stroke-width="1.5"/>
-              <line x1="388" y1="95" x2="388" y2="200"/>
-              <line x1="460" y1="155" x2="460" y2="200"/>
-              <line x1="532" y1="188" x2="532" y2="200"/>
-            </g>
-            <path d="M70 198 C 100 196, 130 175, 172 155 C 210 130, 244 80, 316 52 C 388 80, 422 130, 460 155 C 502 175, 532 196, 562 198"
-                  fill="none" stroke="#6b3fa0" stroke-width="2.3" stroke-linecap="round"/>
-            <line x1="244" y1="28" x2="388" y2="28" stroke="#7eb6d9" stroke-width="1.3" marker-start="url(#arrL)" marker-end="url(#arr)"/>
-            <text x="316" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="#1a2332">68%</text>
-            <line x1="172" y1="14" x2="460" y2="14" stroke="#7eb6d9" stroke-width="1.3" marker-start="url(#arrL)" marker-end="url(#arr)"/>
-            <text x="316" y="10" text-anchor="middle" font-size="12" font-weight="600" fill="#1a2332">95%</text>
-            <text x="136" y="170" text-anchor="middle" font-size="11" fill="#1a2332">2.15%</text>
-            <text x="208" y="125" text-anchor="middle" font-size="11" fill="#1a2332">13.6%</text>
-            <text x="280" y="95" text-anchor="middle" font-size="11" font-weight="600" fill="#1a2332">34%</text>
-            <text x="352" y="95" text-anchor="middle" font-size="11" font-weight="600" fill="#1a2332">34%</text>
-            <text x="424" y="125" text-anchor="middle" font-size="11" fill="#1a2332">13.6%</text>
-            <text x="496" y="170" text-anchor="middle" font-size="11" fill="#1a2332">2.15%</text>
-            <text x="100" y="218" text-anchor="middle" font-size="12">−3</text>
-            <text x="172" y="218" text-anchor="middle" font-size="12">−2</text>
-            <text x="244" y="218" text-anchor="middle" font-size="12">−1</text>
-            <text x="316" y="218" text-anchor="middle" font-size="12" font-weight="600">0</text>
-            <text x="388" y="218" text-anchor="middle" font-size="12">+1</text>
-            <text x="460" y="218" text-anchor="middle" font-size="12">+2</text>
-            <text x="532" y="218" text-anchor="middle" font-size="12">+3</text>
-            <text x="48" y="236" font-size="11" fill="#5c6b7a">Standard Deviations from mean (μ)</text>
-          </svg>
-          <p class="note">Below μ−1σ ≈ <strong>16%</strong>. For exact z↔percentile values, use the table (not this sketch).</p>
+        <div>
+          <table class="pct-table">
+            <thead>
+              <tr>
+                <th>Distance from mean</th>
+                <th>About this % of data</th>
+                <th>In z-score language</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>within ±1 SD</td>
+                <td><strong>≈ 68%</strong></td>
+                <td>−1 ≤ z ≤ +1</td>
+              </tr>
+              <tr>
+                <td>within ±2 SD</td>
+                <td><strong>≈ 95%</strong></td>
+                <td>−2 ≤ z ≤ +2</td>
+              </tr>
+              <tr>
+                <td>within ±3 SD</td>
+                <td><strong>≈ 99.7%</strong></td>
+                <td>−3 ≤ z ≤ +3</td>
+              </tr>
+              <tr>
+                <td>each side band 0→1</td>
+                <td>≈ 34%</td>
+                <td>half of the middle 68%</td>
+              </tr>
+              <tr>
+                <td>below μ − 1σ</td>
+                <td>≈ 16%</td>
+                <td>z &lt; −1 (left tail of middle)</td>
+              </tr>
+              <tr>
+                <td>above μ + 3σ</td>
+                <td>≈ 0.15%</td>
+                <td>z &gt; +3 (one outer tip)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="curve-wrap">
+            <svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Normal curve with standard deviation bands">
+              <defs>
+                <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,1 L6,3 L0,5 Z" fill="#7eb6d9"/>
+                </marker>
+                <marker id="arrL" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto">
+                  <path d="M6,1 L0,3 L6,5 Z" fill="#7eb6d9"/>
+                </marker>
+              </defs>
+              <line x1="48" y1="185" x2="592" y2="185" stroke="#1a2332" stroke-width="1.4"/>
+              <g stroke="#7eb6d9" stroke-width="1.1">
+                <line x1="100" y1="175" x2="100" y2="185"/>
+                <line x1="172" y1="145" x2="172" y2="185"/>
+                <line x1="244" y1="90" x2="244" y2="185"/>
+                <line x1="316" y1="48" x2="316" y2="185" stroke-width="1.5"/>
+                <line x1="388" y1="90" x2="388" y2="185"/>
+                <line x1="460" y1="145" x2="460" y2="185"/>
+                <line x1="532" y1="175" x2="532" y2="185"/>
+              </g>
+              <path d="M70 183 C 100 181, 130 162, 172 145 C 210 122, 244 76, 316 48 C 388 76, 422 122, 460 145 C 502 162, 532 181, 562 183"
+                    fill="none" stroke="#6b3fa0" stroke-width="2.2" stroke-linecap="round"/>
+              <line x1="244" y1="26" x2="388" y2="26" stroke="#7eb6d9" stroke-width="1.3" marker-start="url(#arrL)" marker-end="url(#arr)"/>
+              <text x="316" y="20" text-anchor="middle" font-size="12" font-weight="700" fill="#1a2332">68%</text>
+              <line x1="172" y1="12" x2="460" y2="12" stroke="#7eb6d9" stroke-width="1.3" marker-start="url(#arrL)" marker-end="url(#arr)"/>
+              <text x="316" y="8" text-anchor="middle" font-size="11" font-weight="700" fill="#1a2332">95%</text>
+              <text x="280" y="88" text-anchor="middle" font-size="10" font-weight="600" fill="#1a2332">34%</text>
+              <text x="352" y="88" text-anchor="middle" font-size="10" font-weight="600" fill="#1a2332">34%</text>
+              <text x="208" y="118" text-anchor="middle" font-size="10" fill="#1a2332">13.6%</text>
+              <text x="424" y="118" text-anchor="middle" font-size="10" fill="#1a2332">13.6%</text>
+              <text x="100" y="202" text-anchor="middle" font-size="11">−3σ</text>
+              <text x="172" y="202" text-anchor="middle" font-size="11">−2σ</text>
+              <text x="244" y="202" text-anchor="middle" font-size="11">−1σ</text>
+              <text x="316" y="202" text-anchor="middle" font-size="11" font-weight="700">μ</text>
+              <text x="388" y="202" text-anchor="middle" font-size="11">+1σ</text>
+              <text x="460" y="202" text-anchor="middle" font-size="11">+2σ</text>
+              <text x="532" y="202" text-anchor="middle" font-size="11">+3σ</text>
+              <text x="48" y="220" font-size="10" fill="#5c6b7a">Axis = standard deviations from the mean (same scale as z)</text>
+            </svg>
+          </div>
         </div>
 
         <div>
-          <h3>Worked examples — calculate these</h3>
+          <h3>How to use it on a problem</h3>
+          <ol class="steps">
+            <li>Confirm data is roughly normal.</li>
+            <li>Write μ and σ. Find the cutoffs: μ±1σ, μ±2σ, μ±3σ.</li>
+            <li>Match the question interval to a band on the curve.</li>
+            <li>Read the % (68 / 95 / 99.7) or half-bands (34 / 16 / 0.15).</li>
+          </ol>
+
+          <h3>Worked examples</h3>
           <div class="examples">
             <div class="eg">
-              <strong>1 · Within 1 SD</strong><br />
-              Ages ~ normal, mean 40, SD 5. About what % between 35 and 45?<br />
-              35=μ−1σ, 45=μ+1σ → <span class="ans">≈ 68%</span>
+              <strong>1 · Within 1 SD → ≈68%</strong><br />
+              μ=40, σ=5. Between 35 and 45?<br />
+              35=μ−1σ, 45=μ+1σ → middle → <span class="ans">≈ 68%</span>
             </div>
             <div class="eg">
-              <strong>2 · Within 2 SD</strong><br />
-              Scores ~ normal, mean 80, SD 10. About what % between 60 and 100?<br />
+              <strong>2 · Within 2 SD → ≈95%</strong><br />
+              μ=80, σ=10. Between 60 and 100?<br />
               60=μ−2σ, 100=μ+2σ → <span class="ans">≈ 95%</span>
             </div>
             <div class="eg">
-              <strong>3 · Upper tail beyond 3 SD</strong><br />
-              Mean 70, SD 5. About what % older than 85?<br />
-              85=μ+3σ → each outer tail <span class="ans">≈ 0.15%</span>
+              <strong>3 · Beyond +3 SD → ≈0.15%</strong><br />
+              μ=70, σ=5. Older than 85?<br />
+              85=μ+3σ → one outer tip → <span class="ans">≈ 0.15%</span>
             </div>
           </div>
+
+          <p class="note" style="margin-top:0.1rem;">
+            <strong>Link to z:</strong> “within 1 SD” means −1 ≤ z ≤ +1.
+            For an exact percentile from a specific z (like z=1.2), use the
+            z ↔ percentile table — not the 68-95-99.7 sketch.
+          </p>
           <p class="footer-tiny">Print double-sided · landscape 7″×5″ · mat107.aaronjsmith.me</p>
         </div>
       </div>
