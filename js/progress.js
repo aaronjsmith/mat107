@@ -10,6 +10,7 @@
       attempted: 0,
       credit: 0,
       unaided_correct: 0,
+      mastered: false,
       label: label,
     };
   }
@@ -39,13 +40,28 @@
       const data = JSON.parse(raw);
       data.total_credit = data.total_credit != null ? data.total_credit : data.total_correct || 0;
       data.total_unaided_correct = data.total_unaided_correct || 0;
+      let repaired = false;
       Object.keys(Q.TOPICS).forEach((key) => {
         const t = data.topics[key] || emptyTopic(Q.TOPICS[key]);
         t.label = Q.TOPICS[key];
         t.credit = t.credit != null ? t.credit : t.correct || 0;
-        t.unaided_correct = t.unaided_correct || 0;
+        t.unaided_correct = Number(t.unaided_correct) || 0;
+        // Sticky mastery: once earned (now or historically), keep the badge.
+        t.mastered = Boolean(t.mastered) || t.unaided_correct >= UNAIDED;
+        if (t.mastered && t.unaided_correct < UNAIDED) {
+          t.unaided_correct = UNAIDED;
+          repaired = true;
+        }
         data.topics[key] = t;
       });
+      if (repaired) {
+        // Persist lock repair for topics that were wrongly dropped below 10.
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+          /* ignore */
+        }
+      }
       return data;
     } catch (e) {
       return emptyProgress();
@@ -66,8 +82,9 @@
     return Math.round((1000 * Math.min(unaided, UNAIDED)) / UNAIDED) / 10;
   }
 
-  function isMastered(unaided) {
-    return unaided >= UNAIDED;
+  function isMastered(unaided, topicRec) {
+    if (topicRec && topicRec.mastered) return true;
+    return (Number(unaided) || 0) >= UNAIDED;
   }
 
   function getProgressView() {
@@ -77,9 +94,10 @@
     let unaidedSum = 0;
     Object.keys(p.topics).forEach((key) => {
       const info = p.topics[key];
-      const unaided = info.unaided_correct || 0;
+      let unaided = Number(info.unaided_correct) || 0;
+      if (info.mastered && unaided < UNAIDED) unaided = UNAIDED;
       unaidedSum += Math.min(unaided, UNAIDED);
-      const mastered = isMastered(unaided);
+      const mastered = isMastered(unaided, info);
       if (mastered) masteredCount += 1;
       topics[key] = {
         ...info,
@@ -139,14 +157,27 @@
   /** Adjust topic mastery counter; never below 0. Returns actual delta applied. */
   function adjustUnaided(p, topic, delta) {
     if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic] || topic);
-    const prev = p.topics[topic].unaided_correct || 0;
-    let next = Math.max(0, prev + delta);
-    // Once a topic is mastered, keep it mastered — one miss/hint must not un-master.
-    if (delta < 0 && prev >= UNAIDED) {
-      next = Math.max(next, UNAIDED);
+    const rec = p.topics[topic];
+    const prev = Number(rec.unaided_correct) || 0;
+    const alreadyMastered = Boolean(rec.mastered) || prev >= UNAIDED;
+
+    // Mastered topics are locked — never drop below the mastery threshold.
+    if (delta < 0 && alreadyMastered) {
+      rec.mastered = true;
+      if (prev < UNAIDED) {
+        rec.unaided_correct = UNAIDED;
+        p.total_unaided_correct = Math.max(
+          0,
+          (p.total_unaided_correct || 0) + (UNAIDED - prev)
+        );
+      }
+      return 0;
     }
+
+    const next = Math.max(0, prev + (Number(delta) || 0));
     const applied = next - prev;
-    p.topics[topic].unaided_correct = next;
+    rec.unaided_correct = next;
+    if (next >= UNAIDED) rec.mastered = true;
     p.total_unaided_correct = Math.max(
       0,
       (p.total_unaided_correct || 0) + applied
@@ -177,17 +208,16 @@
         masteryDelta = adjustUnaided(p, topic, 1);
       } else {
         p.streak = 0;
+        // Hinted correct can reduce progress — but never un-master a locked topic.
         masteryDelta = adjustUnaided(p, topic, -1);
       }
     } else {
+      // Wrong answers never change mastery (streak only).
       p.streak = 0;
-      if (hintsUsed > 0) {
-        masteryDelta = adjustUnaided(p, topic, -1);
-      }
     }
 
-    const unaided = p.topics[topic].unaided_correct || 0;
-    const mastered = isMastered(unaided);
+    const unaided = Number(p.topics[topic].unaided_correct) || 0;
+    const mastered = isMastered(unaided, p.topics[topic]);
 
     p.history = p.history || [];
     p.history.push({
@@ -244,13 +274,13 @@
     });
     p.history = p.history.slice(-100);
     save(p);
-    const unaided = p.topics[topic].unaided_correct || 0;
+    const unaided = Number(p.topics[topic].unaided_correct) || 0;
     return {
       mastery_delta: masteryDelta,
       unaided_correct: unaided,
       unaided_needed: UNAIDED,
       topic_mastery: topicMastery(unaided),
-      mastered: isMastered(unaided),
+      mastered: isMastered(unaided, p.topics[topic]),
     };
   }
 
@@ -277,14 +307,14 @@
     });
     p.history = p.history.slice(-100);
     save(p);
-    const unaided = p.topics[topic].unaided_correct || 0;
+    const unaided = Number(p.topics[topic].unaided_correct) || 0;
     return {
       correct: true,
       credit: credit,
       streak: p.streak,
       unaided_correct: unaided,
       unaided_needed: UNAIDED,
-      mastered: isMastered(unaided),
+      mastered: isMastered(unaided, p.topics[topic]),
     };
   }
 
@@ -323,11 +353,14 @@
     next.history = Array.isArray(p.history) ? p.history.slice(-100) : [];
     Object.keys(Q.TOPICS).forEach((key) => {
       const src = (p.topics && p.topics[key]) || {};
+      const unaided = Number(src.unaided_correct) || 0;
+      const mastered = Boolean(src.mastered) || unaided >= UNAIDED;
       next.topics[key] = {
         correct: src.correct || 0,
         attempted: src.attempted || 0,
         credit: src.credit != null ? src.credit : src.correct || 0,
-        unaided_correct: src.unaided_correct || 0,
+        unaided_correct: mastered ? Math.max(unaided, UNAIDED) : unaided,
+        mastered: mastered,
         label: Q.TOPICS[key],
       };
     });
