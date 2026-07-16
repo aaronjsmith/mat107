@@ -53,6 +53,36 @@
       font-size: 0.85rem;
     }
 
+    .disclaimer-banner {
+      max-width: 48rem;
+      margin: 0 auto 0.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid #b45309;
+      border-radius: 10px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .disclaimer-banner strong {
+      display: block;
+      margin-bottom: 0.2rem;
+      font-size: 0.95rem;
+    }
+
+    .card-disclaimer {
+      margin: 0 0 0.1rem;
+      padding: 0.12rem 0.28rem;
+      border: 1px solid #b45309;
+      border-radius: 4px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 0.48rem;
+      line-height: 1.25;
+      font-weight: 600;
+    }
+
     .toolbar-actions {
       display: flex;
       flex-wrap: wrap;
@@ -318,6 +348,7 @@
     @media print {
       body { background: #fff; }
       .toolbar { display: none !important; }
+      .disclaimer-banner { display: none !important; }
       .deck { padding: 0; gap: 0; }
       .side {
         box-shadow: none;
@@ -357,15 +388,24 @@
     </div>
     <div class="toolbar-actions">
       <a class="btn" href="index.html">← Practice quiz</a>
-      <button class="btn primary" type="button" onclick="window.print()">Print notecard</button>
+      <button class="btn primary" type="button" onclick="window.print()">Print study template</button>
     </div>
   </div>
+
+  <aside class="disclaimer-banner" role="note">
+    <strong>Testing-center disclaimer</strong>
+    Ensign College / testing-center rules typically require a <strong>handwritten</strong> notecard.
+    This page is an unofficial <strong>study template only</strong> — copy it by hand onto your approved
+    5×7 card. Do not bring a printed copy unless your instructor explicitly allows it. Always follow
+    your course and testing-center instructions.
+  </aside>
 
   <div class="deck">
     <!-- FRONT -->
     <article class="side" aria-label="Notecard front">
       <span class="side-label">Front · Formulas &amp; symbols</span>
       <h2>MAT 107 cheat card</h2>
+      <p class="card-disclaimer">HANDWRITE for the testing center — this printout is a study guide only (unless your instructor says otherwise).</p>
       <p class="note">Use π = <strong>3.14</strong> (type 3.14 — don’t use the π key). Round only at the end.</p>
 
       <div class="front-grid">
@@ -496,6 +536,7 @@
     <article class="side" aria-label="Notecard back">
       <span class="side-label">Back · SD percentages</span>
       <h2>Percentages of standard deviations (empirical rule)</h2>
+      <p class="card-disclaimer">HANDWRITE for the testing center — printed cards may not be allowed. Confirm with your instructor / testing center.</p>
       <p class="explain">
         For data that is <strong>roughly normal</strong> (bell-shaped), the
         <strong>empirical rule</strong> tells what <em>percent of the data</em>

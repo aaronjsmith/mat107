@@ -264,6 +264,13 @@ a.linkish {
   margin-top: 0;
 }
 
+.progress-actions .notecard-note {
+  margin: -0.15rem 0 0.15rem;
+  font-size: 0.72rem;
+  max-width: 14rem;
+  line-height: 1.35;
+}
+
 .quiz {
   min-height: 420px;
   display: flex;
