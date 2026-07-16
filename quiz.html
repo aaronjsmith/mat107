@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-i18n-title="title">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ensign College MAT 107 · Unofficial student practice</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <header class="top">
+    <div class="brand">
+      <a class="brand-link" href="index.html" data-i18n="course_back">← Lessons &amp; assessments</a>
+      <span class="brand-mark">MAT107</span>
+      <span class="brand-sub" data-i18n="brand_sub">Ensign College MAT 107 · Assessment 1 practice</span>
+    </div>
+    <div class="top-right">
+      <label class="lang-wrap" for="lang-select">
+        <span class="lang-label" data-i18n="lang_label">Language</span>
+        <select id="lang-select" class="lang-select" aria-label="Language"></select>
+      </label>
+      <div class="stats-bar">
+        <div class="stat"><span class="stat-val" id="stat-accuracy">—</span><span class="stat-lbl" data-i18n="stat_grade">Grade</span></div>
+        <div class="stat"><span class="stat-val" id="stat-streak">0</span><span class="stat-lbl" data-i18n="stat_streak">Unaided streak</span></div>
+        <div class="stat"><span class="stat-val" id="stat-total">0</span><span class="stat-lbl" data-i18n="stat_answered">Answered</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel topics">
+      <h2 data-i18n="topics_heading">Topics</h2>
+      <p class="muted" data-i18n-html="topics_blurb">Mastery = <strong>10 correct with no hints</strong> per topic. Hints never reveal the answer — only how to work. Penalty if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%.</p>
+      <button class="topic" data-topic="all" type="button" data-i18n="mode_all">All topics</button>
+      <button class="topic active" data-topic="smart" type="button" data-i18n="mode_smart">Smart pick</button>
+      <button class="topic" data-topic="flashcards" type="button" data-i18n="mode_flashcards">Formula flashcards</button>
+      <button class="topic topic-boss" data-topic="finalboss" type="button" id="btn-final-boss" data-i18n="mode_finalboss_practice">😈 Practice boss fight</button>
+      <div class="topic-list" id="topic-list"></div>
+      <div class="progress-actions">
+        <a class="linkish" href="notecard.html" target="_blank" rel="noopener" data-i18n="btn_notecard">5×7 formula notecard</a>
+        <p class="muted notecard-note" data-i18n="notecard_disclaimer">Study template only — testing center usually requires a handwritten card.</p>
+        <button class="linkish" id="btn-save" type="button" data-i18n="btn_save">Save progress</button>
+        <button class="linkish" id="btn-load" type="button" data-i18n="btn_load">Load progress</button>
+        <input id="progress-file" type="file" accept="application/json,.json" hidden />
+        <button class="linkish danger" id="btn-reset" type="button" data-i18n="btn_reset">Reset progress</button>
+      </div>
+    </aside>
+
+    <section class="panel quiz">
+      <div class="quiz-meta">
+        <span class="boss-face" id="boss-face" hidden aria-hidden="true">😈</span>
+        <div class="quiz-meta-row">
+          <div class="quiz-meta-left">
+            <span class="pill" id="q-topic">—</span>
+          </div>
+          <div class="hint-btns">
+            <button class="linkish" id="btn-hint1" type="button" hidden data-i18n="btn_hint1">Hint 1 · approach (−25%)</button>
+            <button class="linkish" id="btn-hint2" type="button" hidden data-i18n="btn_hint2">Hint 2 · setup (−50%)</button>
+            <button class="linkish" id="btn-hint3-ti" type="button" hidden data-i18n="btn_hint3_ti">TI-36X Pro (−75%)</button>
+            <button class="linkish" id="btn-hint3-casio" type="button" hidden data-i18n="btn_hint3_casio">Casio (−75%)</button>
+            <button class="linkish" id="btn-clarify" type="button" hidden data-i18n="btn_clarify">Need more clarification?</button>
+          </div>
+        </div>
+      </div>
+      <div id="q-figure" class="figure" hidden></div>
+      <h1 class="prompt" id="q-prompt" data-i18n="loading">Loading…</h1>
+      <div class="hint-stack">
+        <p class="hint level1" id="q-hint1" hidden></p>
+        <pre class="setup level2" id="q-hint2" hidden></pre>
+        <pre class="calc level3" id="q-hint3-ti" hidden></pre>
+        <pre class="calc level3" id="q-hint3-casio" hidden></pre>
+        <div class="clarify" id="q-clarify" hidden></div>
+      </div>
+      <div id="q-choices" class="choices" hidden></div>
+      <form id="q-form" class="answer-form" hidden>
+        <div id="q-single-field">
+          <label for="q-input" data-i18n="your_answer">Your answer</label>
+          <div class="input-row">
+            <input id="q-input" name="answer" autocomplete="off" spellcheck="false" />
+            <span class="unit" id="q-unit"></span>
+          </div>
+          <div class="math-insert" id="math-insert" role="group" aria-label="Insert math symbols">
+            <button type="button" class="math-btn" data-insert="π" title="Pi (π)">π</button>
+            <button type="button" class="math-btn" data-insert="²" title="Superscript 2">x²</button>
+            <button type="button" class="math-btn" data-insert="³" title="Superscript 3">x³</button>
+            <button type="button" class="math-btn" data-insert="½" title="One half">½</button>
+            <button type="button" class="math-btn" data-insert-frac title="Fraction a/b">a/b</button>
+          </div>
+        </div>
+        <div id="q-multi-fields" class="multi-fields" hidden></div>
+      </form>
+      <div class="answer-actions">
+        <button class="primary" id="btn-check" type="submit" form="q-form" hidden data-i18n="btn_check">Check</button>
+        <button class="ghost" id="btn-skip" type="button" data-i18n="btn_skip">Skip</button>
+        <button class="ghost btn-with-icon" id="btn-remix" type="button" data-i18n-aria="btn_remix_aria">
+          <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+          <span data-i18n="btn_remix">Remix</span>
+        </button>
+        <button class="primary" id="btn-next" type="button" hidden data-i18n="btn_next">Next question</button>
+        <button class="ghost" id="btn-calc-open" type="button" data-i18n="btn_calc_open">Calculator</button>
+      </div>
+      <div id="feedback" class="feedback" hidden></div>
+      <div class="scratch-pad">
+        <div class="scratch-head">
+          <label for="notes-area" data-i18n="notes_label">Scratch notes</label>
+          <div class="notes-tools" role="group" aria-label="Dataset tools">
+            <button type="button" class="notes-tool" id="notes-sort-asc" data-i18n="notes_sort_asc" data-i18n-title="notes_sort_asc_title" title="Sort numbers ascending">Sort ↑</button>
+            <button type="button" class="notes-tool" id="notes-sort-desc" data-i18n="notes_sort_desc" data-i18n-title="notes_sort_desc_title" title="Sort numbers descending">Sort ↓</button>
+            <button type="button" class="notes-tool" id="notes-sum" data-i18n="notes_sum" data-i18n-title="notes_sum_title" title="Append count and sum">Σ</button>
+            <button type="button" class="notes-tool" id="notes-unique" data-i18n="notes_unique" data-i18n-title="notes_unique_title" title="List unique values with counts">Unique</button>
+          </div>
+        </div>
+        <textarea id="notes-area" rows="4" spellcheck="false" data-i18n-placeholder="notes_placeholder" placeholder="Jot working here…"></textarea>
+        <p class="notes-status" id="notes-status" aria-live="polite" hidden></p>
+      </div>
+    </section>
+
+    <aside class="panel mastery">
+      <h2 data-i18n="mastery_heading">Mastery</h2>
+      <p class="muted" data-i18n="mastery_blurb">Need 10 unaided corrects per topic. Hints never count.</p>
+      <div id="mastery-pie" class="mastery-pie" aria-live="polite"></div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <blockquote class="scripture-quote">
+      <p data-i18n="scripture_quote">“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”</p>
+      <cite data-i18n="scripture_cite">— 1 Nephi 17:9</cite>
+    </blockquote>
+    <p data-i18n-html="disclaimer">Unofficial student practice tool for Ensign College MAT 107, based on a real course assignment. Not affiliated with, endorsed by, or connected to Ensign College or The Church of Jesus Christ of Latter-day Saints. Made by a student for personal study. Built with Cursor, hosted on Cloudflare Workers, and versioned on <a href="https://github.com/aaronjsmith/mat107" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+    <p class="footer-links"><a href="https://github.com/aaronjsmith/mat107" target="_blank" rel="noopener noreferrer" data-i18n="footer_github">View source on GitHub</a></p>
+  </footer>
+
+  <div id="calc-modal" class="calc-panel" hidden role="dialog" aria-modal="false" aria-labelledby="calc-title">
+    <header class="calc-head" id="calc-drag-handle">
+      <h2 id="calc-title" data-i18n="calc_title">Calculator</h2>
+      <button type="button" class="modal-close" id="btn-calc-close" aria-label="Close" data-i18n-aria="btn_calc_close_aria">×</button>
+    </header>
+    <div class="calc-app">
+      <input id="calc-display" class="calc-display" type="text" readonly inputmode="decimal" value="0" aria-live="polite" />
+      <div class="calc-keys" id="calc-keys">
+        <button type="button" data-calc="clear" class="calc-key fn">C</button>
+        <button type="button" data-calc="back" class="calc-key fn">⌫</button>
+        <button type="button" data-calc="sqrt" class="calc-key fn">√</button>
+        <button type="button" data-calc="op" data-op="/" class="calc-key op">÷</button>
+        <button type="button" data-calc="digit" data-digit="7" class="calc-key">7</button>
+        <button type="button" data-calc="digit" data-digit="8" class="calc-key">8</button>
+        <button type="button" data-calc="digit" data-digit="9" class="calc-key">9</button>
+        <button type="button" data-calc="op" data-op="*" class="calc-key op">×</button>
+        <button type="button" data-calc="digit" data-digit="4" class="calc-key">4</button>
+        <button type="button" data-calc="digit" data-digit="5" class="calc-key">5</button>
+        <button type="button" data-calc="digit" data-digit="6" class="calc-key">6</button>
+        <button type="button" data-calc="op" data-op="-" class="calc-key op">−</button>
+        <button type="button" data-calc="digit" data-digit="1" class="calc-key">1</button>
+        <button type="button" data-calc="digit" data-digit="2" class="calc-key">2</button>
+        <button type="button" data-calc="digit" data-digit="3" class="calc-key">3</button>
+        <button type="button" data-calc="op" data-op="+" class="calc-key op">+</button>
+        <button type="button" data-calc="sign" class="calc-key fn">±</button>
+        <button type="button" data-calc="digit" data-digit="0" class="calc-key">0</button>
+        <button type="button" data-calc="dot" class="calc-key">.</button>
+        <button type="button" data-calc="eq" class="calc-key eq">=</button>
+        <button type="button" data-calc="pi" class="calc-key fn">π</button>
+        <button type="button" data-calc="sq" class="calc-key fn">x²</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="boss-invite-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="boss-invite-title">
+    <div class="modal-backdrop" id="boss-invite-backdrop" tabindex="-1"></div>
+    <div class="modal-card boss-invite-card">
+      <header class="modal-head">
+        <h2 id="boss-invite-title" data-i18n="boss_invite_title">Gadianton Robber</h2>
+        <button type="button" class="modal-close" id="boss-invite-close" aria-label="Close" data-i18n-aria="boss_invite_close_aria">×</button>
+      </header>
+      <p class="boss-invite-face" aria-hidden="true">😈</p>
+      <p class="modal-body" id="boss-invite-msg" data-i18n="boss_invite_mastered">Every topic is mastered at 10/10. A Gadianton Robber threatens Zarahemla — fight him now?</p>
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="boss-invite-later" data-i18n="boss_invite_later">Not now</button>
+        <button type="button" class="primary" id="boss-invite-fight" data-i18n="boss_invite_fight">Fight</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="boss-retreat-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="boss-retreat-title">
+    <div class="modal-backdrop" id="boss-retreat-backdrop" tabindex="-1"></div>
+    <div class="modal-card boss-invite-card">
+      <header class="modal-head">
+        <h2 id="boss-retreat-title" data-i18n="boss_retreat_title">Retreat</h2>
+        <button type="button" class="modal-close" id="boss-retreat-close" aria-label="Close" data-i18n-aria="boss_retreat_close_aria">×</button>
+      </header>
+      <p class="boss-invite-face" aria-hidden="true">🏃</p>
+      <p class="modal-body" id="boss-retreat-msg" data-i18n="boss_retreat_msg">You need to retreat and perfect this skill before facing the Gadianton Robber again.</p>
+      <div class="modal-actions">
+        <button type="button" class="primary" id="boss-retreat-ok" data-i18n="boss_retreat_ok">Train now</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="lang/languages.js"></script>
+  <script src="lang/en.js"></script>
+  <script src="js/assessments.js"></script>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var raw = params.get("a") || "assessment1";
+      var course = window.Mat107Course;
+      if (!course) {
+        window.MAT107_ASSESSMENT_ID = "assessment1";
+        return;
+      }
+      var id = course.resolveAssessmentId(raw);
+      var assessment = id ? course.getAssessment(id) : null;
+      if (!assessment || !assessment.available) {
+        window.location.replace("index.html");
+        return;
+      }
+      window.MAT107_ASSESSMENT_ID = id;
+    })();
+  </script>
+  <script src="js/i18n.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

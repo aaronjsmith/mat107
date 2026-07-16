@@ -1,6 +1,13 @@
 /* MAT107 progress — localStorage */
 (function () {
-  const STORAGE_KEY = "mat107-assessment1-progress";
+  const ASSESSMENT_ID =
+    window.MAT107_ASSESSMENT_ID ||
+    (window.Mat107Course && window.Mat107Course.getDefaultAssessmentId()) ||
+    "assessment1";
+  const STORAGE_KEY =
+    window.Mat107Course && window.Mat107Course.progressStorageKey
+      ? window.Mat107Course.progressStorageKey(ASSESSMENT_ID)
+      : "mat107-" + ASSESSMENT_ID + "-progress";
   const Q = window.QuizQuestions;
   /** Unaided corrects needed to master a topic. */
   const MASTER = Q.UNAIDED_TO_MASTER || 10;
@@ -477,7 +484,8 @@
   function exportProgress() {
     const p = load();
     return {
-      format: "mat107-assessment1-progress",
+      format: "mat107-" + ASSESSMENT_ID + "-progress",
+      assessment_id: ASSESSMENT_ID,
       version: 3,
       exported_at: new Date().toISOString(),
       progress: p,
@@ -570,5 +578,6 @@
     importProgress: importProgress,
     downloadProgressFile: downloadProgressFile,
     STORAGE_KEY: STORAGE_KEY,
+    ASSESSMENT_ID: ASSESSMENT_ID,
   };
 })();

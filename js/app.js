@@ -1918,7 +1918,10 @@
   }
 
   // --- Scratch notes (persisted) + dataset tools ----------------------------
-  const NOTES_KEY = "mat107-assessment1-notes";
+  const NOTES_KEY =
+    window.Mat107Course && P.ASSESSMENT_ID
+      ? window.Mat107Course.notesStorageKey(P.ASSESSMENT_ID)
+      : "mat107-assessment1-notes";
 
   function persistNotes() {
     if (!els.notes) return;
@@ -2385,8 +2388,23 @@
     });
   }
 
+  function applyAssessmentBranding() {
+    const id = (P && P.ASSESSMENT_ID) || "assessment1";
+    const course = window.Mat107Course;
+    const brandSub = document.querySelector(".brand-sub");
+    if (!brandSub || !course || !course.getAssessment) return;
+    const assessment = course.getAssessment(id);
+    if (!assessment) return;
+    brandSub.textContent = t(assessment.titleKey);
+    const titleKey = "assessment." + assessment.number + ".page_title";
+    if (I18n && I18n.has && I18n.has(titleKey)) {
+      document.title = t(titleKey);
+    }
+  }
+
   function start() {
     if (I18n && I18n.applyStatic) I18n.applyStatic();
+    applyAssessmentBranding();
     hideBossFace();
     if (restoreBossRunFromStorage()) {
       state.mode = "finalboss";
