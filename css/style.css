@@ -1557,6 +1557,11 @@ a.linkish {
   opacity: 0.88;
 }
 
+.card-grid-single {
+  grid-template-columns: 1fr;
+  max-width: 42rem;
+}
+
 @media (max-width: 640px) {
   .course-layout {
     padding: 1rem 1rem 2.5rem;

@@ -1,5 +1,5 @@
 /**
- * MAT107 course catalog — lessons and assessments.
+ * MAT107 assessment catalog.
  * Each assessment gets its own localStorage progress key: mat107-{id}-progress
  */
 (function () {
@@ -22,57 +22,6 @@
     "literacy",
   ];
 
-  const LESSONS = [
-    {
-      id: "lesson1",
-      number: 1,
-      titleKey: "lesson.1.title",
-      summaryKey: "lesson.1.summary",
-      topics: ["conversions"],
-      assessments: ["assessment1"],
-    },
-    {
-      id: "lesson2",
-      number: 2,
-      titleKey: "lesson.2.title",
-      summaryKey: "lesson.2.summary",
-      topics: ["formulas", "perimeter_area", "volume"],
-      assessments: ["assessment1", "assessment2"],
-    },
-    {
-      id: "lesson3",
-      number: 3,
-      titleKey: "lesson.3.title",
-      summaryKey: "lesson.3.summary",
-      topics: ["pythagorean", "scale_rates", "scaling"],
-      assessments: ["assessment1", "assessment2"],
-    },
-    {
-      id: "lesson4",
-      number: 4,
-      titleKey: "lesson.4.title",
-      summaryKey: "lesson.4.summary",
-      topics: ["stats_center"],
-      assessments: ["assessment1", "assessment3"],
-    },
-    {
-      id: "lesson5",
-      number: 5,
-      titleKey: "lesson.5.title",
-      summaryKey: "lesson.5.summary",
-      topics: ["stats_spread", "z_scores", "distributions"],
-      assessments: ["assessment1", "assessment3"],
-    },
-    {
-      id: "lesson6",
-      number: 6,
-      titleKey: "lesson.6.title",
-      summaryKey: "lesson.6.summary",
-      topics: ["literacy"],
-      assessments: ["assessment1", "assessment4"],
-    },
-  ];
-
   const ASSESSMENTS = [
     {
       id: "assessment1",
@@ -80,46 +29,6 @@
       titleKey: "assessment.1.title",
       summaryKey: "assessment.1.summary",
       available: true,
-      lessons: ["lesson1", "lesson2", "lesson3", "lesson4", "lesson5", "lesson6"],
-      topicIds: TOPIC_IDS.slice(),
-    },
-    {
-      id: "assessment2",
-      number: 2,
-      titleKey: "assessment.2.title",
-      summaryKey: "assessment.2.summary",
-      available: false,
-      lessons: ["lesson2", "lesson3"],
-      topicIds: [
-        "formulas",
-        "perimeter_area",
-        "volume",
-        "pythagorean",
-        "scale_rates",
-        "scaling",
-      ],
-    },
-    {
-      id: "assessment3",
-      number: 3,
-      titleKey: "assessment.3.title",
-      summaryKey: "assessment.3.summary",
-      available: false,
-      lessons: ["lesson4", "lesson5"],
-      topicIds: [
-        "stats_center",
-        "stats_spread",
-        "z_scores",
-        "distributions",
-      ],
-    },
-    {
-      id: "assessment4",
-      number: 4,
-      titleKey: "assessment.4.title",
-      summaryKey: "assessment.4.summary",
-      available: false,
-      lessons: ["lesson1", "lesson2", "lesson3", "lesson4", "lesson5", "lesson6"],
       topicIds: TOPIC_IDS.slice(),
     },
   ];
@@ -139,12 +48,6 @@
   function getAssessment(id) {
     return ASSESSMENTS.find(function (a) {
       return a.id === id;
-    });
-  }
-
-  function getLesson(id) {
-    return LESSONS.find(function (l) {
-      return l.id === id;
     });
   }
 
@@ -193,13 +96,11 @@
   window.Mat107Course = {
     MASTER: MASTER,
     TOPIC_IDS: TOPIC_IDS,
-    LESSONS: LESSONS,
     ASSESSMENTS: ASSESSMENTS,
     progressStorageKey: progressStorageKey,
     notesStorageKey: notesStorageKey,
     quizHref: quizHref,
     getAssessment: getAssessment,
-    getLesson: getLesson,
     getDefaultAssessmentId: getDefaultAssessmentId,
     resolveAssessmentId: resolveAssessmentId,
     readProgressSummary: readProgressSummary,

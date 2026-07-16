@@ -1,4 +1,4 @@
-/* MAT107 course hub — lessons & assessments index */
+/* MAT107 course hub — assessment picker */
 (function () {
   "use strict";
 
@@ -12,7 +12,6 @@
   if (!C) return;
 
   const els = {
-    lessonList: document.getElementById("lesson-list"),
     assessmentList: document.getElementById("assessment-list"),
     lang: document.getElementById("lang-select"),
   };
@@ -33,50 +32,6 @@
         );
       })
       .join("");
-  }
-
-  function primaryAssessmentForLesson(lesson) {
-    const ids = lesson.assessments || [];
-    for (let i = 0; i < ids.length; i++) {
-      const a = C.getAssessment(ids[i]);
-      if (a && a.available) return a;
-    }
-    return null;
-  }
-
-  function renderLessons() {
-    if (!els.lessonList) return;
-    els.lessonList.innerHTML = C.LESSONS.map(function (lesson) {
-      const practice = primaryAssessmentForLesson(lesson);
-      const practiceHtml = practice
-        ? '<a class="card-link" href="' +
-          escapeHtml(C.quizHref(practice.id)) +
-          '">' +
-          escapeHtml(t("course_practice_assessment", { n: practice.number })) +
-          "</a>"
-        : '<span class="card-soon muted">' +
-          escapeHtml(t("course_coming_soon")) +
-          "</span>";
-      return (
-        '<article class="course-card lesson-card">' +
-        '<div class="card-badge">' +
-        escapeHtml(t("course_lesson_n", { n: lesson.number })) +
-        "</div>" +
-        "<h3>" +
-        escapeHtml(t(lesson.titleKey)) +
-        "</h3>" +
-        '<p class="card-summary">' +
-        escapeHtml(t(lesson.summaryKey)) +
-        "</p>" +
-        '<div class="topic-pills">' +
-        topicPills(lesson.topics) +
-        "</div>" +
-        '<div class="card-actions">' +
-        practiceHtml +
-        "</div>" +
-        "</article>"
-      );
-    }).join("");
   }
 
   function progressLine(summary) {
@@ -113,31 +68,10 @@
     if (!els.assessmentList) return;
     els.assessmentList.innerHTML = C.ASSESSMENTS.map(function (assessment) {
       const summary = C.readProgressSummary(assessment);
-      const status = assessment.available
-        ? '<span class="status-pill status-live">' +
-          escapeHtml(t("course_status_live")) +
-          "</span>"
-        : '<span class="status-pill status-soon">' +
-          escapeHtml(t("course_status_soon")) +
-          "</span>";
-      const action = assessment.available
-        ? '<a class="primary card-btn" href="' +
-          escapeHtml(C.quizHref(assessment.id)) +
-          '">' +
-          escapeHtml(t("course_open_practice")) +
-          "</a>"
-        : '<button class="ghost card-btn" type="button" disabled>' +
-          escapeHtml(t("course_coming_soon")) +
-          "</button>";
       return (
-        '<article class="course-card assessment-card' +
-        (assessment.available ? "" : " is-soon") +
-        '">' +
-        '<div class="card-head">' +
+        '<article class="course-card assessment-card">' +
         '<div class="card-badge">' +
         escapeHtml(t("course_assessment_n", { n: assessment.number })) +
-        "</div>" +
-        status +
         "</div>" +
         "<h3>" +
         escapeHtml(t(assessment.titleKey)) +
@@ -145,9 +79,16 @@
         '<p class="card-summary">' +
         escapeHtml(t(assessment.summaryKey)) +
         "</p>" +
+        '<div class="topic-pills">' +
+        topicPills(assessment.topicIds || []) +
+        "</div>" +
         progressLine(summary) +
         '<div class="card-actions">' +
-        action +
+        '<a class="primary card-btn" href="' +
+        escapeHtml(C.quizHref(assessment.id)) +
+        '">' +
+        escapeHtml(t("course_open_practice")) +
+        "</a>" +
         "</div>" +
         "</article>"
       );
@@ -155,7 +96,6 @@
   }
 
   function render() {
-    renderLessons();
     renderAssessments();
   }
 
