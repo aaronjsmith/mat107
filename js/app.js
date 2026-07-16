@@ -437,6 +437,39 @@
     }, 2000);
   }
 
+  function persistBossRun() {
+    if (
+      state.boss &&
+      state.boss.active &&
+      state.boss.status === "running" &&
+      Array.isArray(state.boss.queue) &&
+      state.boss.queue.length
+    ) {
+      P.saveBossRun({
+        active: true,
+        queue: state.boss.queue.slice(),
+        index: state.boss.index,
+        status: "running",
+        real: Boolean(state.boss.real),
+      });
+    } else if (P.clearBossRun) {
+      P.clearBossRun();
+    }
+  }
+
+  function restoreBossRunFromStorage() {
+    const saved = P.getBossRun && P.getBossRun();
+    if (!saved) return false;
+    state.boss = {
+      active: true,
+      queue: saved.queue.slice(),
+      index: saved.index,
+      status: "running",
+      real: Boolean(saved.real),
+    };
+    return true;
+  }
+
   function startBossRun() {
     const real = Boolean(P.allTopicsMastered && P.allTopicsMastered());
     state.boss = {
@@ -446,6 +479,7 @@
       status: "running",
       real: real,
     };
+    persistBossRun();
     setBossFace("😈");
     updateFinalBossButton(P.getProgressView());
   }
@@ -464,6 +498,7 @@
     }
     state.boss.status = "failed";
     state.boss.active = false;
+    if (P.clearBossRun) P.clearBossRun();
     state.answered = true;
     hideBossFace();
     lockInputs();
@@ -496,6 +531,7 @@
     }
     state.boss.status = "won";
     state.boss.active = false;
+    if (P.clearBossRun) P.clearBossRun();
     state.answered = true;
     setBossFace("💀", "dead");
     bossFaceTimer = setTimeout(hideBossFace, 1100);
@@ -520,6 +556,7 @@
   function advanceBossAfterCorrect() {
     state.boss.index += 1;
     if (state.boss.index >= state.boss.queue.length) {
+      if (P.clearBossRun) P.clearBossRun();
       playBossHitSound();
       setBossFace("👹", "hit");
       bossFaceTimer = setTimeout(function () {
@@ -527,6 +564,7 @@
       }, 2000);
       return;
     }
+    persistBossRun();
     bossTakeDamage();
     els.feedback.className = "feedback ok";
     els.feedback.textContent = t("boss_ok", {
@@ -740,7 +778,6 @@
     els.next.textContent = t("btn_next");
 
     if (state.mode !== "finalboss") {
-      state.boss = { active: false, queue: [], index: 0, status: null, real: false };
       hideBossFace();
     } else if (!bossFightActive()) {
       // Between runs / after win-fail — keep face hidden until a new fight starts.
@@ -750,13 +787,31 @@
     let topic = null;
     if (state.mode === "finalboss") {
       if (!state.boss.active || state.boss.status === "failed" || state.boss.status === "won") {
-        startBossRun();
-        els.feedback.hidden = false;
-        els.feedback.className = "feedback ok";
-        // Real fights never use practice copy.
-        els.feedback.textContent = state.boss.real
-          ? t("boss_start")
-          : t("boss_start_practice");
+        // Resume a saved mid-fight run after refresh / leaving the mode.
+        if (!restoreBossRunFromStorage()) {
+          startBossRun();
+          els.feedback.hidden = false;
+          els.feedback.className = "feedback ok";
+          // Real fights never use practice copy.
+          els.feedback.textContent = state.boss.real
+            ? t("boss_start")
+            : t("boss_start_practice");
+        } else {
+          setBossFace("😈");
+          updateFinalBossButton(P.getProgressView());
+          els.feedback.hidden = false;
+          els.feedback.className = "feedback ok";
+          if (state.boss.index > 0) {
+            els.feedback.textContent = t("boss_ok", {
+              current: state.boss.index,
+              total: state.boss.queue.length,
+            });
+          } else {
+            els.feedback.textContent = state.boss.real
+              ? t("boss_start")
+              : t("boss_start_practice");
+          }
+        }
       }
       topic = state.boss.queue[state.boss.index];
     } else if (state.mode === "smart") {
@@ -1286,7 +1341,9 @@
       state.mode = nextMode;
       state.remixAfterFail = false;
       if (nextMode === "finalboss") {
-        state.boss = { active: false, queue: [], index: 0, status: null, real: false };
+        if (!restoreBossRunFromStorage()) {
+          state.boss = { active: false, queue: [], index: 0, status: null, real: false };
+        }
       }
       setModeButtons();
       loadQuestion();
@@ -1872,7 +1929,11 @@
   function start() {
     if (I18n && I18n.applyStatic) I18n.applyStatic();
     hideBossFace();
+    if (restoreBossRunFromStorage()) {
+      state.mode = "finalboss";
+    }
     refreshProgress();
+    setModeButtons();
     loadQuestion();
   }
 

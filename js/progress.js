@@ -32,6 +32,7 @@
       history: [],
       final_boss_cleared: false,
       final_boss_cleared_at: null,
+      boss_run: null,
       updated_at: null,
     };
   }
@@ -50,6 +51,7 @@
       data.total_unaided_correct = data.total_unaided_correct || 0;
       data.final_boss_cleared = Boolean(data.final_boss_cleared);
       data.final_boss_cleared_at = data.final_boss_cleared_at || null;
+      data.boss_run = normalizeBossRun(data.boss_run);
       Object.keys(Q.TOPICS).forEach((key) => {
         const t = data.topics[key] || emptyTopic(Q.TOPICS[key]);
         t.label = Q.TOPICS[key];
@@ -70,6 +72,45 @@
   function save(data) {
     data.updated_at = new Date().toISOString();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function normalizeBossRun(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    if (!raw.active || raw.status !== "running") return null;
+    if (!Array.isArray(raw.queue) || !raw.queue.length) return null;
+    const topicKeys = Q.TOPICS ? Object.keys(Q.TOPICS) : [];
+    const queue = raw.queue.filter(function (t) {
+      return topicKeys.indexOf(t) >= 0;
+    });
+    if (!queue.length) return null;
+    let index = Number(raw.index) || 0;
+    if (index < 0) index = 0;
+    if (index >= queue.length) index = queue.length - 1;
+    return {
+      active: true,
+      queue: queue,
+      index: index,
+      status: "running",
+      real: Boolean(raw.real),
+    };
+  }
+
+  function getBossRun() {
+    return normalizeBossRun(load().boss_run);
+  }
+
+  function saveBossRun(run) {
+    const p = load();
+    p.boss_run = normalizeBossRun(run);
+    save(p);
+    return p.boss_run;
+  }
+
+  function clearBossRun() {
+    const p = load();
+    if (p.boss_run == null) return;
+    p.boss_run = null;
+    save(p);
   }
 
   function gradeAccuracy(credit, attempted) {
@@ -404,6 +445,7 @@
     next.best_streak = p.best_streak || 0;
     next.final_boss_cleared = Boolean(p.final_boss_cleared);
     next.final_boss_cleared_at = p.final_boss_cleared_at || null;
+    next.boss_run = normalizeBossRun(p.boss_run);
     next.history = Array.isArray(p.history) ? p.history.slice(-100) : [];
     Object.keys(Q.TOPICS).forEach((key) => {
       const src = (p.topics && p.topics[key]) || {};
@@ -450,6 +492,9 @@
     shuffleTopics: shuffleTopics,
     markFinalBossCleared: markFinalBossCleared,
     penalizeBossFail: penalizeBossFail,
+    getBossRun: getBossRun,
+    saveBossRun: saveBossRun,
+    clearBossRun: clearBossRun,
     recordAnswer: recordAnswer,
     recordHintSkip: recordHintSkip,
     awardRetryCredit: awardRetryCredit,
