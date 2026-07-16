@@ -424,7 +424,7 @@
   }
 
   /** Boss takes a hit: 👹 for 2s, then back to 😈 only while the fight continues. */
-  function bossTakeDamage() {
+  function bossTakeDamage(onDone) {
     if (!bossFightActive()) {
       hideBossFace();
       return;
@@ -432,8 +432,15 @@
     playBossHitSound();
     setBossFace("👹", "hit");
     bossFaceTimer = setTimeout(function () {
-      if (bossFightActive()) setBossFace("😈");
-      else hideBossFace();
+      if (!bossFightActive()) {
+        hideBossFace();
+        return;
+      }
+      if (typeof onDone === "function") {
+        onDone();
+        return;
+      }
+      setBossFace("😈");
     }, 2000);
   }
 
@@ -565,13 +572,17 @@
       return;
     }
     persistBossRun();
-    bossTakeDamage();
+    els.feedback.hidden = false;
     els.feedback.className = "feedback ok";
     els.feedback.textContent = t("boss_ok", {
       current: state.boss.index,
       total: state.boss.queue.length,
     });
-    els.next.hidden = false;
+    els.next.hidden = true;
+    bossTakeDamage(function () {
+      if (!bossFightActive()) return;
+      loadQuestion();
+    });
   }
 
   function refreshProgress() {
