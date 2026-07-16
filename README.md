@@ -1,1 +1,3 @@
-MAT 107 https://mat107.aaronjsmith.me/
+MAT 107 practice: https://mat107.aaronjsmith.me/
+
+Printable 5×7 double-sided formula notecard: https://mat107.aaronjsmith.me/notecard.html

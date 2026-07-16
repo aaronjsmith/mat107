@@ -235,6 +235,10 @@ html[dir="rtl"] .lang-wrap {
   text-underline-offset: 3px;
 }
 
+a.linkish {
+  display: inline-block;
+}
+
 .linkish.danger { color: var(--warn); }
 
 .progress-actions {

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MAT 107 · 5×7 Formula Notecard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a2332;
+      --muted: #5c6b7a;
+      --line: #c9bba3;
+      --accent: #0f6e56;
+      --paper: #fffcf6;
+      --wash: #f3efe6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--wash);
+      line-height: 1.35;
+    }
+
+    .toolbar {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toolbar h1 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .toolbar p {
+      margin: 0.2rem 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      padding: 0.5rem 0.9rem;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn:hover { filter: brightness(0.97); }
+
+    .deck {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 0.75rem 1rem 2rem;
+    }
+
+    .side {
+      width: 5in;
+      height: 7in;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: 0 12px 28px rgba(26, 35, 50, 0.08);
+      padding: 0.28in 0.3in 0.26in;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .side-label {
+      position: absolute;
+      top: 0.12in;
+      right: 0.18in;
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .side h2 {
+      margin: 0 0 0.18rem;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .side h3 {
+      margin: 0.35rem 0 0.12rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(201, 187, 163, 0.7);
+      padding-bottom: 0.08rem;
+    }
+
+    .cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.18in 0.16in;
+    }
+
+    .formulas {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.62rem;
+      margin: 0;
+      padding-left: 0.9rem;
+    }
+
+    .formulas li { margin: 0.08rem 0; }
+
+    .formulas .lbl {
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      color: var(--muted);
+      font-size: 0.58rem;
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 1rem;
+      font-size: 0.68rem;
+    }
+
+    .steps li { margin: 0.1rem 0; }
+
+    .ex {
+      margin: 0.18rem 0 0;
+      padding: 0.28rem 0.4rem;
+      background: rgba(15, 110, 86, 0.06);
+      border-left: 2px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+      font-size: 0.62rem;
+    }
+
+    .ex strong {
+      display: block;
+      margin-bottom: 0.08rem;
+      font-size: 0.64rem;
+    }
+
+    .ex code {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.6rem;
+    }
+
+    .note {
+      margin: 0.2rem 0 0;
+      font-size: 0.58rem;
+      color: var(--muted);
+    }
+
+    .curve-wrap {
+      text-align: center;
+      margin: 0.1rem 0 0.15rem;
+    }
+
+    .curve-wrap svg {
+      width: 100%;
+      max-height: 1.85in;
+      height: auto;
+    }
+
+    .examples {
+      display: grid;
+      gap: 0.14rem;
+    }
+
+    .eg {
+      border: 1px solid rgba(201, 187, 163, 0.65);
+      border-radius: 6px;
+      padding: 0.28rem 0.38rem;
+      font-size: 0.62rem;
+    }
+
+    .eg strong {
+      color: var(--accent);
+      font-size: 0.64rem;
+    }
+
+    .eg .ans {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-weight: 500;
+    }
+
+    .footer-tiny {
+      margin-top: 0.2rem;
+      font-size: 0.52rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none !important; }
+      .deck {
+        padding: 0;
+        gap: 0;
+      }
+      .side {
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        page-break-after: always;
+        break-after: page;
+        margin: 0;
+      }
+      .side:last-child { page-break-after: auto; }
+      @page {
+        size: 5in 7in;
+        margin: 0;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .side {
+        width: min(100%, 5in);
+        height: auto;
+        min-height: 7in;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <h1>MAT 107 · Double-sided 5×7 notecard</h1>
+      <p>Print both sides on 5×7 card stock (or trim from letter). Flip for Front / Back.</p>
+    </div>
+    <div class="toolbar-actions">
+      <a class="btn" href="index.html">← Practice quiz</a>
+      <button class="btn primary" type="button" onclick="window.print()">Print notecard</button>
+    </div>
+  </div>
+
+  <div class="deck">
+    <!-- FRONT -->
+    <article class="side" aria-label="Notecard front">
+      <span class="side-label">Front · Formulas &amp; steps</span>
+      <h2>MAT 107 cheat card</h2>
+      <p class="note">Use π = <strong>3.14</strong> (type 3.14 — don’t use the π key). Round only at the end.</p>
+
+      <div class="cols">
+        <div>
+          <h3>Perimeter &amp; area</h3>
+          <ul class="formulas">
+            <li><span class="lbl">Square</span> P=4s · A=s²</li>
+            <li><span class="lbl">Rectangle</span> P=2L+2W · A=LW</li>
+            <li><span class="lbl">Triangle</span> P=a+b+c · A=½bh</li>
+            <li><span class="lbl">Circle</span> C=2πr · A=πr²</li>
+          </ul>
+          <h3>Volume</h3>
+          <ul class="formulas">
+            <li><span class="lbl">Cube</span> V=s³</li>
+            <li><span class="lbl">Cylinder</span> V=πr²h</li>
+            <li><span class="lbl">Sphere</span> V=(4/3)πr³</li>
+          </ul>
+          <h3>Other</h3>
+          <ul class="formulas">
+            <li><span class="lbl">Pythagorean</span> a²+b²=c²</li>
+            <li><span class="lbl">Slope</span> rise/run</li>
+            <li><span class="lbl">Z-score</span> z=(x−μ)/σ</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Conversions</h3>
+          <ul class="formulas">
+            <li>1 yd = 3 ft</li>
+            <li>1 sq yd = 9 sq ft</li>
+            <li>1 cu yd = 27 cu ft</li>
+            <li>1 gal = 3.785 L</li>
+            <li>9 sq ft = 1 sq yd</li>
+          </ul>
+          <h3>Stats quick</h3>
+          <ul class="formulas">
+            <li>mean = sum ÷ n</li>
+            <li>median = middle (sorted)</li>
+            <li>mode = most frequent</li>
+            <li>range = max − min</li>
+            <li>s ≈ range ÷ 4</li>
+          </ul>
+          <h3>Scaling</h3>
+          <ul class="formulas">
+            <li>Area ∝ (scale)²</li>
+            <li>Volume ∝ (scale)³</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Steps to solve</h3>
+      <ol class="steps">
+        <li><strong>Read</strong> — underline what is asked; list knowns.</li>
+        <li><strong>Choose</strong> — pick the matching formula / rule.</li>
+        <li><strong>Substitute</strong> — plug numbers (r = d/2 if needed).</li>
+        <li><strong>Compute</strong> — left→right; use parentheses; π=3.14.</li>
+        <li><strong>Finish</strong> — convert units if needed; round as asked.</li>
+      </ol>
+
+      <div class="ex">
+        <strong>Example A · Rectangle area</strong>
+        Room 12 ft by 9 ft → A = L×W = 12×9 = <code>108 sq ft</code>
+      </div>
+      <div class="ex">
+        <strong>Example B · Cylinder volume</strong>
+        Diameter 4 in, height 6 in → r=2 → V=3.14×2²×6 = 3.14×4×6 = <code>75.36 cu in</code>
+      </div>
+      <div class="ex">
+        <strong>Example C · Z-score</strong>
+        x=85, μ=70, σ=10 → z=(85−70)/10 = <code>1.50</code>
+      </div>
+
+      <p class="footer-tiny">Unofficial MAT 107 study aid · not affiliated with Ensign College</p>
+    </article>
+
+    <!-- BACK -->
+    <article class="side" aria-label="Notecard back">
+      <span class="side-label">Back · Normal curve</span>
+      <h2>Empirical rule (≈normal data)</h2>
+      <p class="note">About <strong>68%</strong> within 1 SD · <strong>95%</strong> within 2 SD · <strong>99.7%</strong> within 3 SD of the mean.</p>
+
+      <div class="curve-wrap">
+        <svg viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Normal curve with standard deviation bands">
+          <defs>
+            <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,1 L6,3 L0,5 Z" fill="#7eb6d9"/>
+            </marker>
+            <marker id="arrL" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto">
+              <path d="M6,1 L0,3 L6,5 Z" fill="#7eb6d9"/>
+            </marker>
+          </defs>
+          <line x1="48" y1="200" x2="592" y2="200" stroke="#1a2332" stroke-width="1.4"/>
+          <!-- ticks -->
+          <g stroke="#7eb6d9" stroke-width="1.1">
+            <line x1="100" y1="188" x2="100" y2="200"/><!-- -3 -->
+            <line x1="172" y1="155" x2="172" y2="200"/><!-- -2 -->
+            <line x1="244" y1="95" x2="244" y2="200"/><!-- -1 -->
+            <line x1="316" y1="52" x2="316" y2="200" stroke-width="1.5"/><!-- 0 -->
+            <line x1="388" y1="95" x2="388" y2="200"/><!-- +1 -->
+            <line x1="460" y1="155" x2="460" y2="200"/><!-- +2 -->
+            <line x1="532" y1="188" x2="532" y2="200"/><!-- +3 -->
+          </g>
+          <path d="M70 198 C 100 196, 130 175, 172 155 C 210 130, 244 80, 316 52 C 388 80, 422 130, 460 155 C 502 175, 532 196, 562 198"
+                fill="none" stroke="#6b3fa0" stroke-width="2.3" stroke-linecap="round"/>
+          <!-- range arrows -->
+          <line x1="244" y1="28" x2="388" y2="28" stroke="#7eb6d9" stroke-width="1.3" marker-start="url(#arrL)" marker-end="url(#arr)"/>
+          <text x="316" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="#1a2332">68%</text>
+          <line x1="172" y1="14" x2="460" y2="14" stroke="#7eb6d9" stroke-width="1.3" marker-start="url(#arrL)" marker-end="url(#arr)"/>
+          <text x="316" y="10" text-anchor="middle" font-size="12" font-weight="600" fill="#1a2332">95%</text>
+          <!-- segment labels -->
+          <text x="136" y="170" text-anchor="middle" font-size="11" fill="#1a2332">2.15%</text>
+          <text x="208" y="125" text-anchor="middle" font-size="11" fill="#1a2332">13.6%</text>
+          <text x="280" y="95" text-anchor="middle" font-size="11" font-weight="600" fill="#1a2332">34%</text>
+          <text x="352" y="95" text-anchor="middle" font-size="11" font-weight="600" fill="#1a2332">34%</text>
+          <text x="424" y="125" text-anchor="middle" font-size="11" fill="#1a2332">13.6%</text>
+          <text x="496" y="170" text-anchor="middle" font-size="11" fill="#1a2332">2.15%</text>
+          <!-- axis labels -->
+          <text x="100" y="218" text-anchor="middle" font-size="12">−3</text>
+          <text x="172" y="218" text-anchor="middle" font-size="12">−2</text>
+          <text x="244" y="218" text-anchor="middle" font-size="12">−1</text>
+          <text x="316" y="218" text-anchor="middle" font-size="12" font-weight="600">0</text>
+          <text x="388" y="218" text-anchor="middle" font-size="12">+1</text>
+          <text x="460" y="218" text-anchor="middle" font-size="12">+2</text>
+          <text x="532" y="218" text-anchor="middle" font-size="12">+3</text>
+          <text x="48" y="236" font-size="11" fill="#5c6b7a">Standard Deviations from mean (μ)</text>
+        </svg>
+      </div>
+
+      <h3>Worked examples — calculate these</h3>
+      <div class="examples">
+        <div class="eg">
+          <strong>1 · Within 1 SD</strong><br />
+          Ages ~ normal, mean 40, SD 5. About what % are between 35 and 45?<br />
+          35 = μ−1σ, 45 = μ+1σ → middle band → <span class="ans">≈ 68%</span>
+        </div>
+        <div class="eg">
+          <strong>2 · Within 2 SD</strong><br />
+          Scores ~ normal, mean 80, SD 10. About what % fall between 60 and 100?<br />
+          60 = μ−2σ, 100 = μ+2σ → <span class="ans">≈ 95%</span>
+        </div>
+        <div class="eg">
+          <strong>3 · Upper tail beyond 3 SD</strong><br />
+          Mean 70, SD 5. About what % are older than 85?<br />
+          85 = μ+3σ → outside 99.7% total ≈ 0.3% in both tails → each tail <span class="ans">≈ 0.15%</span>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top:0.25rem">
+        Also remember: below μ−1σ ≈ half of the outside-68% band → about <strong>16%</strong>.
+        For exact percentiles from a z value, use the z ↔ percentile table (not this sketch).
+      </p>
+      <p class="footer-tiny">Print double-sided · flip on short edge if your printer asks · mat107.aaronjsmith.me</p>
+    </article>
+  </div>
+</body>
+</html>

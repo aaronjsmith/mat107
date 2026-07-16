@@ -375,6 +375,7 @@
     "unit.units": "units",
     "btn_save": "Save progress",
     "btn_load": "Load progress",
+    "btn_notecard": "5×7 formula notecard",
     "load_confirm": "Replace current progress with this JSON file?",
     "save_ok": "Progress saved as {file}",
     "save_fail": "Could not save progress file.",
