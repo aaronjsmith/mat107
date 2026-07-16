@@ -64,6 +64,8 @@
     "btn_next": "Next question",
     "btn_skip": "Skip",
     "btn_skip_retry": "Skip · 0%",
+    "btn_remix": "Remix",
+    "btn_remix_aria": "Remix question — same style with new numbers",
     "btn_calc_open": "Calculator",
     "btn_calc_close_aria": "Close calculator",
     "calc_title": "Calculator",

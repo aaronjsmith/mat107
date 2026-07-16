@@ -640,6 +640,17 @@ html[dir="rtl"] .lang-wrap {
   color: var(--muted);
 }
 
+.btn-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-with-icon .btn-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
 .answer-actions {
   display: flex;
   flex-wrap: wrap;

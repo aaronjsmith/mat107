@@ -459,6 +459,8 @@
     "h.cuyd_to_cuft": "1 cubic yard = 27 cubic feet, so multiply by 27.",
     "q.gal_l.v4": "A food-storage drum holds {gallons} gallons of wheat-free… wait, milk for the breakfast. How many {bottleL}-liter bottles fill it? (1 gal = 3.785 L). Round to the nearest hundredth.",
     "q.gal_l.v5": "Convert {gallons} gallons to {bottleL}-liter bottles (1 gal = 3.785 L). Round to the nearest hundredth.",
-    "q.gal_l.v6": "The cultural-hall mop bucket recipe calls for {gallons} gallons of cleaner concentrate. How many {bottleL}-liter bottles is that? (1 gal = 3.785 L). Round to hundredths."
+    "q.gal_l.v6": "The cultural-hall mop bucket recipe calls for {gallons} gallons of cleaner concentrate. How many {bottleL}-liter bottles is that? (1 gal = 3.785 L). Round to hundredths.",
+    "btn_remix": "Remix",
+    "btn_remix_aria": "Remix question — same style with new numbers"
   }
 }

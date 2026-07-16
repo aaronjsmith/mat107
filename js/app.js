@@ -48,6 +48,7 @@
     feedback: document.getElementById("feedback"),
     next: document.getElementById("btn-next"),
     skip: document.getElementById("btn-skip"),
+    remix: document.getElementById("btn-remix"),
     reset: document.getElementById("btn-reset"),
     save: document.getElementById("btn-save"),
     load: document.getElementById("btn-load"),
@@ -395,6 +396,7 @@
     els.next.hidden = true;
     els.skip.hidden = false;
     els.skip.textContent = t("btn_skip");
+    if (els.remix) els.remix.hidden = false;
     els.hint1.hidden = true;
     els.hint2.hidden = true;
     els.hint3ti.hidden = true;
@@ -439,6 +441,21 @@
     }
 
     const full = Q.generateQuestion(topic);
+    showQuestion(full);
+  }
+
+  function loadRemix() {
+    if (!state.fullQuestion) {
+      loadQuestion();
+      return;
+    }
+    // Abandon current item without skip penalty — intentional reshuffle.
+    resetUI();
+    const full = Q.remixQuestion(state.fullQuestion);
+    showQuestion(full);
+  }
+
+  function showQuestion(full) {
     const pub = Q.publicQuestion(full);
     state.fullQuestion = full;
     state.publicQ = pub;
@@ -614,6 +631,7 @@
     els.next.hidden = true;
     els.skip.hidden = false;
     els.skip.textContent = t("btn_skip_retry");
+    if (els.remix) els.remix.hidden = false;
     els.check.textContent = t("btn_check_retry");
 
     if (state.publicQ.type === "mc") {
@@ -644,6 +662,7 @@
     lockInputs();
     els.skip.hidden = true;
     els.skip.textContent = t("btn_skip");
+    if (els.remix) els.remix.hidden = true;
     els.check.textContent = t("btn_check");
     els.next.hidden = false;
 
@@ -689,6 +708,7 @@
     if (state.answered) return;
     state.answered = true;
     els.skip.hidden = true;
+    if (els.remix) els.remix.hidden = true;
     els.check.hidden = true;
     els.input.disabled = true;
     hideHintControls();
@@ -848,6 +868,15 @@
     }
     loadQuestion();
   });
+  if (els.remix) {
+    els.remix.addEventListener("click", () => {
+      if (state.retryPhase) {
+        // Miss already recorded; reshuffle without the 0% skip finish.
+        state.retryPhase = false;
+      }
+      loadRemix();
+    });
+  }
 
   document.querySelectorAll(".topic[data-topic]").forEach((btn) => {
     btn.addEventListener("click", () => {

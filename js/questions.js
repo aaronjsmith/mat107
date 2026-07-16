@@ -2367,6 +2367,7 @@
   function generateQuestion(topic) {
     if (topic === "flashcards") {
       const q = genFormulaFlashcard();
+      q._gen = genFormulaFlashcard;
       remember(recentPick.topics, q.topic);
       remember(recentPick.fingerprints, fingerprint(q));
       remember(recentPick.gens, genFormulaFlashcard, 6);
@@ -2378,6 +2379,7 @@
     // Within Formulas, prefer flashcards so every formula gets typed/recalled.
     if (targetTopic === "formulas" && Math.random() < 0.55) {
       const q = genFormulaFlashcard();
+      q._gen = genFormulaFlashcard;
       remember(recentPick.gens, genFormulaFlashcard, 6);
       remember(recentPick.topics, q.topic, 6);
       remember(recentPick.fingerprints, fingerprint(q), RECENT_KEEP);
@@ -2400,19 +2402,58 @@
     if (!candidates.length) candidates = pool.slice();
 
     let best = null;
+    let bestGen = null;
     for (let attempt = 0; attempt < 10; attempt++) {
       const gen = choice(candidates);
       const q = gen();
       const fp = fingerprint(q);
       if (recentPick.fingerprints.indexOf(fp) < 0 || attempt === 9) {
         best = q;
+        bestGen = gen;
         remember(recentPick.gens, gen, 8);
         remember(recentPick.topics, q.topic, 6);
         remember(recentPick.fingerprints, fp, RECENT_KEEP);
         break;
       }
     }
-    return best || choice(pool)();
+    if (!best) {
+      bestGen = choice(pool);
+      best = bestGen();
+    }
+    best._gen = bestGen;
+    return best;
+  }
+
+  /** Fresh numbers / prompt for the same generator as the previous question. */
+  function remixQuestion(prev) {
+    const gen =
+      prev && typeof prev._gen === "function"
+        ? prev._gen
+        : null;
+    if (!gen) {
+      return generateQuestion(prev && prev.topic ? prev.topic : "all");
+    }
+    const oldFp = prev ? fingerprint(prev) : "";
+    let best = null;
+    for (let attempt = 0; attempt < 14; attempt++) {
+      const q = gen();
+      q._gen = gen;
+      const fp = fingerprint(q);
+      if (fp !== oldFp && recentPick.fingerprints.indexOf(fp) < 0) {
+        best = q;
+        remember(recentPick.gens, gen, 8);
+        remember(recentPick.topics, q.topic, 6);
+        remember(recentPick.fingerprints, fp, RECENT_KEEP);
+        break;
+      }
+      if (attempt === 13) {
+        best = q;
+        remember(recentPick.gens, gen, 8);
+        remember(recentPick.topics, q.topic, 6);
+        remember(recentPick.fingerprints, fp, RECENT_KEEP);
+      }
+    }
+    return best;
   }
 
   function checkAnswer(question, userAnswer) {
@@ -2556,6 +2597,7 @@
     num: num,
     id: id,
     generateQuestion: generateQuestion,
+    remixQuestion: remixQuestion,
     checkAnswer: checkAnswer,
     publicQuestion: publicQuestion,
   };
