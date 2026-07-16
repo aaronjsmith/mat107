@@ -356,12 +356,25 @@
     els.bossFace.setAttribute("aria-hidden", "true");
   }
 
-  /** Boss takes a hit: 👹 briefly, then back to 😈. */
-  function bossTakeDamage(thenIdle) {
+  function bossFightActive() {
+    return (
+      state.mode === "finalboss" &&
+      state.boss &&
+      state.boss.active &&
+      state.boss.status === "running"
+    );
+  }
+
+  /** Boss takes a hit: 👹 briefly, then back to 😈 only while the fight continues. */
+  function bossTakeDamage() {
+    if (!bossFightActive()) {
+      hideBossFace();
+      return;
+    }
     setBossFace("👹", "hit");
     bossFaceTimer = setTimeout(function () {
-      if (thenIdle === false) return;
-      setBossFace("😈");
+      if (bossFightActive()) setBossFace("😈");
+      else hideBossFace();
     }, 650);
   }
 
@@ -392,7 +405,7 @@
     state.boss.status = "failed";
     state.boss.active = false;
     state.answered = true;
-    setBossFace("😈");
+    hideBossFace();
     lockInputs();
     hideHintControls();
     els.skip.hidden = true;
@@ -412,7 +425,6 @@
     els.topic.textContent = t("mode_lockin");
     setModeButtons();
     refreshProgress();
-    bossFaceTimer = setTimeout(hideBossFace, 900);
   }
 
   function winBoss() {
@@ -425,6 +437,7 @@
     state.boss.active = false;
     state.answered = true;
     setBossFace("💀", "dead");
+    bossFaceTimer = setTimeout(hideBossFace, 1100);
     lockInputs();
     hideHintControls();
     els.skip.hidden = true;
@@ -446,14 +459,13 @@
   function advanceBossAfterCorrect() {
     state.boss.index += 1;
     if (state.boss.index >= state.boss.queue.length) {
-      // Final hit → death face (no return to idle).
       setBossFace("👹", "hit");
       bossFaceTimer = setTimeout(function () {
         winBoss();
       }, 500);
       return;
     }
-    bossTakeDamage(true);
+    bossTakeDamage();
     els.feedback.className = "feedback ok";
     els.feedback.textContent = t("boss_ok", {
       current: state.boss.index,
@@ -599,8 +611,11 @@
     els.next.textContent = t("btn_next");
 
     if (state.mode !== "finalboss") {
-      state.boss = { active: false, queue: [], index: 0, status: null };
+      state.boss = { active: false, queue: [], index: 0, status: null, fullStakes: false };
       hideBossFace();
+    } else if (!bossFightActive()) {
+      // Between runs / after win-fail — keep face hidden until a new fight starts.
+      if (state.boss.status !== "won") hideBossFace();
     }
 
     let topic = null;
@@ -669,13 +684,18 @@
         ? t("mode_flashcards")
         : state.mode === "lockin"
           ? t("mode_lockin") + " · " + pub.topic_label
-          : state.mode === "finalboss"
+            : state.mode === "finalboss"
             ? t("boss_progress", {
                 current: state.boss.index + 1,
                 total: state.boss.queue.length,
                 topic: pub.topic_label,
               })
             : pub.topic_label;
+    if (bossFightActive()) {
+      setBossFace("😈");
+    } else if (state.mode !== "finalboss" || state.boss.status !== "won") {
+      hideBossFace();
+    }
     els.prompt.textContent = pub.prompt;
     els.hint1.textContent = pub.hint1 || "";
     els.hint2.textContent = pub.hint2 || "";
