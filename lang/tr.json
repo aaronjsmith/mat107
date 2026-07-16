@@ -279,6 +279,11 @@
     "mode_finalboss_fighting": "Defending Zarahemla…",
     "boss_start_practice": "Practice boss fight: one unaided question from each topic — no hints. One miss ends the run. Master every topic at 10/10 for the true defense of Zarahemla.",
     "boss_fail_practice": "Practice run failed on {topic}. No mastery penalty this time — master all topics at 10/10 when you’re ready for the real fight.",
-    "boss_win_practice": "Practice victory! Master every topic at 10/10, then face him again to truly save Zarahemla and earn assessment-ready status."
+    "boss_win_practice": "Practice victory! Master every topic at 10/10, then face him again to truly save Zarahemla and earn assessment-ready status.",
+    "boss_retreat_title": "Retreat",
+    "boss_retreat_msg": "The Gadianton Robber slips away on {topic}. Retreat and perfect this skill before facing him again — a remixed version of the missed question is next.",
+    "boss_retreat_msg_real": "Zarahemla is in danger. The Gadianton Robber slips away on {topic} — that topic drops to {progress}. Retreat and perfect this skill before facing him again — a remixed version of the missed question is next.",
+    "boss_retreat_ok": "Train now",
+    "boss_retreat_close_aria": "Dismiss and start training"
   }
 }

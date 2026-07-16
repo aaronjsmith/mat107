@@ -26,6 +26,8 @@
     clarifyAiShown: false,
     /** After a miss, serve a remix of the same generator next. */
     remixAfterFail: false,
+    /** Question to remix after a boss retreat modal. */
+    pendingBossRemix: null,
     boss: {
       active: false,
       queue: [],
@@ -82,6 +84,11 @@
     bossInviteLater: document.getElementById("boss-invite-later"),
     bossInviteClose: document.getElementById("boss-invite-close"),
     bossInviteBackdrop: document.getElementById("boss-invite-backdrop"),
+    bossRetreatModal: document.getElementById("boss-retreat-modal"),
+    bossRetreatMsg: document.getElementById("boss-retreat-msg"),
+    bossRetreatOk: document.getElementById("boss-retreat-ok"),
+    bossRetreatClose: document.getElementById("boss-retreat-close"),
+    bossRetreatBackdrop: document.getElementById("boss-retreat-backdrop"),
     notes: document.getElementById("notes-area"),
     notesStatus: document.getElementById("notes-status"),
     notesSortAsc: document.getElementById("notes-sort-asc"),
@@ -492,8 +499,9 @@
   }
 
   function failBoss() {
+    const missedQ = state.fullQuestion;
     const missedTopic =
-      (state.fullQuestion && state.fullQuestion.topic) ||
+      (missedQ && missedQ.topic) ||
       (state.boss.queue && state.boss.queue[state.boss.index]) ||
       null;
     const topicLabel =
@@ -507,27 +515,68 @@
     state.boss.active = false;
     if (P.clearBossRun) P.clearBossRun();
     state.answered = true;
+    state.pendingBossRemix = missedQ;
     hideBossFace();
     lockInputs();
     hideHintControls();
     els.skip.hidden = true;
     if (els.remix) els.remix.hidden = true;
     els.check.hidden = true;
-    els.next.hidden = false;
-    els.next.textContent = t("btn_next");
-    els.feedback.hidden = false;
-    els.feedback.className = "feedback no";
-    els.feedback.textContent = real
-      ? t("boss_fail", {
-          topic: topicLabel,
-          progress: penalty.dropped_to + "/10",
-        })
-      : t("boss_fail_practice", { topic: topicLabel });
+    els.next.hidden = true;
+    els.feedback.hidden = true;
     state.mode = missedTopic && Q.TOPICS[missedTopic] ? missedTopic : "smart";
     els.topic.textContent =
       missedTopic && Q.TOPICS[missedTopic] ? Q.TOPICS[missedTopic] : t("mode_smart");
     setModeButtons();
     refreshProgress();
+    openBossRetreatModal({
+      topicLabel: topicLabel,
+      real: real,
+      progress: penalty.dropped_to + "/10",
+    });
+  }
+
+  let bossRetreatOpen = false;
+
+  function openBossRetreatModal(opts) {
+    if (!els.bossRetreatModal) {
+      finishBossRetreat();
+      return;
+    }
+    opts = opts || {};
+    if (els.bossRetreatMsg) {
+      els.bossRetreatMsg.textContent = opts.real
+        ? t("boss_retreat_msg_real", {
+            topic: opts.topicLabel || "",
+            progress: opts.progress || "9/10",
+          })
+        : t("boss_retreat_msg", { topic: opts.topicLabel || "" });
+    }
+    bossRetreatOpen = true;
+    els.bossRetreatModal.hidden = false;
+    const focusBtn = els.bossRetreatOk;
+    if (focusBtn) {
+      setTimeout(function () {
+        focusBtn.focus();
+      }, 0);
+    }
+  }
+
+  function finishBossRetreat() {
+    if (els.bossRetreatModal) els.bossRetreatModal.hidden = true;
+    bossRetreatOpen = false;
+    const missedQ = state.pendingBossRemix;
+    state.pendingBossRemix = null;
+    state.remixAfterFail = false;
+    if (Q.setBossTheme) Q.setBossTheme(false);
+    setModeButtons();
+    refreshProgress();
+    if (missedQ && typeof missedQ._gen === "function") {
+      state.fullQuestion = missedQ;
+      loadRemix();
+      return;
+    }
+    loadQuestion();
   }
 
   function winBoss() {
@@ -1401,6 +1450,15 @@
   if (els.bossInviteBackdrop) {
     els.bossInviteBackdrop.addEventListener("click", dismissBossInvite);
   }
+  if (els.bossRetreatOk) {
+    els.bossRetreatOk.addEventListener("click", finishBossRetreat);
+  }
+  if (els.bossRetreatClose) {
+    els.bossRetreatClose.addEventListener("click", finishBossRetreat);
+  }
+  if (els.bossRetreatBackdrop) {
+    els.bossRetreatBackdrop.addEventListener("click", finishBossRetreat);
+  }
 
   if (els.save) {
     els.save.addEventListener("click", () => {
@@ -1839,6 +1897,10 @@
   }
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
+    if (els.bossRetreatModal && !els.bossRetreatModal.hidden) {
+      finishBossRetreat();
+      return;
+    }
     if (els.bossInviteModal && !els.bossInviteModal.hidden) {
       dismissBossInvite();
       return;
