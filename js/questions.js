@@ -319,6 +319,168 @@
     };
   }
 
+  /** Multi-field: each field graded independently; all must be correct. */
+  function _multi(prompt, fields, topic, hint, setup, calc, layout) {
+    hint = hint || "";
+    setup = setup || "";
+    calc = calc || "";
+    const mappedFields = fields.map(function (f) {
+      const field = {
+        id: f.id,
+        label: f.label || "",
+        type: f.type || "numeric",
+        unit: f.unit || "",
+        placeholder: f.placeholder || "",
+        tolerance: f.tolerance !== undefined ? f.tolerance : 0.05,
+        digit: Boolean(f.digit),
+        maxLength: f.maxLength,
+      };
+      if (field.type === "numeric") {
+        field.answer = num(f.answer, 4);
+      } else if (field.type === "short") {
+        field.answers = (f.answers || [f.answer]).map(function (a) {
+          return String(a).toLowerCase().trim();
+        });
+        field.answer = field.answers[0];
+      } else if (field.type === "select") {
+        field.answer = String(f.answer);
+        field.options = (f.options || []).map(function (o) {
+          return {
+            value: String(o.value),
+            label: o.label || String(o.value),
+          };
+        });
+      } else {
+        field.answer = f.answer;
+      }
+      return field;
+    });
+    const autoLayout = mappedFields.map(function (f) {
+      return { widget: "field", id: f.id };
+    });
+    return {
+      id: id(),
+      topic: topic,
+      type: "multi",
+      prompt: prompt,
+      fields: mappedFields,
+      layout: layout || autoLayout,
+      hint: hint,
+      setup: setup,
+      calc: calc,
+    };
+  }
+
+  function fieldLabelText(field) {
+    return field.label || field.id;
+  }
+
+  function selectOptionLabel(field, value) {
+    const opts = field.options || [];
+    for (let i = 0; i < opts.length; i++) {
+      if (String(opts[i].value) === String(value)) return opts[i].label;
+    }
+    return String(value);
+  }
+
+  function formatFieldExpected(field) {
+    const lbl = fieldLabelText(field);
+    if (field.type === "select") {
+      return lbl + ": " + selectOptionLabel(field, field.answer);
+    }
+    const u = field.unit ? " " + field.unit : "";
+    return lbl + ": " + field.answer + u;
+  }
+
+  function formatMultiExpected(question) {
+    const fieldsById = {};
+    (question.fields || []).forEach(function (f) {
+      fieldsById[f.id] = f;
+    });
+    const parts = [];
+    const used = new Set();
+    (question.layout || []).forEach(function (item) {
+      if (item.widget === "fraction") {
+        const num = fieldsById[item.num];
+        const den = fieldsById[item.denom];
+        if (num && den) {
+          const lbl = item.label || fieldLabelText(num);
+          parts.push(lbl + ": " + num.answer + "/" + den.answer);
+          used.add(item.num);
+          used.add(item.denom);
+        }
+      } else if (item.widget === "unit_value") {
+        const val = fieldsById[item.value];
+        const unit = fieldsById[item.unit];
+        if (val && unit) {
+          const lbl = item.label || t("field.conversion");
+          parts.push(
+            lbl +
+              ": " +
+              val.answer +
+              " " +
+              selectOptionLabel(unit, unit.answer)
+          );
+          used.add(item.value);
+          used.add(item.unit);
+        }
+      } else if (item.widget === "division") {
+        const qText = (item.quotient || [])
+          .map(function (id) {
+            return fieldsById[id] ? fieldsById[id].answer : "";
+          })
+          .join("");
+        const rem = item.remainder ? fieldsById[item.remainder] : null;
+        let text =
+          item.dividend + " ÷ " + item.divisor + " = " + qText;
+        if (rem && Number(rem.answer) > 0) text += " R " + rem.answer;
+        parts.push(text);
+        (item.quotient || []).forEach(function (id) {
+          used.add(id);
+        });
+        if (item.remainder) used.add(item.remainder);
+      } else if (item.widget === "field") {
+        const f = fieldsById[item.id];
+        if (f && !used.has(f.id)) {
+          parts.push(formatFieldExpected(f));
+          used.add(f.id);
+        }
+      }
+    });
+    (question.fields || []).forEach(function (f) {
+      if (!used.has(f.id)) parts.push(formatFieldExpected(f));
+    });
+    return parts.join(" · ");
+  }
+
+  function checkMultiField(field, userVal) {
+    const ftype = field.type || "numeric";
+    if (ftype === "numeric") {
+      const val = parseNumericInput(userVal);
+      if (isNaN(val)) return false;
+      return (
+        Math.abs(val - Number(field.answer)) <=
+        Number(field.tolerance !== undefined ? field.tolerance : 0.05)
+      );
+    }
+    if (ftype === "select") {
+      return String(userVal).trim() === String(field.answer).trim();
+    }
+    if (ftype === "short") {
+      const raw = String(userVal).toLowerCase().trim().replace(/ /g, "");
+      if (!raw) return false;
+      const answers =
+        field.answers ||
+        (field.answer !== undefined ? [String(field.answer)] : []);
+      for (let i = 0; i < answers.length; i++) {
+        const target = String(answers[i]).toLowerCase().replace(/ /g, "");
+        if (raw === target) return true;
+      }
+      return false;
+    }
+    return String(userVal).trim() === String(field.answer).trim();
+  }
+
   function _normFormula(s) {
     let t = String(s).toLowerCase().trim();
     const replacements = [
@@ -490,6 +652,43 @@
     if (ask === "days_wage") {
       const days = choice([3, 4, 5, 6, 7, 10]);
       const usd = days * rate; // 1 senine per day (Alma 11:3)
+      if (Math.random() < 0.55) {
+        return _multi(
+          tVar("q.nephite_wage_multi", { days: days, rate: rate }),
+          [
+            {
+              id: "senines",
+              label: t("field.senines"),
+              answer: days,
+              tolerance: 0,
+              unit: t("unit.senines"),
+            },
+            {
+              id: "usd",
+              label: t("field.usd"),
+              answer: num(usd),
+              tolerance: 0.01,
+              unit: t("unit.dollars"),
+            },
+          ],
+          "conversions",
+          t("h.nephite_money"),
+          "senines = 1 per day × " +
+            days +
+            " days = " +
+            days +
+            "\nUSD = " +
+            days +
+            " × $" +
+            rate +
+            " = $" +
+            usd,
+          calcHelp(
+            days + " senines; then " + days + " × " + rate + " =",
+            days + " senines; then " + days + " × " + rate + " ="
+          )
+        );
+      }
       return _numeric(
         tVar("q.nephite_judge_wage", { days: days, rate: rate }),
         num(usd),
@@ -560,6 +759,132 @@
     );
   }
 
+  function genYardsFeetUnit() {
+    const mode = choice(["yd_to_ft", "ft_to_yd"]);
+    const unitOpts = [
+      { value: "ft", label: t("unit.ft") },
+      { value: "yd", label: t("unit.yd") },
+      { value: "in", label: t("unit.in_short") },
+    ];
+    if (mode === "yd_to_ft") {
+      const yards = nextChoice("ydUnitAmt", [2, 3, 4, 5, 6, 8, 10, 12]);
+      const feet = yards * 3;
+      return _multi(
+        tVar("q.yd_ft_unit", { amount: yards, fromUnit: t("unit.yd") }),
+        [
+          {
+            id: "value",
+            type: "numeric",
+            answer: feet,
+            tolerance: 0,
+          },
+          {
+            id: "unit",
+            type: "select",
+            answer: "ft",
+            options: unitOpts,
+          },
+        ],
+        "conversions",
+        t("h.yd_to_ft"),
+        yards + " yd × 3 = " + feet + " ft",
+        calcHelp(yards + " × 3 =", yards + " × 3 ="),
+        [
+          {
+            widget: "unit_value",
+            label: t("field.conversion"),
+            value: "value",
+            unit: "unit",
+          },
+        ]
+      );
+    }
+    const feet = nextChoice("ftUnitAmt", [6, 9, 12, 15, 18, 21, 24, 27, 30, 36]);
+    const yards = feet / 3;
+    return _multi(
+      tVar("q.ft_yd_unit", { amount: feet, fromUnit: t("unit.ft") }),
+      [
+        {
+          id: "value",
+          type: "numeric",
+          answer: num(yards, 2),
+          tolerance: 0.01,
+        },
+        {
+          id: "unit",
+          type: "select",
+          answer: "yd",
+          options: unitOpts,
+        },
+      ],
+      "conversions",
+      t("h.ft_to_yd"),
+      feet + " ft ÷ 3 = " + yards + " yd",
+      calcHelp(feet + " ÷ 3 =", feet + " ÷ 3 ="),
+      [
+        {
+          widget: "unit_value",
+          label: t("field.conversion"),
+          value: "value",
+          unit: "unit",
+        },
+      ]
+    );
+  }
+
+  function genLongDivision() {
+    const divisor = choice([6, 7, 8, 9, 11, 12, 15]);
+    const qLen = choice([2, 2, 3]);
+    const quotient =
+      qLen === 2 ? randInt(11, 48) : randInt(105, 420);
+    const remainder =
+      Math.random() < 0.35 ? randInt(1, divisor - 1) : 0;
+    const dividend = divisor * quotient + remainder;
+    const qDigits = String(quotient).split("");
+    const qIds = qDigits.map(function (_, i) {
+      return "q" + i;
+    });
+    const fields = qIds.map(function (id, i) {
+      return {
+        id: id,
+        type: "numeric",
+        answer: Number(qDigits[i]),
+        tolerance: 0,
+        digit: true,
+        maxLength: 1,
+      };
+    });
+    fields.push({
+      id: "rem",
+      type: "numeric",
+      answer: remainder,
+      tolerance: 0,
+      digit: true,
+      maxLength: 2,
+    });
+    return _multi(
+      tVar("q.long_div", { dividend: dividend, divisor: divisor }),
+      fields,
+      "conversions",
+      t("h.long_div"),
+      "quotient = " + quotient + (remainder ? ", remainder = " + remainder : ""),
+      calcHelp(
+        dividend + " ÷ " + divisor + " =",
+        dividend + " ÷ " + divisor + " =",
+        "Enter each quotient digit left to right, then the remainder (0 if none)."
+      ),
+      [
+        {
+          widget: "division",
+          dividend: dividend,
+          divisor: divisor,
+          quotient: qIds,
+          remainder: "rem",
+        },
+      ]
+    );
+  }
+
   function genSqFtInSqYard() {
     return _numeric(tVar("q.sqft_sqyd"), 9, "conversions", 0, t("h.sqft_sqyd"), t("s.sqft_sqyd"));
   }
@@ -575,6 +900,39 @@
       "sq ft = " + sqYd + " × 9",
       t("unit.sq_ft"),
       calcHelp(sqYd + " × 9 =", sqYd + " × 9 =")
+    );
+  }
+
+  function genAreaRoomMulti() {
+    const L = randInt(9, 18);
+    const W = randInt(10, 20);
+    const sqft = L * W;
+    const sqyd = sqft / 9;
+    return _multi(
+      tVar("q.area_room_multi", { L: L, W: W }),
+      [
+        {
+          id: "sqft",
+          label: t("field.sq_ft"),
+          answer: sqft,
+          tolerance: 0,
+          unit: t("unit.sq_ft"),
+        },
+        {
+          id: "sqyd",
+          label: t("field.sq_yd"),
+          answer: num(sqyd, 2),
+          tolerance: 0.05,
+          unit: t("unit.sq_yd"),
+        },
+      ],
+      "conversions",
+      t("h.area_room_multi"),
+      "sq ft = " + L + " × " + W + "\nsq yd = (" + L + " × " + W + ") ÷ 9",
+      calcHelp(
+        L + " × " + W + " = sq ft; then ÷ 9 =",
+        L + " × " + W + " = sq ft; then ÷ 9 ="
+      )
     );
   }
 
@@ -1351,6 +1709,41 @@
       const g = gcd(rise, run);
       const sr = rise / g;
       const sn = run / g;
+      if (Math.random() < 0.5) {
+        return _multi(
+          tVar("q.drive_slope_frac", { rise: rise, run: run }),
+          [
+            {
+              id: "num",
+              type: "numeric",
+              answer: sr,
+              tolerance: 0,
+            },
+            {
+              id: "den",
+              type: "numeric",
+              answer: sn,
+              tolerance: 0,
+            },
+          ],
+          "pythagorean",
+          t("h.drive_slope"),
+          "slope = " + rise + "/" + run + " → simplify with GCF " + g,
+          calcHelp(
+            "GCF of " + rise + " and " + run + " is " + g,
+            "GCF of " + rise + " and " + run + " is " + g,
+            "Divide rise and run by the GCF for simplest form."
+          ),
+          [
+            {
+              widget: "fraction",
+              label: t("field.slope"),
+              num: "num",
+              denom: "den",
+            },
+          ]
+        );
+      }
       const answers = [
         rise + ":" + run,
         rise + "/" + run,
@@ -1412,6 +1805,39 @@
     const bottleL = nextChoice("bottleL", [0.5, 1, 1.5, 2, 2.5]);
     const liters = gallons * 3.785;
     const bottles = liters / bottleL;
+    if (Math.random() < 0.5) {
+      return _multi(
+        tVar("q.gal_l_multi", { gallons: gallons, bottleL: bottleL }),
+        [
+          {
+            id: "liters",
+            label: t("field.liters"),
+            answer: num(liters, 2),
+            tolerance: 0.1,
+            unit: t("unit.liters"),
+          },
+          {
+            id: "bottles",
+            label: t("field.bottles"),
+            answer: num(bottles, 2),
+            tolerance: 0.05,
+            unit: t("unit.bottles"),
+          },
+        ],
+        "conversions",
+        t("h.gal_l"),
+        "liters = " +
+          gallons +
+          " × 3.785\nbottles = (" +
+          gallons +
+          " × 3.785) ÷ " +
+          bottleL,
+        calcHelp(
+          gallons + " × 3.785 = L; then ÷ " + bottleL + " =",
+          gallons + " × 3.785 = L; then ÷ " + bottleL + " ="
+        )
+      );
+    }
     return _numeric(
       tVar("q.gal_l", { gallons: gallons, bottleL: bottleL }),
       num(bottles),
@@ -1518,6 +1944,56 @@
       );
     }
     if (ask === "yard") {
+      if (Math.random() < 0.55) {
+        return _multi(
+          tVar("q.carpet_yd_multi", {
+            L: L,
+            W: W,
+            cost: costPerSqyd,
+            costLabel: costYdLabel,
+          }),
+          [
+            {
+              id: "sqft",
+              label: t("field.sq_ft"),
+              answer: areaSqft,
+              tolerance: 0,
+              unit: t("unit.sq_ft"),
+            },
+            {
+              id: "sqyd",
+              label: t("field.sq_yd"),
+              answer: num(areaSqyd, 2),
+              tolerance: 0.05,
+              unit: t("unit.sq_yd"),
+            },
+            {
+              id: "cost",
+              label: t("field.total_cost"),
+              answer: num(costYd),
+              tolerance: 0.5,
+              unit: t("unit.dollars"),
+            },
+          ],
+          "scale_rates",
+          t("h.carpet_yd"),
+          "sq ft = " +
+            L +
+            " × " +
+            W +
+            "\nsq yd = (" +
+            L +
+            " × " +
+            W +
+            ") ÷ 9\ncost = sq yd × " +
+            costPerSqyd,
+          calcHelp(
+            L + " × " + W + " = sq ft; ÷ 9 = sq yd; × " + costPerSqyd + " =",
+            L + " × " + W + " = sq ft; ÷ 9 = sq yd; × " + costPerSqyd + " =",
+            "Round cost to the nearest cent."
+          )
+        );
+      }
       return _numeric(
         tVar("q.carpet_yd", {
           L: L,
@@ -2490,8 +2966,11 @@
   const GENERATORS = [
     genFeetInYard,
     genYardsToFeet,
+    genYardsFeetUnit,
+    genLongDivision,
     genSqFtInSqYard,
     genSqYdToSqFt,
+    genAreaRoomMulti,
     genCuFtInCuYard,
     genCuYdToCuFt,
     genDimensionConcept,
@@ -2545,12 +3024,18 @@
   }
 
   function fingerprint(q) {
-    const ans =
-      q.answer != null
-        ? String(q.answer)
-        : Array.isArray(q.answers)
-          ? q.answers.join("|")
-          : "";
+    let ans = "";
+    if (q.type === "multi" && q.fields) {
+      ans = q.fields
+        .map(function (f) {
+          return f.id + "=" + f.answer;
+        })
+        .join("|");
+    } else if (q.answer != null) {
+      ans = String(q.answer);
+    } else if (Array.isArray(q.answers)) {
+      ans = q.answers.join("|");
+    }
     return (q.topic || "") + "::" + (q.type || "") + "::" + ans;
   }
 
@@ -2690,6 +3175,18 @@
       return [ok, String(question.answer)];
     }
 
+    if (qtype === "multi") {
+      const answers =
+        typeof userAnswer === "object" && userAnswer != null ? userAnswer : {};
+      let allOk = true;
+      const fields = question.fields || [];
+      for (let i = 0; i < fields.length; i++) {
+        const f = fields[i];
+        if (!checkMultiField(f, answers[f.id])) allOk = false;
+      }
+      return [allOk, formatMultiExpected(question)];
+    }
+
     if (qtype === "short" || qtype === "flashcard") {
       const raw =
         qtype === "flashcard"
@@ -2789,6 +3286,45 @@
     };
     if (q.type === "mc") {
       out.choices = q.choices;
+    }
+    if (q.type === "multi") {
+      out.fields = (q.fields || []).map(function (f) {
+        const pubField = {
+          id: f.id,
+          label: f.label || "",
+          type: f.type || "numeric",
+          unit: f.unit || "",
+          placeholder: f.placeholder || "",
+          digit: Boolean(f.digit),
+          maxLength: f.maxLength,
+        };
+        if (f.type === "select") {
+          pubField.options = (f.options || []).map(function (o) {
+            return { value: o.value, label: o.label };
+          });
+        }
+        return pubField;
+      });
+      out.layout = (q.layout || []).map(function (item) {
+        if (item.widget === "division") {
+          return {
+            widget: "division",
+            dividend: item.dividend,
+            divisor: item.divisor,
+            quotient: item.quotient,
+            remainder: item.remainder,
+          };
+        }
+        return {
+          widget: item.widget,
+          id: item.id,
+          label: item.label,
+          num: item.num,
+          denom: item.denom,
+          value: item.value,
+          unit: item.unit,
+        };
+      });
     }
     if (q.type === "flashcard") {
       out.placeholder = t("flashcard_placeholder");

@@ -56,6 +56,8 @@
     figure: document.getElementById("q-figure"),
     choices: document.getElementById("q-choices"),
     form: document.getElementById("q-form"),
+    singleField: document.getElementById("q-single-field"),
+    multiFields: document.getElementById("q-multi-fields"),
     input: document.getElementById("q-input"),
     unit: document.getElementById("q-unit"),
     mathInsert: document.getElementById("math-insert"),
@@ -897,6 +899,8 @@
     els.choices.hidden = true;
     els.choices.innerHTML = "";
     els.form.hidden = true;
+    clearMultiFields();
+    els.singleField.hidden = false;
     els.figure.hidden = true;
     els.figure.innerHTML = "";
     els.input.value = "";
@@ -907,6 +911,288 @@
         btn.disabled = false;
       });
     }
+    els.unit.textContent = "";
+  }
+
+  function clearMultiFields() {
+    if (!els.multiFields) return;
+    els.multiFields.innerHTML = "";
+    els.multiFields.hidden = true;
+  }
+
+  function getMultiInputs() {
+    if (!els.multiFields) return [];
+    return [
+      ...els.multiFields.querySelectorAll("input[data-field-id]"),
+      ...els.multiFields.querySelectorAll("select[data-field-id]"),
+    ];
+  }
+
+  function collectMultiAnswers() {
+    const out = {};
+    getMultiInputs().forEach((control) => {
+      out[control.dataset.fieldId] = control.value;
+    });
+    return out;
+  }
+
+  function createMultiInput(f, inputId) {
+    if (f.type === "select") {
+      const select = document.createElement("select");
+      select.id = inputId;
+      select.dataset.fieldId = f.id;
+      (f.options || []).forEach((opt) => {
+        const option = document.createElement("option");
+        option.value = opt.value;
+        option.textContent = opt.label || opt.value;
+        select.appendChild(option);
+      });
+      return select;
+    }
+    const input = document.createElement("input");
+    input.id = inputId;
+    input.type = "text";
+    input.dataset.fieldId = f.id;
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    if (f.placeholder) input.placeholder = f.placeholder;
+    if (f.maxLength) input.maxLength = f.maxLength;
+    if (f.digit) {
+      input.className = "digit-input";
+      input.inputMode = "numeric";
+    }
+    return input;
+  }
+
+  function appendStandardField(f, focus) {
+    const row = document.createElement("div");
+    row.className = "multi-field";
+
+    const label = document.createElement("label");
+    const inputId = "mf-" + f.id;
+    label.htmlFor = inputId;
+    label.textContent = f.label || f.id;
+
+    const inputRow = document.createElement("div");
+    inputRow.className = "input-row";
+
+    const control = createMultiInput(f, inputId);
+    inputRow.appendChild(control);
+    if (f.unit) {
+      const unit = document.createElement("span");
+      unit.className = "unit";
+      unit.textContent = f.unit;
+      inputRow.appendChild(unit);
+    }
+
+    row.appendChild(label);
+    row.appendChild(inputRow);
+    els.multiFields.appendChild(row);
+    if (focus) control.focus();
+    return control;
+  }
+
+  function renderMultiFields(pub) {
+    clearMultiFields();
+    els.singleField.hidden = true;
+    els.multiFields.hidden = false;
+    const fieldById = Object.fromEntries((pub.fields || []).map((f) => [f.id, f]));
+    const layout =
+      pub.layout || (pub.fields || []).map((f) => ({ widget: "field", id: f.id }));
+    let focusSet = false;
+
+    layout.forEach((item) => {
+      if (item.widget === "fraction") {
+        const numF = fieldById[item.num];
+        const denF = fieldById[item.denom];
+        if (!numF || !denF) return;
+
+        const row = document.createElement("div");
+        row.className = "multi-field multi-fraction";
+
+        if (item.label) {
+          const label = document.createElement("span");
+          label.className = "multi-widget-label";
+          label.textContent = item.label;
+          row.appendChild(label);
+        }
+
+        const frac = document.createElement("div");
+        frac.className = "fraction-input";
+        frac.setAttribute("role", "group");
+        frac.setAttribute("aria-label", item.label || t("field.slope"));
+
+        const numIn = createMultiInput(numF, "mf-" + item.num);
+        const denIn = createMultiInput(denF, "mf-" + item.denom);
+        const bar = document.createElement("span");
+        bar.className = "fraction-bar";
+        bar.setAttribute("aria-hidden", "true");
+
+        frac.appendChild(numIn);
+        frac.appendChild(bar);
+        frac.appendChild(denIn);
+        row.appendChild(frac);
+        els.multiFields.appendChild(row);
+
+        if (!focusSet) {
+          numIn.focus();
+          focusSet = true;
+        }
+        return;
+      }
+
+      if (item.widget === "unit_value") {
+        const valF = fieldById[item.value];
+        const unitF = fieldById[item.unit];
+        if (!valF || !unitF) return;
+
+        const row = document.createElement("div");
+        row.className = "multi-field multi-unit-value";
+
+        if (item.label) {
+          const label = document.createElement("label");
+          label.className = "multi-widget-label";
+          label.textContent = item.label;
+          row.appendChild(label);
+        }
+
+        const inputRow = document.createElement("div");
+        inputRow.className = "input-row unit-value-row";
+
+        const valIn = createMultiInput(valF, "mf-" + item.value);
+        const unitSel = createMultiInput(unitF, "mf-" + item.unit);
+        unitSel.className = "unit-select";
+
+        inputRow.appendChild(valIn);
+        inputRow.appendChild(unitSel);
+        row.appendChild(inputRow);
+        els.multiFields.appendChild(row);
+
+        if (!focusSet) {
+          valIn.focus();
+          focusSet = true;
+        }
+        return;
+      }
+
+      if (item.widget === "division") {
+        const row = document.createElement("div");
+        row.className = "multi-field multi-division";
+
+        const work = document.createElement("div");
+        work.className = "division-work";
+        work.setAttribute("role", "group");
+        work.setAttribute("aria-label", t("field.division_work"));
+
+        const quotientRow = document.createElement("div");
+        quotientRow.className = "div-row quotient-row";
+
+        const gutter = document.createElement("div");
+        gutter.className = "div-gutter";
+        gutter.setAttribute("aria-hidden", "true");
+        quotientRow.appendChild(gutter);
+
+        const qDigits = document.createElement("div");
+        qDigits.className = "div-quotient-digits";
+        (item.quotient || []).forEach((qid) => {
+          const qf = fieldById[qid];
+          if (qf) qDigits.appendChild(createMultiInput(qf, "mf-" + qid));
+        });
+        quotientRow.appendChild(qDigits);
+
+        if (item.remainder && fieldById[item.remainder]) {
+          const remWrap = document.createElement("div");
+          remWrap.className = "div-remainder";
+          const remLbl = document.createElement("span");
+          remLbl.className = "div-rem-label";
+          remLbl.textContent = "R";
+          remWrap.appendChild(remLbl);
+          remWrap.appendChild(
+            createMultiInput(fieldById[item.remainder], "mf-" + item.remainder)
+          );
+          quotientRow.appendChild(remWrap);
+        }
+
+        const problemRow = document.createElement("div");
+        problemRow.className = "div-row problem-row";
+
+        const divisorEl = document.createElement("span");
+        divisorEl.className = "div-divisor";
+        divisorEl.textContent = String(item.divisor);
+
+        const parenEl = document.createElement("span");
+        parenEl.className = "div-paren";
+        parenEl.textContent = ")";
+
+        const dividendEl = document.createElement("span");
+        dividendEl.className = "div-dividend";
+        dividendEl.textContent = String(item.dividend);
+
+        const barEl = document.createElement("div");
+        barEl.className = "div-bar";
+        barEl.setAttribute("aria-hidden", "true");
+
+        problemRow.appendChild(divisorEl);
+        problemRow.appendChild(parenEl);
+        problemRow.appendChild(dividendEl);
+
+        work.appendChild(quotientRow);
+        work.appendChild(barEl);
+        work.appendChild(problemRow);
+        row.appendChild(work);
+        els.multiFields.appendChild(row);
+
+        const firstQ = qDigits.querySelector("input");
+        if (!focusSet && firstQ) {
+          firstQ.focus();
+          focusSet = true;
+        }
+        return;
+      }
+
+      if (item.widget === "field") {
+        const f = fieldById[item.id];
+        if (!f) return;
+        appendStandardField(f, !focusSet);
+        if (!focusSet) focusSet = true;
+      }
+    });
+  }
+
+  function getAnswerPayload() {
+    if (state.publicQ && state.publicQ.type === "multi") {
+      return collectMultiAnswers();
+    }
+    return els.input.value;
+  }
+
+  function setInputsDisabled(disabled) {
+    els.input.disabled = disabled;
+    getMultiInputs().forEach((input) => {
+      input.disabled = disabled;
+    });
+    if (els.mathInsert) {
+      els.mathInsert.querySelectorAll("button").forEach((btn) => {
+        btn.disabled = disabled;
+      });
+    }
+  }
+
+  function clearAnswerInputs() {
+    els.input.value = "";
+    getMultiInputs().forEach((control) => {
+      if (control.tagName === "SELECT") control.selectedIndex = 0;
+      else control.value = "";
+    });
+  }
+
+  function focusFirstAnswerInput() {
+    if (state.publicQ && state.publicQ.type === "multi") {
+      const first = getMultiInputs()[0];
+      if (first) first.focus();
+      return;
+    }
+    els.input.focus();
   }
 
   function loadQuestion() {
@@ -1061,12 +1347,16 @@
         btn.addEventListener("click", () => submitAnswer(c));
         els.choices.appendChild(btn);
       });
+    } else if (pub.type === "multi") {
+      els.form.hidden = false;
+      els.check.hidden = false;
+      renderMultiFields(pub);
     } else {
       els.form.hidden = false;
       els.check.hidden = false;
       els.unit.textContent = pub.unit || "";
       if (pub.placeholder) els.input.placeholder = pub.placeholder;
-      els.input.focus();
+      focusFirstAnswerInput();
     }
   }
 
@@ -1166,12 +1456,7 @@
 
   function lockInputs() {
     els.check.hidden = true;
-    els.input.disabled = true;
-    if (els.mathInsert) {
-      els.mathInsert.querySelectorAll("button").forEach((btn) => {
-        btn.disabled = true;
-      });
-    }
+    setInputsDisabled(true);
     if (state.publicQ && state.publicQ.type === "mc") {
       [...els.choices.children].forEach((btn) => {
         btn.disabled = true;
@@ -1217,14 +1502,9 @@
     } else {
       els.form.hidden = false;
       els.check.hidden = false;
-      els.input.disabled = false;
-      els.input.value = "";
-      if (els.mathInsert) {
-        els.mathInsert.querySelectorAll("button").forEach((btn) => {
-          btn.disabled = false;
-        });
-      }
-      els.input.focus();
+      clearAnswerInputs();
+      setInputsDisabled(false);
+      focusFirstAnswerInput();
     }
   }
 
@@ -1283,13 +1563,8 @@
     els.skip.hidden = true;
     if (els.remix) els.remix.hidden = true;
     els.check.hidden = true;
-    els.input.disabled = true;
+    setInputsDisabled(true);
     hideHintControls();
-    if (els.mathInsert) {
-      els.mathInsert.querySelectorAll("button").forEach((btn) => {
-        btn.disabled = true;
-      });
-    }
 
     // Final Boss: miss knocks 1 mastery off that topic, then remix same question to continue.
     if (state.mode === "finalboss" && state.boss.active) {
@@ -1404,7 +1679,7 @@
 
   els.form.addEventListener("submit", (e) => {
     e.preventDefault();
-    submitAnswer(els.input.value);
+    submitAnswer(getAnswerPayload());
   });
 
   els.hint1Btn.addEventListener("click", () => {

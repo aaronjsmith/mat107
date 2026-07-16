@@ -715,6 +715,154 @@ a.linkish {
   white-space: nowrap;
 }
 
+.multi-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.multi-field label {
+  display: block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.multi-field .input-row {
+  margin-bottom: 0;
+}
+
+.multi-field input {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.multi-field input:focus {
+  outline: 2px solid rgba(15, 110, 86, 0.35);
+  border-color: var(--accent);
+}
+
+.multi-widget-label {
+  display: block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.fraction-input {
+  display: inline-grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 0.15rem;
+  min-width: 5rem;
+}
+
+.fraction-input input {
+  width: 4.5rem;
+  text-align: center;
+}
+
+.fraction-bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 1px;
+}
+
+.multi-unit-value .unit-value-row {
+  align-items: stretch;
+}
+
+.multi-unit-value .unit-value-row input {
+  flex: 1;
+  min-width: 5rem;
+}
+
+.unit-select {
+  font-family: var(--mono);
+  font-size: 1rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  min-width: 7rem;
+}
+
+.digit-input {
+  width: 2.4rem !important;
+  flex: 0 0 auto !important;
+  text-align: center;
+  padding-left: 0.35rem !important;
+  padding-right: 0.35rem !important;
+}
+
+.division-work {
+  font-family: var(--mono);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  display: inline-block;
+}
+
+.div-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.div-gutter {
+  width: 2.5rem;
+  flex-shrink: 0;
+}
+
+.div-quotient-digits {
+  display: flex;
+  gap: 0.25rem;
+  padding-left: 2.85rem;
+}
+
+.div-remainder {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.div-rem-label {
+  font-weight: 600;
+}
+
+.div-bar {
+  height: 2px;
+  background: var(--ink);
+  margin: 0.15rem 0 0.2rem 2.85rem;
+  min-width: 6rem;
+}
+
+.problem-row .div-divisor {
+  min-width: 2rem;
+  text-align: right;
+}
+
+.div-paren {
+  margin-right: 0.15rem;
+}
+
+.div-dividend {
+  letter-spacing: 0.12em;
+}
+
 .math-insert {
   display: flex;
   flex-wrap: wrap;

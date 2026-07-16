@@ -75,18 +75,21 @@
       </div>
       <div id="q-choices" class="choices" hidden></div>
       <form id="q-form" class="answer-form" hidden>
-        <label for="q-input" data-i18n="your_answer">Your answer</label>
-        <div class="input-row">
-          <input id="q-input" name="answer" autocomplete="off" spellcheck="false" />
-          <span class="unit" id="q-unit"></span>
+        <div id="q-single-field">
+          <label for="q-input" data-i18n="your_answer">Your answer</label>
+          <div class="input-row">
+            <input id="q-input" name="answer" autocomplete="off" spellcheck="false" />
+            <span class="unit" id="q-unit"></span>
+          </div>
+          <div class="math-insert" id="math-insert" role="group" aria-label="Insert math symbols">
+            <button type="button" class="math-btn" data-insert="π" title="Pi (π)">π</button>
+            <button type="button" class="math-btn" data-insert="²" title="Superscript 2">x²</button>
+            <button type="button" class="math-btn" data-insert="³" title="Superscript 3">x³</button>
+            <button type="button" class="math-btn" data-insert="½" title="One half">½</button>
+            <button type="button" class="math-btn" data-insert-frac title="Fraction a/b">a/b</button>
+          </div>
         </div>
-        <div class="math-insert" id="math-insert" role="group" aria-label="Insert math symbols">
-          <button type="button" class="math-btn" data-insert="π" title="Pi (π)">π</button>
-          <button type="button" class="math-btn" data-insert="²" title="Superscript 2">x²</button>
-          <button type="button" class="math-btn" data-insert="³" title="Superscript 3">x³</button>
-          <button type="button" class="math-btn" data-insert="½" title="One half">½</button>
-          <button type="button" class="math-btn" data-insert-frac title="Fraction a/b">a/b</button>
-        </div>
+        <div id="q-multi-fields" class="multi-fields" hidden></div>
       </form>
       <div class="answer-actions">
         <button class="primary" id="btn-check" type="submit" form="q-form" hidden data-i18n="btn_check">Check</button>
