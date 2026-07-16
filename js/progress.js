@@ -140,6 +140,7 @@
       unaided_to_lock: LOCK_AT,
       lock_grace: LOCK_GRACE,
       all_locked: allTopicsLocked(),
+      all_mastered: allTopicsMastered(),
       final_boss_cleared: Boolean(p.final_boss_cleared),
       final_boss_cleared_at: p.final_boss_cleared_at || null,
       topics: topics,
@@ -154,6 +155,15 @@
     if (!keys.length) return false;
     return keys.every(function (t) {
       return (Number((p.topics[t] || {}).unaided_correct) || 0) >= LOCK_AT;
+    });
+  }
+
+  function allTopicsMastered() {
+    const p = load();
+    const keys = Object.keys(Q.TOPICS);
+    if (!keys.length) return false;
+    return keys.every(function (t) {
+      return (Number((p.topics[t] || {}).unaided_correct) || 0) >= MASTER;
     });
   }
 
@@ -559,6 +569,7 @@
     pickLockInTopic: pickLockInTopic,
     pickAllTopic: pickAllTopic,
     allTopicsLocked: allTopicsLocked,
+    allTopicsMastered: allTopicsMastered,
     shuffleTopics: shuffleTopics,
     markFinalBossCleared: markFinalBossCleared,
     penalizeBossFail: penalizeBossFail,

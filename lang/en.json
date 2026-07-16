@@ -31,6 +31,8 @@
     "boss_fail_practice": "Practice run failed on {topic}. No lock penalty this time — lock all topics at 20/10 when you’re ready for the real fight.",
     "boss_win": "The Gadianton Robber is defeated — Zarahemla is saved. You’re ready for the assessment.",
     "boss_win_again": "Zarahemla stands again. Still looking assessment-ready.",
+    "boss_invite_mastered": "Every topic is at 10/10 or higher. A Gadianton Robber threatens Zarahemla — fight him now?",
+    "boss_invite_locked": "Every topic is locked at 20/10. Face the Gadianton Robber and save Zarahemla for real?",
     "boss_win_practice": "Practice victory! Lock every topic at 20/10, then face him again to truly save Zarahemla and earn assessment-ready status.",
     "btn_reset": "Reset progress",
     "btn_hint1": "Hint 1 · approach (−25%)",

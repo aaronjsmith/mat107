@@ -512,6 +512,56 @@
     updateFinalBossButton(p);
   }
 
+  const BOSS_INVITE_KEY = "mat107-boss-invite-dismissed";
+  let bossInviteOpen = false;
+
+  function maybePromptBossFight(p) {
+    if (bossInviteOpen) return;
+    if (state.mode === "finalboss" && state.boss && state.boss.active) return;
+    p = p || P.getProgressView();
+    if (!p || !p.all_mastered) {
+      try {
+        sessionStorage.removeItem(BOSS_INVITE_KEY);
+      } catch (e) {
+        /* ignore */
+      }
+      return;
+    }
+    try {
+      if (sessionStorage.getItem(BOSS_INVITE_KEY) === "1") return;
+    } catch (e) {
+      /* ignore */
+    }
+
+    bossInviteOpen = true;
+    const msg = p.all_locked ? t("boss_invite_locked") : t("boss_invite_mastered");
+    let go = false;
+    try {
+      go = window.confirm(msg);
+    } finally {
+      bossInviteOpen = false;
+    }
+    if (go) {
+      state.mode = "finalboss";
+      state.boss = {
+        active: false,
+        queue: [],
+        index: 0,
+        status: null,
+        fullStakes: false,
+      };
+      setModeButtons();
+      updateFinalBossButton(p);
+      loadQuestion();
+    } else {
+      try {
+        sessionStorage.setItem(BOSS_INVITE_KEY, "1");
+      } catch (e) {
+        /* ignore */
+      }
+    }
+  }
+
   function hideHintControls() {
     els.hint1Btn.hidden = true;
     els.hint2Btn.hidden = true;
@@ -659,6 +709,10 @@
     if (Q.setBossTheme) Q.setBossTheme(state.mode === "finalboss");
     const full = Q.generateQuestion(topic);
     showQuestion(full);
+    // After a question loads (e.g. post-mastery Next), offer the boss fight.
+    if (state.mode !== "finalboss") {
+      maybePromptBossFight();
+    }
   }
 
   function loadRemix() {
@@ -1731,6 +1785,7 @@
 
   function start() {
     if (I18n && I18n.applyStatic) I18n.applyStatic();
+    hideBossFace();
     refreshProgress();
     loadQuestion();
   }

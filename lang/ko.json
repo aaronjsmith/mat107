@@ -582,6 +582,8 @@
     "card.pyth.front.boss": "Right-angled rampart (Moroni): Pythagorean relation for a, b, c?",
     "boss_start_practice": "Practice boss fight: one unaided question from each topic — no hints. One miss ends the run. Lock every topic at 20/10 for the true defense of Zarahemla.",
     "boss_fail_practice": "Practice run failed on {topic}. No lock penalty this time — lock all topics at 20/10 when you’re ready for the real fight.",
-    "boss_win_practice": "Practice victory! Lock every topic at 20/10, then face him again to truly save Zarahemla and earn assessment-ready status."
+    "boss_win_practice": "Practice victory! Lock every topic at 20/10, then face him again to truly save Zarahemla and earn assessment-ready status.",
+    "boss_invite_mastered": "Every topic is at 10/10 or higher. A Gadianton Robber threatens Zarahemla — fight him now?",
+    "boss_invite_locked": "Every topic is locked at 20/10. Face the Gadianton Robber and save Zarahemla for real?"
   }
 }

@@ -349,6 +349,10 @@ a.linkish {
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
+.boss-face[hidden] {
+  display: none !important;
+}
+
 .boss-face.hit {
   background: rgba(185, 28, 28, 0.16);
   border-color: rgba(185, 28, 28, 0.4);
