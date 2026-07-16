@@ -461,6 +461,18 @@
     "q.gal_l.v5": "Convert {gallons} gallons to {bottleL}-liter bottles (1 gal = 3.785 L). Round to the nearest hundredth.",
     "q.gal_l.v6": "The cultural-hall mop bucket recipe calls for {gallons} gallons of cleaner concentrate. How many {bottleL}-liter bottles is that? (1 gal = 3.785 L). Round to hundredths.",
     "btn_remix": "Remix",
-    "btn_remix_aria": "Remix question — same style with new numbers"
+    "btn_remix_aria": "Remix question — same style with new numbers",
+    "notes_sort_asc": "Sort ↑",
+    "notes_sort_desc": "Sort ↓",
+    "notes_sum": "Σ",
+    "notes_unique": "Unique",
+    "notes_sort_asc_title": "Sort numbers ascending (uses selection if any)",
+    "notes_sort_desc_title": "Sort numbers descending (uses selection if any)",
+    "notes_sum_title": "Append count and sum of numbers",
+    "notes_unique_title": "Append unique values with frequencies",
+    "notes_status": "n = {n} · sum = {sum}",
+    "notes_status_empty": "No numbers found",
+    "notes_sum_line": "n = {n}, sum = {sum}",
+    "notes_unique_line": "unique: {list}"
   }
 }

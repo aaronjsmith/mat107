@@ -103,6 +103,9 @@
     document.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
       el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria")));
     });
+    document.querySelectorAll("[data-i18n-title]").forEach(function (el) {
+      el.setAttribute("title", t(el.getAttribute("data-i18n-title")));
+    });
     const titleKey = document.documentElement.getAttribute("data-i18n-title");
     if (titleKey) document.title = t(titleKey);
   }

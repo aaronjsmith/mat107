@@ -66,6 +66,11 @@
     calcDisplay: document.getElementById("calc-display"),
     calcKeys: document.getElementById("calc-keys"),
     notes: document.getElementById("notes-area"),
+    notesStatus: document.getElementById("notes-status"),
+    notesSortAsc: document.getElementById("notes-sort-asc"),
+    notesSortDesc: document.getElementById("notes-sort-desc"),
+    notesSum: document.getElementById("notes-sum"),
+    notesUnique: document.getElementById("notes-unique"),
     lang: document.getElementById("lang-select"),
   };
 
@@ -965,30 +970,214 @@
     });
   }
 
-  // --- Scratch notes (persisted) --------------------------------------------
+  // --- Scratch notes (persisted) + dataset tools ----------------------------
   const NOTES_KEY = "mat107-assessment1-notes";
+
+  function persistNotes() {
+    if (!els.notes) return;
+    try {
+      localStorage.setItem(NOTES_KEY, els.notes.value);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function setNotesStatus(msg, empty) {
+    if (!els.notesStatus) return;
+    if (!msg) {
+      els.notesStatus.hidden = true;
+      els.notesStatus.textContent = "";
+      return;
+    }
+    els.notesStatus.hidden = false;
+    els.notesStatus.textContent = msg;
+    els.notesStatus.classList.toggle("empty", Boolean(empty));
+  }
+
+  function parseNoteNumbers(text) {
+    const re = /-?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/gi;
+    const out = [];
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const n = parseFloat(m[0]);
+      if (!isNaN(n) && isFinite(n)) out.push(n);
+    }
+    return out;
+  }
+
+  function formatNoteNumber(n) {
+    if (Number.isInteger(n)) return String(n);
+    const s = String(Math.round(n * 1e10) / 1e10);
+    return s;
+  }
+
+  function notesTarget() {
+    const ta = els.notes;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    if (typeof start === "number" && typeof end === "number" && end > start) {
+      return {
+        mode: "selection",
+        start: start,
+        end: end,
+        text: ta.value.slice(start, end),
+      };
+    }
+    return { mode: "all", start: 0, end: ta.value.length, text: ta.value };
+  }
+
+  function replaceNotesTarget(target, replacement) {
+    const ta = els.notes;
+    const before = ta.value.slice(0, target.start);
+    const after = ta.value.slice(target.end);
+    ta.value = before + replacement + after;
+    const caret = before.length + replacement.length;
+    ta.focus();
+    ta.setSelectionRange(before.length, caret);
+    persistNotes();
+  }
+
+  function notesSumOf(nums) {
+    return nums.reduce(function (a, b) {
+      return a + b;
+    }, 0);
+  }
+
+  function updateNotesStatusFrom(nums) {
+    if (!nums.length) {
+      setNotesStatus(t("notes_status_empty"), true);
+      return;
+    }
+    setNotesStatus(
+      t("notes_status", {
+        n: nums.length,
+        sum: formatNoteNumber(notesSumOf(nums)),
+      })
+    );
+  }
+
+  function sortNumbersInPlace(text, desc) {
+    const re = /-?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/gi;
+    const nums = [];
+    let m;
+    const finder = new RegExp(re.source, "gi");
+    while ((m = finder.exec(text)) !== null) {
+      const n = parseFloat(m[0]);
+      if (!isNaN(n) && isFinite(n)) nums.push(n);
+    }
+    if (!nums.length) return null;
+    const sorted = nums.slice().sort(function (a, b) {
+      return desc ? b - a : a - b;
+    });
+    let i = 0;
+    const out = text.replace(re, function () {
+      return formatNoteNumber(sorted[i++]);
+    });
+    return { text: out, nums: sorted };
+  }
+
+  function notesSort(desc) {
+    if (!els.notes) return;
+    const target = notesTarget();
+    const result = sortNumbersInPlace(target.text, desc);
+    if (!result) {
+      setNotesStatus(t("notes_status_empty"), true);
+      return;
+    }
+    replaceNotesTarget(target, result.text);
+    updateNotesStatusFrom(result.nums);
+  }
+
+  function notesAppendSum() {
+    if (!els.notes) return;
+    const target = notesTarget();
+    const nums = parseNoteNumbers(target.text);
+    if (!nums.length) {
+      setNotesStatus(t("notes_status_empty"), true);
+      return;
+    }
+    const line = t("notes_sum_line", {
+      n: nums.length,
+      sum: formatNoteNumber(notesSumOf(nums)),
+    });
+    const base = target.mode === "selection" ? target.text : els.notes.value;
+    const joined = (base.replace(/\s+$/, "") + "\n" + line).replace(/^\n/, "");
+    replaceNotesTarget(target, joined);
+    updateNotesStatusFrom(nums);
+  }
+
+  function notesAppendUnique() {
+    if (!els.notes) return;
+    const target = notesTarget();
+    const nums = parseNoteNumbers(target.text);
+    if (!nums.length) {
+      setNotesStatus(t("notes_status_empty"), true);
+      return;
+    }
+    const freq = {};
+    const order = [];
+    nums.forEach(function (n) {
+      const key = formatNoteNumber(n);
+      if (!Object.prototype.hasOwnProperty.call(freq, key)) {
+        freq[key] = 0;
+        order.push(key);
+      }
+      freq[key] += 1;
+    });
+    order.sort(function (a, b) {
+      return parseFloat(a) - parseFloat(b);
+    });
+    const list = order
+      .map(function (k) {
+        return k + (freq[k] > 1 ? "×" + freq[k] : "");
+      })
+      .join(", ");
+    const line = t("notes_unique_line", { list: list });
+    const base = target.mode === "selection" ? target.text : els.notes.value;
+    const joined = (base.replace(/\s+$/, "") + "\n" + line).replace(/^\n/, "");
+    replaceNotesTarget(target, joined);
+    updateNotesStatusFrom(nums);
+  }
+
   if (els.notes) {
     try {
       els.notes.value = localStorage.getItem(NOTES_KEY) || "";
     } catch (e) {
       /* ignore */
     }
-    els.notes.addEventListener("input", () => {
-      try {
-        localStorage.setItem(NOTES_KEY, els.notes.value);
-      } catch (e) {
-        /* ignore */
-      }
-    });
+    els.notes.addEventListener("input", persistNotes);
+  }
+  if (els.notesSortAsc) {
+    els.notesSortAsc.addEventListener("click", () => notesSort(false));
+  }
+  if (els.notesSortDesc) {
+    els.notesSortDesc.addEventListener("click", () => notesSort(true));
+  }
+  if (els.notesSum) {
+    els.notesSum.addEventListener("click", notesAppendSum);
+  }
+  if (els.notesUnique) {
+    els.notesUnique.addEventListener("click", notesAppendUnique);
   }
 
-  // --- Standard calculator modal -------------------------------------------
+  // --- Floating calculator (draggable / dockable) ---------------------------
   const calcState = {
     display: "0",
     left: null,
     op: null,
     fresh: true,
   };
+
+  const calcUi = {
+    x: null,
+    y: null,
+    dock: null, // null | "left" | "right"
+    dragging: false,
+    grabX: 0,
+    grabY: 0,
+  };
+
+  const CALC_SNAP = 36;
 
   function calcRender() {
     if (els.calcDisplay) els.calcDisplay.value = calcState.display;
@@ -1068,17 +1257,75 @@
     calcRender();
   }
 
+  function calcPanelSize() {
+    const el = els.calcModal;
+    if (!el) return { w: 320, h: 420 };
+    return {
+      w: el.offsetWidth || 320,
+      h: el.offsetHeight || 420,
+    };
+  }
+
+  function defaultCalcPosition() {
+    const { w, h } = calcPanelSize();
+    calcUi.x = Math.max(12, window.innerWidth - w - 16);
+    calcUi.y = Math.max(12, Math.min(120, window.innerHeight - h - 16));
+    calcUi.dock = null;
+  }
+
+  function applyCalcPosition() {
+    const el = els.calcModal;
+    if (!el || el.hidden) return;
+    const { w, h } = calcPanelSize();
+    const maxX = Math.max(0, window.innerWidth - w);
+    const maxY = Math.max(0, window.innerHeight - h);
+
+    if (calcUi.x == null || calcUi.y == null) defaultCalcPosition();
+
+    if (calcUi.dock === "left") {
+      calcUi.x = 0;
+    } else if (calcUi.dock === "right") {
+      calcUi.x = maxX;
+    } else {
+      calcUi.x = Math.min(maxX, Math.max(0, calcUi.x));
+    }
+    calcUi.y = Math.min(maxY, Math.max(0, calcUi.y));
+
+    el.classList.toggle("is-docked-left", calcUi.dock === "left");
+    el.classList.toggle("is-docked-right", calcUi.dock === "right");
+    el.style.left = calcUi.x + "px";
+    el.style.top = calcUi.y + "px";
+    el.style.right = "auto";
+    el.style.bottom = "auto";
+  }
+
+  function snapCalcDock() {
+    const { w } = calcPanelSize();
+    const maxX = Math.max(0, window.innerWidth - w);
+    if (calcUi.x <= CALC_SNAP) {
+      calcUi.dock = "left";
+      calcUi.x = 0;
+    } else if (calcUi.x >= maxX - CALC_SNAP) {
+      calcUi.dock = "right";
+      calcUi.x = maxX;
+    } else {
+      calcUi.dock = null;
+    }
+  }
+
   function openCalcModal() {
     if (!els.calcModal) return;
     els.calcModal.hidden = false;
-    document.body.style.overflow = "hidden";
+    if (calcUi.x == null || calcUi.y == null) defaultCalcPosition();
+    applyCalcPosition();
     calcRender();
   }
 
   function closeCalcModal() {
     if (!els.calcModal) return;
     els.calcModal.hidden = true;
-    document.body.style.overflow = "";
+    els.calcModal.classList.remove("is-dragging");
+    calcUi.dragging = false;
   }
 
   if (els.calcOpen) {
@@ -1087,16 +1334,50 @@
   if (els.calcClose) {
     els.calcClose.addEventListener("click", closeCalcModal);
   }
-  if (els.calcModal) {
-    els.calcModal.querySelectorAll("[data-calc-close]").forEach((el) => {
-      el.addEventListener("click", closeCalcModal);
-    });
-  }
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && els.calcModal && !els.calcModal.hidden) {
       closeCalcModal();
     }
   });
+  window.addEventListener("resize", () => {
+    if (els.calcModal && !els.calcModal.hidden) applyCalcPosition();
+  });
+
+  const calcHandle = document.getElementById("calc-drag-handle");
+  if (calcHandle && els.calcModal) {
+    calcHandle.addEventListener("pointerdown", (e) => {
+      if (e.button != null && e.button !== 0) return;
+      if (e.target.closest && e.target.closest("button")) return;
+      const rect = els.calcModal.getBoundingClientRect();
+      calcUi.dragging = true;
+      calcUi.dock = null;
+      calcUi.grabX = e.clientX - rect.left;
+      calcUi.grabY = e.clientY - rect.top;
+      els.calcModal.classList.add("is-dragging");
+      calcHandle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    calcHandle.addEventListener("pointermove", (e) => {
+      if (!calcUi.dragging) return;
+      calcUi.x = e.clientX - calcUi.grabX;
+      calcUi.y = e.clientY - calcUi.grabY;
+      applyCalcPosition();
+    });
+    function endCalcDrag(e) {
+      if (!calcUi.dragging) return;
+      calcUi.dragging = false;
+      els.calcModal.classList.remove("is-dragging");
+      try {
+        calcHandle.releasePointerCapture(e.pointerId);
+      } catch (err) {
+        /* ignore */
+      }
+      snapCalcDock();
+      applyCalcPosition();
+    }
+    calcHandle.addEventListener("pointerup", endCalcDrag);
+    calcHandle.addEventListener("pointercancel", endCalcDrag);
+  }
 
   if (els.calcKeys) {
     els.calcKeys.addEventListener("click", (e) => {

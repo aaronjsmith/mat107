@@ -98,8 +98,17 @@
       </div>
       <div id="feedback" class="feedback" hidden></div>
       <div class="scratch-pad">
-        <label for="notes-area" data-i18n="notes_label">Scratch notes</label>
+        <div class="scratch-head">
+          <label for="notes-area" data-i18n="notes_label">Scratch notes</label>
+          <div class="notes-tools" role="group" aria-label="Dataset tools">
+            <button type="button" class="notes-tool" id="notes-sort-asc" data-i18n="notes_sort_asc" data-i18n-title="notes_sort_asc_title" title="Sort numbers ascending">Sort ↑</button>
+            <button type="button" class="notes-tool" id="notes-sort-desc" data-i18n="notes_sort_desc" data-i18n-title="notes_sort_desc_title" title="Sort numbers descending">Sort ↓</button>
+            <button type="button" class="notes-tool" id="notes-sum" data-i18n="notes_sum" data-i18n-title="notes_sum_title" title="Append count and sum">Σ</button>
+            <button type="button" class="notes-tool" id="notes-unique" data-i18n="notes_unique" data-i18n-title="notes_unique_title" title="List unique values with counts">Unique</button>
+          </div>
+        </div>
         <textarea id="notes-area" rows="4" spellcheck="false" data-i18n-placeholder="notes_placeholder" placeholder="Jot working here…"></textarea>
+        <p class="notes-status" id="notes-status" aria-live="polite" hidden></p>
       </div>
     </section>
 
@@ -118,39 +127,36 @@
     <p data-i18n="disclaimer">Unofficial student practice tool for Ensign College MAT 107, based on a real course assignment. Not affiliated with, endorsed by, or connected to Ensign College or The Church of Jesus Christ of Latter-day Saints. Made by a student for personal study. Built with Cursor, hosted on Cloudflare Workers, and versioned on GitHub.</p>
   </footer>
 
-  <div id="calc-modal" class="modal" hidden>
-    <div class="modal-backdrop" data-calc-close></div>
-    <div class="modal-card calc-card" role="dialog" aria-modal="true" aria-labelledby="calc-title">
-      <header class="modal-head">
-        <h2 id="calc-title" data-i18n="calc_title">Calculator</h2>
-        <button type="button" class="modal-close" id="btn-calc-close" aria-label="Close" data-i18n-aria="btn_calc_close_aria">×</button>
-      </header>
-      <div class="calc-app">
-        <input id="calc-display" class="calc-display" type="text" readonly inputmode="decimal" value="0" aria-live="polite" />
-        <div class="calc-keys" id="calc-keys">
-          <button type="button" data-calc="clear" class="calc-key fn">C</button>
-          <button type="button" data-calc="back" class="calc-key fn">⌫</button>
-          <button type="button" data-calc="sqrt" class="calc-key fn">√</button>
-          <button type="button" data-calc="op" data-op="/" class="calc-key op">÷</button>
-          <button type="button" data-calc="digit" data-digit="7" class="calc-key">7</button>
-          <button type="button" data-calc="digit" data-digit="8" class="calc-key">8</button>
-          <button type="button" data-calc="digit" data-digit="9" class="calc-key">9</button>
-          <button type="button" data-calc="op" data-op="*" class="calc-key op">×</button>
-          <button type="button" data-calc="digit" data-digit="4" class="calc-key">4</button>
-          <button type="button" data-calc="digit" data-digit="5" class="calc-key">5</button>
-          <button type="button" data-calc="digit" data-digit="6" class="calc-key">6</button>
-          <button type="button" data-calc="op" data-op="-" class="calc-key op">−</button>
-          <button type="button" data-calc="digit" data-digit="1" class="calc-key">1</button>
-          <button type="button" data-calc="digit" data-digit="2" class="calc-key">2</button>
-          <button type="button" data-calc="digit" data-digit="3" class="calc-key">3</button>
-          <button type="button" data-calc="op" data-op="+" class="calc-key op">+</button>
-          <button type="button" data-calc="sign" class="calc-key fn">±</button>
-          <button type="button" data-calc="digit" data-digit="0" class="calc-key">0</button>
-          <button type="button" data-calc="dot" class="calc-key">.</button>
-          <button type="button" data-calc="eq" class="calc-key eq">=</button>
-          <button type="button" data-calc="pi" class="calc-key fn">π</button>
-          <button type="button" data-calc="sq" class="calc-key fn">x²</button>
-        </div>
+  <div id="calc-modal" class="calc-panel" hidden role="dialog" aria-modal="false" aria-labelledby="calc-title">
+    <header class="calc-head" id="calc-drag-handle">
+      <h2 id="calc-title" data-i18n="calc_title">Calculator</h2>
+      <button type="button" class="modal-close" id="btn-calc-close" aria-label="Close" data-i18n-aria="btn_calc_close_aria">×</button>
+    </header>
+    <div class="calc-app">
+      <input id="calc-display" class="calc-display" type="text" readonly inputmode="decimal" value="0" aria-live="polite" />
+      <div class="calc-keys" id="calc-keys">
+        <button type="button" data-calc="clear" class="calc-key fn">C</button>
+        <button type="button" data-calc="back" class="calc-key fn">⌫</button>
+        <button type="button" data-calc="sqrt" class="calc-key fn">√</button>
+        <button type="button" data-calc="op" data-op="/" class="calc-key op">÷</button>
+        <button type="button" data-calc="digit" data-digit="7" class="calc-key">7</button>
+        <button type="button" data-calc="digit" data-digit="8" class="calc-key">8</button>
+        <button type="button" data-calc="digit" data-digit="9" class="calc-key">9</button>
+        <button type="button" data-calc="op" data-op="*" class="calc-key op">×</button>
+        <button type="button" data-calc="digit" data-digit="4" class="calc-key">4</button>
+        <button type="button" data-calc="digit" data-digit="5" class="calc-key">5</button>
+        <button type="button" data-calc="digit" data-digit="6" class="calc-key">6</button>
+        <button type="button" data-calc="op" data-op="-" class="calc-key op">−</button>
+        <button type="button" data-calc="digit" data-digit="1" class="calc-key">1</button>
+        <button type="button" data-calc="digit" data-digit="2" class="calc-key">2</button>
+        <button type="button" data-calc="digit" data-digit="3" class="calc-key">3</button>
+        <button type="button" data-calc="op" data-op="+" class="calc-key op">+</button>
+        <button type="button" data-calc="sign" class="calc-key fn">±</button>
+        <button type="button" data-calc="digit" data-digit="0" class="calc-key">0</button>
+        <button type="button" data-calc="dot" class="calc-key">.</button>
+        <button type="button" data-calc="eq" class="calc-key eq">=</button>
+        <button type="button" data-calc="pi" class="calc-key fn">π</button>
+        <button type="button" data-calc="sq" class="calc-key fn">x²</button>
       </div>
     </div>
   </div>
