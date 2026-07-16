@@ -140,7 +140,11 @@
   function adjustUnaided(p, topic, delta) {
     if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic] || topic);
     const prev = p.topics[topic].unaided_correct || 0;
-    const next = Math.max(0, prev + delta);
+    let next = Math.max(0, prev + delta);
+    // Once a topic is mastered, keep it mastered — one miss/hint must not un-master.
+    if (delta < 0 && prev >= UNAIDED) {
+      next = Math.max(next, UNAIDED);
+    }
     const applied = next - prev;
     p.topics[topic].unaided_correct = next;
     p.total_unaided_correct = Math.max(

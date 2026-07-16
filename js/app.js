@@ -14,7 +14,7 @@
   }
 
   const state = {
-    mode: "all",
+    mode: "smart",
     fullQuestion: null,
     publicQ: null,
     answered: false,
@@ -732,11 +732,19 @@
       const progress = `${result.unaided_correct}/${result.unaided_needed}`;
       let note = "";
       if (result.hints_used) {
-        note =
-          t("feedback_note_hinted", {
-            credit: creditPct,
-            progress: progress,
-          }) + " ";
+        if (result.mastery_delta < 0) {
+          note =
+            t("feedback_note_hinted", {
+              credit: creditPct,
+              progress: progress,
+            }) + " ";
+        } else {
+          note =
+            t("feedback_note_hinted_locked", {
+              credit: creditPct,
+              progress: progress,
+            }) + " ";
+        }
       } else {
         note = t("feedback_note_unaided", { progress: progress }) + " ";
       }
