@@ -226,6 +226,49 @@ html[dir="rtl"] .lang-wrap {
   font-weight: 600;
 }
 
+.topic.topic-sub {
+  margin-left: 0.85rem;
+  width: calc(100% - 0.85rem);
+  font-size: 0.92rem;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  color: var(--muted);
+}
+
+.topic.topic-sub.active {
+  color: var(--ink);
+}
+
+.topic.topic-boss {
+  margin-top: 0.65rem;
+  border: 1px solid rgba(180, 83, 9, 0.35);
+  background: rgba(180, 83, 9, 0.08);
+  font-weight: 600;
+}
+
+.topic.topic-boss:hover:not(:disabled) {
+  background: rgba(180, 83, 9, 0.14);
+}
+
+.topic.topic-boss.active {
+  background: rgba(180, 83, 9, 0.2);
+  border-color: rgba(180, 83, 9, 0.55);
+}
+
+.topic.topic-boss:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.topic.topic-boss.cleared {
+  border-color: rgba(15, 110, 86, 0.45);
+  background: rgba(15, 110, 86, 0.12);
+}
+
+.topic.topic-boss.practice {
+  border-style: dashed;
+}
+
 .topic .m {
   float: right;
   font-family: var(--mono);
@@ -282,6 +325,53 @@ a.linkish {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
+}
+
+.quiz-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.boss-face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  font-size: 1.55rem;
+  line-height: 1;
+  border-radius: 999px;
+  background: rgba(180, 83, 9, 0.12);
+  border: 1px solid rgba(180, 83, 9, 0.3);
+  flex-shrink: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.boss-face.hit {
+  background: rgba(185, 28, 28, 0.16);
+  border-color: rgba(185, 28, 28, 0.4);
+  animation: boss-hit 0.45s ease;
+}
+
+.boss-face.dead {
+  background: rgba(30, 41, 59, 0.12);
+  border-color: rgba(30, 41, 59, 0.35);
+  animation: boss-dead 0.55s ease;
+}
+
+@keyframes boss-hit {
+  0% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(1.35) rotate(-12deg); }
+  60% { transform: scale(0.92) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes boss-dead {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.4) rotate(10deg); }
+  100% { transform: scale(1); }
 }
 
 .pill {

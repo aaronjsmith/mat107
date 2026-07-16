@@ -5,6 +5,13 @@
 (function () {
   "use strict";
 
+  /** When true, tVar prefers q.*.boss / q.*.boss2… prompt variants. */
+  let gadiantonBossTheme = false;
+
+  function setBossTheme(on) {
+    gadiantonBossTheme = Boolean(on);
+  }
+
   function t(key, vars) {
     if (window.QuizI18n && window.QuizI18n.t) {
       return window.QuizI18n.t(key, vars || {});
@@ -12,13 +19,26 @@
     return key;
   }
 
-  /** Pick a random prompt variant: key, key.v2, key.v3, … when present. */
+  function i18nHas(key) {
+    return Boolean(window.QuizI18n && window.QuizI18n.has && window.QuizI18n.has(key));
+  }
+
+  /** Pick a random prompt variant: key, key.v2, key.v3, … when present.
+   *  During the Gadianton boss fight, prefer key.boss / key.boss2… if available. */
   function tVar(key, vars) {
-    const opts = [key];
-    for (let n = 2; n <= 6; n++) {
-      const k = key + ".v" + n;
-      if (window.QuizI18n && window.QuizI18n.has && window.QuizI18n.has(k)) {
-        opts.push(k);
+    const opts = [];
+    if (gadiantonBossTheme) {
+      if (i18nHas(key + ".boss")) opts.push(key + ".boss");
+      for (let n = 2; n <= 6; n++) {
+        const k = key + ".boss" + n;
+        if (i18nHas(k)) opts.push(k);
+      }
+    }
+    if (!opts.length) {
+      opts.push(key);
+      for (let n = 2; n <= 6; n++) {
+        const k = key + ".v" + n;
+        if (i18nHas(k)) opts.push(k);
       }
     }
     const last = recentPick.variantByKey[key];
@@ -62,7 +82,12 @@
   const HINT_CREDIT = { 0: 1.0, 1: 0.75, 2: 0.5, 3: 0.25 };
   /** Credit for correcting a miss on the recovery attempt (not mastery). */
   const RETRY_CREDIT = 0.05;
+  /** Unaided corrects needed to master a topic (badge at 10/10). */
   const UNAIDED_TO_MASTER = 10;
+  /** Extra unaided corrects to fully lock mastery (shown as 20/10). */
+  const UNAIDED_TO_LOCK = 20;
+  /** Wrong/hint hits needed to break a full lock (20 → 9/10). */
+  const MASTER_LOCK_GRACE = 3;
 
   // --- Helpers ----------------------------------------------------------------
 
@@ -294,19 +319,23 @@
   }
 
   function getFormulaCards() {
+    function front(key) {
+      if (gadiantonBossTheme && i18nHas(key + ".boss")) return t(key + ".boss");
+      return t(key);
+    }
     return [
-      { front: t("card.sq_p.front"), back: "P = 4s", answers: ["4s", "4*s", "s+s+s+s"], hint: t("card.sq_p.hint") },
-      { front: t("card.sq_a.front"), back: "A = s²", answers: ["s^2", "s*s", "s²"], hint: t("card.sq_a.hint") },
-      { front: t("card.rect_p.front"), back: "P = 2L + 2W", answers: ["2l+2w", "2(l+w)", "2*l+2*w"], hint: t("card.rect_p.hint") },
-      { front: t("card.rect_a.front"), back: "A = L × W", answers: ["l*w", "lw", "l×w", "w*l"], hint: t("card.rect_a.hint") },
-      { front: t("card.tri_p.front"), back: "P = a + b + c", answers: ["a+b+c"], hint: t("card.tri_p.hint") },
-      { front: t("card.tri_a.front"), back: "A = ½bh", answers: ["0.5bh", "0.5*b*h", "(1/2)bh", "1/2*b*h", "bh/2"], hint: t("card.tri_a.hint") },
-      { front: t("card.circ_c.front"), back: "C = 2πr", answers: ["2pir", "2*pi*r", "2πr", "pid", "pi*d"], hint: t("card.circ_c.hint") },
-      { front: t("card.circ_a.front"), back: "A = πr²", answers: ["pir^2", "pi*r^2", "πr²", "pi*r*r"], hint: t("card.circ_a.hint") },
-      { front: t("card.cube.front"), back: "V = s³", answers: ["s^3", "s*s*s", "s³"], hint: t("card.cube.hint") },
-      { front: t("card.sphere.front"), back: "V = (4/3)πr³", answers: ["(4/3)pir^3", "(4/3)*pi*r^3", "4/3pir^3", "4/3*pi*r^3"], hint: t("card.sphere.hint") },
-      { front: t("card.cyl.front"), back: "V = πr²h", answers: ["pir^2h", "pi*r^2*h", "πr²h", "pi*r*r*h"], hint: t("card.cyl.hint") },
-      { front: t("card.pyth.front"), back: "a² + b² = c²", answers: ["a^2+b^2=c^2", "a²+b²=c²", "c^2=a^2+b^2"], hint: t("card.pyth.hint") }
+      { front: front("card.sq_p.front"), back: "P = 4s", answers: ["4s", "4*s", "s+s+s+s"], hint: t("card.sq_p.hint") },
+      { front: front("card.sq_a.front"), back: "A = s²", answers: ["s^2", "s*s", "s²"], hint: t("card.sq_a.hint") },
+      { front: front("card.rect_p.front"), back: "P = 2L + 2W", answers: ["2l+2w", "2(l+w)", "2*l+2*w"], hint: t("card.rect_p.hint") },
+      { front: front("card.rect_a.front"), back: "A = L × W", answers: ["l*w", "lw", "l×w", "w*l"], hint: t("card.rect_a.hint") },
+      { front: front("card.tri_p.front"), back: "P = a + b + c", answers: ["a+b+c"], hint: t("card.tri_p.hint") },
+      { front: front("card.tri_a.front"), back: "A = ½bh", answers: ["0.5bh", "0.5*b*h", "(1/2)bh", "1/2*b*h", "bh/2"], hint: t("card.tri_a.hint") },
+      { front: front("card.circ_c.front"), back: "C = 2πr", answers: ["2pir", "2*pi*r", "2πr", "pid", "pi*d"], hint: t("card.circ_c.hint") },
+      { front: front("card.circ_a.front"), back: "A = πr²", answers: ["pir^2", "pi*r^2", "πr²", "pi*r*r"], hint: t("card.circ_a.hint") },
+      { front: front("card.cube.front"), back: "V = s³", answers: ["s^3", "s*s*s", "s³"], hint: t("card.cube.hint") },
+      { front: front("card.sphere.front"), back: "V = (4/3)πr³", answers: ["(4/3)pir^3", "(4/3)*pi*r^3", "4/3pir^3", "4/3*pi*r^3"], hint: t("card.sphere.hint") },
+      { front: front("card.cyl.front"), back: "V = πr²h", answers: ["pir^2h", "pi*r^2*h", "πr²h", "pi*r*r*h"], hint: t("card.cyl.hint") },
+      { front: front("card.pyth.front"), back: "a² + b² = c²", answers: ["a^2+b^2=c^2", "a²+b²=c²", "c^2=a^2+b^2"], hint: t("card.pyth.hint") }
     ];
   }
 
@@ -2590,6 +2619,9 @@
     HINT_CREDIT: HINT_CREDIT,
     RETRY_CREDIT: RETRY_CREDIT,
     UNAIDED_TO_MASTER: UNAIDED_TO_MASTER,
+    UNAIDED_TO_LOCK: UNAIDED_TO_LOCK,
+    MASTER_LOCK_GRACE: MASTER_LOCK_GRACE,
+    setBossTheme: setBossTheme,
     randInt: randInt,
     choice: choice,
     shuffle: shuffle,

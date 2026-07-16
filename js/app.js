@@ -24,10 +24,18 @@
     lastTopic: null,
     clarifyShown: false,
     clarifyAiShown: false,
+    boss: {
+      active: false,
+      queue: [],
+      index: 0,
+      status: null, // "running" | "won" | "failed"
+    },
   };
 
   const els = {
     topicList: document.getElementById("topic-list"),
+    finalBossBtn: document.getElementById("btn-final-boss"),
+    bossFace: document.getElementById("boss-face"),
     prompt: document.getElementById("q-prompt"),
     topic: document.getElementById("q-topic"),
     hint1: document.getElementById("q-hint1"),
@@ -216,7 +224,7 @@
         color +
         '"></i>' +
         "<span>" +
-        (info.mastered ? "✓ " : "") +
+        (info.locked ? "🔒 " : info.mastered ? "✓ " : "") +
         info.label +
         "</span>" +
         "<em>" +
@@ -297,10 +305,161 @@
       const active =
         (state.mode === "all" && topic === "all") ||
         (state.mode === "smart" && topic === "smart") ||
+        (state.mode === "lockin" && topic === "lockin") ||
         (state.mode === "flashcards" && topic === "flashcards") ||
+        (state.mode === "finalboss" && topic === "finalboss") ||
         state.mode === topic;
       btn.classList.toggle("active", active);
     });
+  }
+
+  function updateFinalBossButton(p) {
+    const btn = els.finalBossBtn;
+    if (!btn) return;
+    const unlocked = Boolean(p && p.all_locked);
+    btn.disabled = false;
+    btn.classList.toggle("cleared", Boolean(p && p.final_boss_cleared));
+    btn.classList.toggle("practice", !unlocked);
+    if (p && p.final_boss_cleared && unlocked) {
+      btn.textContent = "💀 " + t("mode_finalboss_cleared");
+    } else if (unlocked) {
+      btn.textContent = "😈 " + t("mode_finalboss_ready");
+    } else {
+      btn.textContent = "😈 " + t("mode_finalboss_locked");
+    }
+  }
+
+  let bossFaceTimer = null;
+
+  function setBossFace(emoji, mode) {
+    if (!els.bossFace) return;
+    if (bossFaceTimer) {
+      clearTimeout(bossFaceTimer);
+      bossFaceTimer = null;
+    }
+    els.bossFace.hidden = false;
+    els.bossFace.textContent = emoji;
+    els.bossFace.classList.remove("hit", "dead");
+    if (mode) els.bossFace.classList.add(mode);
+    els.bossFace.setAttribute("aria-hidden", "false");
+  }
+
+  function hideBossFace() {
+    if (!els.bossFace) return;
+    if (bossFaceTimer) {
+      clearTimeout(bossFaceTimer);
+      bossFaceTimer = null;
+    }
+    els.bossFace.hidden = true;
+    els.bossFace.classList.remove("hit", "dead");
+    els.bossFace.textContent = "😈";
+    els.bossFace.setAttribute("aria-hidden", "true");
+  }
+
+  /** Boss takes a hit: 👹 briefly, then back to 😈. */
+  function bossTakeDamage(thenIdle) {
+    setBossFace("👹", "hit");
+    bossFaceTimer = setTimeout(function () {
+      if (thenIdle === false) return;
+      setBossFace("😈");
+    }, 650);
+  }
+
+  function startBossRun() {
+    const fullStakes = Boolean(P.allTopicsLocked && P.allTopicsLocked());
+    state.boss = {
+      active: true,
+      queue: P.shuffleTopics(),
+      index: 0,
+      status: "running",
+      fullStakes: fullStakes,
+    };
+    setBossFace("😈");
+  }
+
+  function failBoss() {
+    const missedTopic =
+      (state.fullQuestion && state.fullQuestion.topic) ||
+      (state.boss.queue && state.boss.queue[state.boss.index]) ||
+      null;
+    const topicLabel =
+      missedTopic && Q.TOPICS[missedTopic] ? Q.TOPICS[missedTopic] : t("mode_finalboss");
+    const fullStakes = Boolean(state.boss.fullStakes);
+    let penalty = { dropped_to: 19, topic: missedTopic, topics_affected: 0 };
+    if (fullStakes) {
+      penalty = P.penalizeBossFail(missedTopic);
+    }
+    state.boss.status = "failed";
+    state.boss.active = false;
+    state.answered = true;
+    setBossFace("😈");
+    lockInputs();
+    hideHintControls();
+    els.skip.hidden = true;
+    if (els.remix) els.remix.hidden = true;
+    els.check.hidden = true;
+    els.next.hidden = false;
+    els.next.textContent = t("btn_next");
+    els.feedback.hidden = false;
+    els.feedback.className = "feedback no";
+    els.feedback.textContent = fullStakes
+      ? t("boss_fail", {
+          topic: topicLabel,
+          progress: penalty.dropped_to + "/10",
+        })
+      : t("boss_fail_practice", { topic: topicLabel });
+    state.mode = "lockin";
+    els.topic.textContent = t("mode_lockin");
+    setModeButtons();
+    refreshProgress();
+    bossFaceTimer = setTimeout(hideBossFace, 900);
+  }
+
+  function winBoss() {
+    const fullStakes = Boolean(state.boss.fullStakes);
+    const already = Boolean(P.getProgressView().final_boss_cleared);
+    if (fullStakes) {
+      P.markFinalBossCleared();
+    }
+    state.boss.status = "won";
+    state.boss.active = false;
+    state.answered = true;
+    setBossFace("💀", "dead");
+    lockInputs();
+    hideHintControls();
+    els.skip.hidden = true;
+    if (els.remix) els.remix.hidden = true;
+    els.check.hidden = true;
+    els.next.hidden = false;
+    els.feedback.hidden = false;
+    els.feedback.className = "feedback ok";
+    if (!fullStakes) {
+      els.feedback.textContent = t("boss_win_practice");
+      els.topic.textContent = t("mode_finalboss");
+    } else {
+      els.feedback.textContent = already ? t("boss_win_again") : t("boss_win");
+      els.topic.textContent = t("mode_finalboss_cleared");
+    }
+    refreshProgress();
+  }
+
+  function advanceBossAfterCorrect() {
+    state.boss.index += 1;
+    if (state.boss.index >= state.boss.queue.length) {
+      // Final hit → death face (no return to idle).
+      setBossFace("👹", "hit");
+      bossFaceTimer = setTimeout(function () {
+        winBoss();
+      }, 500);
+      return;
+    }
+    bossTakeDamage(true);
+    els.feedback.className = "feedback ok";
+    els.feedback.textContent = t("boss_ok", {
+      current: state.boss.index,
+      total: state.boss.queue.length,
+    });
+    els.next.hidden = false;
   }
 
   function refreshProgress() {
@@ -317,7 +476,7 @@
         btn.className = "topic";
         btn.dataset.topic = key;
         btn.dataset.key = key;
-        const mark = info.mastered ? "✓ " : "";
+        const mark = info.locked ? "🔒 " : info.mastered ? "✓ " : "";
         btn.innerHTML = `${mark}${info.label}<span class="m">${info.unaided_correct}/${info.unaided_needed}</span>`;
         btn.addEventListener("click", () => {
           state.mode = key;
@@ -330,7 +489,7 @@
       existing.forEach((btn) => {
         const info = p.topics[btn.dataset.key];
         if (info) {
-          const mark = info.mastered ? "✓ " : "";
+          const mark = info.locked ? "🔒 " : info.mastered ? "✓ " : "";
           btn.innerHTML = `${mark}${info.label}<span class="m">${info.unaided_correct}/${info.unaided_needed}</span>`;
         }
       });
@@ -338,6 +497,7 @@
 
     renderMasteryPie(p);
     setModeButtons();
+    updateFinalBossButton(p);
   }
 
   function hideHintControls() {
@@ -436,15 +596,52 @@
 
   function loadQuestion() {
     resetUI();
+    els.next.textContent = t("btn_next");
+
+    if (state.mode !== "finalboss") {
+      state.boss = { active: false, queue: [], index: 0, status: null };
+      hideBossFace();
+    }
+
     let topic = null;
-    if (state.mode === "smart") {
+    if (state.mode === "finalboss") {
+      if (!state.boss.active || state.boss.status === "failed" || state.boss.status === "won") {
+        startBossRun();
+        els.feedback.hidden = false;
+        els.feedback.className = "feedback ok";
+        els.feedback.textContent = state.boss.fullStakes
+          ? t("boss_start")
+          : t("boss_start_practice");
+      }
+      topic = state.boss.queue[state.boss.index];
+    } else if (state.mode === "smart") {
       topic = P.pickSmartTopic(state.lastTopic);
+    } else if (state.mode === "lockin") {
+      topic = P.pickLockInTopic(state.lastTopic);
     } else if (state.mode === "all") {
-      topic = "all";
+      topic = P.pickAllTopic(state.lastTopic);
+    } else if (state.mode === "flashcards") {
+      topic = "flashcards";
     } else {
       topic = state.mode;
     }
 
+    if (!topic) {
+      els.prompt.textContent = t("mode_all_locked");
+      els.topic.textContent =
+        state.mode === "lockin"
+          ? t("mode_lockin")
+          : state.mode === "finalboss"
+            ? t("mode_finalboss")
+            : t("mode_smart");
+      els.check.hidden = true;
+      els.skip.hidden = true;
+      if (els.remix) els.remix.hidden = true;
+      hideHintControls();
+      return;
+    }
+
+    if (Q.setBossTheme) Q.setBossTheme(state.mode === "finalboss");
     const full = Q.generateQuestion(topic);
     showQuestion(full);
   }
@@ -456,6 +653,7 @@
     }
     // Abandon current item without skip penalty — intentional reshuffle.
     resetUI();
+    if (Q.setBossTheme) Q.setBossTheme(state.mode === "finalboss");
     const full = Q.remixQuestion(state.fullQuestion);
     showQuestion(full);
   }
@@ -467,23 +665,38 @@
     if (full && full.topic) state.lastTopic = full.topic;
 
     els.topic.textContent =
-      state.mode === "flashcards" ? t("mode_flashcards") : pub.topic_label;
+      state.mode === "flashcards"
+        ? t("mode_flashcards")
+        : state.mode === "lockin"
+          ? t("mode_lockin") + " · " + pub.topic_label
+          : state.mode === "finalboss"
+            ? t("boss_progress", {
+                current: state.boss.index + 1,
+                total: state.boss.queue.length,
+                topic: pub.topic_label,
+              })
+            : pub.topic_label;
     els.prompt.textContent = pub.prompt;
     els.hint1.textContent = pub.hint1 || "";
     els.hint2.textContent = pub.hint2 || "";
     els.hint3ti.textContent = pub.hint3_ti || "";
     els.hint3casio.textContent = pub.hint3_casio || "";
 
-    if (pub.has_hint1) {
+    if (pub.has_hint1 && state.mode !== "finalboss") {
       els.hint1Btn.hidden = false;
-    } else if (pub.has_hint2) {
+    } else if (pub.has_hint2 && state.mode !== "finalboss") {
       els.hint2Btn.hidden = false;
-    } else if (pub.has_hint3) {
+    } else if (pub.has_hint3 && state.mode !== "finalboss") {
       showCalcButtons(false);
     }
-    // Clarification is always available when we have any guidance.
-    if (els.clarifyBtn && pub.has_clarify) {
+    // Clarification is available outside the Final Boss gauntlet.
+    if (els.clarifyBtn && pub.has_clarify && state.mode !== "finalboss") {
       els.clarifyBtn.hidden = false;
+    }
+
+    if (state.mode === "finalboss" && els.remix) {
+      // Remix same topic is fine; skip would abandon the run.
+      els.skip.hidden = true;
     }
 
     if (pub.svg) {
@@ -628,8 +841,21 @@
       state.publicQ?.hint1 ||
       state.publicQ?.hint2 ||
       "";
+    const progress = `${result.unaided_correct}/${result.unaided_needed}`;
+    let lockNote = "";
+    if (result.lock_broken) {
+      lockNote = t("feedback_note_lock_broken", { progress: progress });
+    } else if (result.locked && result.mastery_delta === 0 && (result.lock_strikes || 0) > 0) {
+      lockNote = t("feedback_note_lock_chip", {
+        progress: progress,
+        strikes: result.lock_strikes,
+      });
+    } else if (result.mastery_delta < 0) {
+      lockNote = t("feedback_note_lock_broken", { progress: progress });
+    }
     els.feedback.textContent =
       t("feedback_wrong_retry") +
+      lockNote +
       (tip ? t("feedback_wrong_hint", { hint: tip }) : "");
     showHintsAfterMiss();
 
@@ -723,6 +949,25 @@
       });
     }
 
+    // Final Boss: one-shot unaided gauntlet — does not change mastery locks.
+    if (state.mode === "finalboss" && state.boss.active) {
+      const [ok, expected] = Q.checkAnswer(state.fullQuestion, answer);
+      els.feedback.hidden = false;
+      if (state.publicQ.type === "mc") {
+        [...els.choices.children].forEach((btn) => {
+          btn.disabled = true;
+          if (ok && btn.textContent === expected) btn.classList.add("right");
+          if (!ok && btn.textContent === String(answer)) btn.classList.add("wrong");
+        });
+      }
+      if (!ok || state.hintsUsed > 0) {
+        failBoss();
+        return;
+      }
+      advanceBossAfterCorrect();
+      return;
+    }
+
     const result = P.recordAnswer(state.fullQuestion, answer, state.hintsUsed);
     els.feedback.hidden = false;
 
@@ -732,15 +977,22 @@
       const progress = `${result.unaided_correct}/${result.unaided_needed}`;
       let note = "";
       if (result.hints_used) {
-        if (result.mastery_delta < 0) {
+        if (result.lock_broken || result.mastery_delta < 0) {
           note =
             t("feedback_note_hinted", {
               credit: creditPct,
               progress: progress,
             }) + " ";
-        } else {
+        } else if (result.locked && (result.lock_strikes || 0) > 0) {
           note =
             t("feedback_note_hinted_locked", {
+              credit: creditPct,
+              progress: progress,
+              strikes: result.lock_strikes,
+            }) + " ";
+        } else {
+          note =
+            t("feedback_note_hinted", {
               credit: creditPct,
               progress: progress,
             }) + " ";
@@ -748,12 +1000,17 @@
       } else {
         note = t("feedback_note_unaided", { progress: progress }) + " ";
       }
+      const masteredNote = result.just_locked
+        ? t("feedback_note_just_locked")
+        : result.just_mastered
+          ? t("feedback_mastered")
+          : "";
       els.feedback.textContent = t("feedback_correct", {
         credit: creditPct,
         note: note,
         streak: result.streak,
         progress: progress,
-        mastered: result.just_mastered ? t("feedback_mastered") : "",
+        mastered: masteredNote,
       });
       if (state.publicQ.type === "mc") {
         [...els.choices.children].forEach((btn) => {
@@ -869,18 +1126,6 @@
   els.hint3tiBtn.addEventListener("click", () => openCalcPanel("ti"));
   els.hint3casioBtn.addEventListener("click", () => openCalcPanel("casio"));
 
-  els.next.addEventListener("click", loadQuestion);
-  els.skip.addEventListener("click", () => {
-    if (state.retryPhase) {
-      finishAfterRetry(false, state.lastExpected);
-      return;
-    }
-    if (state.fullQuestion && state.hintsUsed > 0 && !state.answered) {
-      P.recordHintSkip(state.fullQuestion, state.hintsUsed);
-      refreshProgress();
-    }
-    loadQuestion();
-  });
   if (els.remix) {
     els.remix.addEventListener("click", () => {
       if (state.retryPhase) {
@@ -893,10 +1138,37 @@
 
   document.querySelectorAll(".topic[data-topic]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      state.mode = btn.dataset.topic;
+      if (btn.disabled) return;
+      const nextMode = btn.dataset.topic;
+      state.mode = nextMode;
+      if (nextMode === "finalboss") {
+        state.boss = { active: false, queue: [], index: 0, status: null, fullStakes: false };
+      }
       setModeButtons();
       loadQuestion();
     });
+  });
+
+  els.next.addEventListener("click", () => {
+    if (state.mode === "finalboss" && state.boss.status === "won") {
+      state.boss.status = null;
+    }
+    loadQuestion();
+  });
+  els.skip.addEventListener("click", () => {
+    if (state.mode === "finalboss" && state.boss.active) {
+      failBoss();
+      return;
+    }
+    if (state.retryPhase) {
+      finishAfterRetry(false, state.lastExpected);
+      return;
+    }
+    if (state.fullQuestion && state.hintsUsed > 0 && !state.answered) {
+      P.recordHintSkip(state.fullQuestion, state.hintsUsed);
+      refreshProgress();
+    }
+    loadQuestion();
   });
 
   els.reset.addEventListener("click", () => {
