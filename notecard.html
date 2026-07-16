@@ -630,29 +630,37 @@
             <li>Read the % (68 / 95 / 99.7) or half-bands (34 / 16 / 0.15).</li>
           </ol>
 
-          <h3>Worked examples</h3>
+          <div class="z-box" style="margin-top:0.08rem;">
+            <p class="z-title">PERCENTILE · no table (μ→±1σ band ≈ 34%)</p>
+            <ol class="steps">
+              <li>z = (x − μ) / σ</li>
+              <li>Fraction of the way to ±1σ: |z| (when |z| ≤ 1)</li>
+              <li>Band piece = |z| × 34%</li>
+              <li>Above mean: 50% + band · Below mean: 50% − band</li>
+            </ol>
+          </div>
+
+          <h3>Worked examples · μ=50, σ=10</h3>
           <div class="examples">
             <div class="eg">
-              <strong>1 · Within 1 SD → ≈68%</strong><br />
-              μ=40, σ=5. Between 35 and 45?<br />
-              35=μ−1σ, 45=μ+1σ → middle → <span class="ans">≈ 68%</span>
+              <strong>1 · x=57 → ~74th percentile</strong><br />
+              z=(57−50)/10=<code>+0.7</code> (70% of the way to +1σ)<br />
+              0.7×34%=23.8% · then 50%+23.8%=<span class="ans">73.8% ≈ 74th</span>
             </div>
             <div class="eg">
-              <strong>2 · Within 2 SD → ≈95%</strong><br />
-              μ=80, σ=10. Between 60 and 100?<br />
-              60=μ−2σ, 100=μ+2σ → <span class="ans">≈ 95%</span>
+              <strong>2 · x=47 → ~40th percentile</strong><br />
+              z=(47−50)/10=<code>−0.3</code> (30% of the way to −1σ)<br />
+              0.3×34%=10.2% · then 50%−10.2%=<span class="ans">39.8% ≈ 40th</span>
             </div>
             <div class="eg">
-              <strong>3 · Beyond +3 SD → ≈0.15%</strong><br />
-              μ=70, σ=5. Older than 85?<br />
-              85=μ+3σ → one outer tip → <span class="ans">≈ 0.15%</span>
+              <strong>3 · Within 1 SD → ≈68%</strong><br />
+              Between 40 and 60? → μ±1σ → <span class="ans">≈ 68%</span>
             </div>
           </div>
 
           <p class="note" style="margin-top:0.1rem;">
-            <strong>Link to z:</strong> “within 1 SD” means −1 ≤ z ≤ +1.
-            For an exact percentile from a specific z (like z=1.2), use the
-            z ↔ percentile table — not the 68-95-99.7 sketch.
+            <strong>Tip:</strong> This interpolates inside the μ↔±1σ half-band (34%).
+            For |z|&gt;1, step through the 34% / 13.5% / 2.35% slices, or use a z-table.
           </p>
           <p class="footer-tiny">Print double-sided · landscape 7″×5″ · mat107.aaronjsmith.me</p>
         </div>
