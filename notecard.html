@@ -625,42 +625,44 @@
           <h3>How to use it on a problem</h3>
           <ol class="steps">
             <li>Confirm data is roughly normal.</li>
-            <li>Write μ and σ. Find the cutoffs: μ±1σ, μ±2σ, μ±3σ.</li>
-            <li>Match the question interval to a band on the curve.</li>
+            <li>Write mean and SD. Mark mean ±1, ±2, ±3 SD.</li>
+            <li>Match the question to a band on the curve.</li>
             <li>Read the % (68 / 95 / 99.7) or half-bands (34 / 16 / 0.15).</li>
           </ol>
 
-          <div class="z-box" style="margin-top:0.08rem;">
-            <p class="z-title">PERCENTILE · no table (μ→±1σ band ≈ 34%)</p>
+          <div class="z-box" style="margin-top:0.06rem;">
+            <p class="z-title">PERCENTILE · no table</p>
+            <p>Mean to +1 SD (or −1 SD) holds about <strong>34%</strong> of the data.</p>
             <ol class="steps">
-              <li>z = (x − μ) / σ</li>
-              <li>Fraction of the way to ±1σ: |z| (when |z| ≤ 1)</li>
-              <li>Band piece = |z| × 34%</li>
-              <li>Above mean: 50% + band · Below mean: 50% − band</li>
+              <li><strong>Compute z</strong> — how many SDs you are from the mean.</li>
+              <li><strong>Read the band</strong> — z tells what fraction of the way you are toward 1 SD (e.g. z=0.7 → 70% of the way).</li>
+              <li><strong>Take that fraction of 34%</strong> — e.g. 0.7 × 34% = 23.8%.</li>
+              <li><strong>Finish</strong> — above the mean: add to 50%. Below the mean: subtract from 50%.</li>
             </ol>
           </div>
 
-          <h3>Worked examples · μ=50, σ=10</h3>
+          <h3>Worked examples · mean=50, SD=10</h3>
           <div class="examples">
             <div class="eg">
-              <strong>1 · x=57 → ~74th percentile</strong><br />
-              z=(57−50)/10=<code>+0.7</code> (70% of the way to +1σ)<br />
-              0.7×34%=23.8% · then 50%+23.8%=<span class="ans">73.8% ≈ 74th</span>
+              <strong>1 · x=57 → about the 74th percentile</strong><br />
+              Step 1: z = (57−50)/10 = <code>+0.7</code>
+              → 70% of the way from the mean to +1 SD.<br />
+              Step 2: 0.7 × 34% = 23.8%.<br />
+              Step 3: Add the 50% below the mean → 50% + 23.8% =
+              <span class="ans">73.8% ≈ 74th</span>
             </div>
             <div class="eg">
-              <strong>2 · x=47 → ~40th percentile</strong><br />
-              z=(47−50)/10=<code>−0.3</code> (30% of the way to −1σ)<br />
-              0.3×34%=10.2% · then 50%−10.2%=<span class="ans">39.8% ≈ 40th</span>
-            </div>
-            <div class="eg">
-              <strong>3 · Within 1 SD → ≈68%</strong><br />
-              Between 40 and 60? → μ±1σ → <span class="ans">≈ 68%</span>
+              <strong>2 · x=47 → about the 40th percentile</strong><br />
+              Step 1: z = (47−50)/10 = <code>−0.3</code>
+              → 30% of the way from the mean to −1 SD.<br />
+              Step 2: 0.3 × 34% = 10.2%.<br />
+              Step 3: Subtract from the 50% below the mean → 50% − 10.2% =
+              <span class="ans">39.8% ≈ 40th</span>
             </div>
           </div>
 
-          <p class="note" style="margin-top:0.1rem;">
-            <strong>Tip:</strong> This interpolates inside the μ↔±1σ half-band (34%).
-            For |z|&gt;1, step through the 34% / 13.5% / 2.35% slices, or use a z-table.
+          <p class="note" style="margin-top:0.08rem;">
+            Works inside the first SD band. Farther out than 1 SD? Walk the 34% / 13.5% / 2.35% slices, or use a z-table.
           </p>
           <p class="footer-tiny">Print double-sided · landscape 7″×5″ · mat107.aaronjsmith.me</p>
         </div>
