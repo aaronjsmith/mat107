@@ -425,7 +425,7 @@
     "calc_title": "Rechner",
     "notes_label": "Notizen",
     "notes_placeholder": "Notieren Sie hier Rechnungen, Formeln oder Erinnerungen…",
-    "disclaimer": "Inoffizielles Übungsangebot eines Studierenden für Ensign College MAT 107, basierend auf einer echten Kursaufgabe. Keine Verbindung, Unterstützung oder Zugehörigkeit zu Ensign College oder der Kirche Jesu Christi der Heiligen der Letzten Tage. Von einem Studierenden für persönliches Lernen erstellt. Erstellt mit Cursor, gehostet auf Cloudflare Workers und versioniert auf GitHub.",
+    "disclaimer": "Inoffizielles Übungsangebot eines Studierenden für Ensign College MAT 107, basierend auf einer echten Kursaufgabe. Keine Verbindung, Unterstützung oder Zugehörigkeit zu Ensign College oder der Kirche Jesu Christi der Heiligen der Letzten Tage. Von einem Studierenden für persönliches Lernen erstellt. Erstellt mit Cursor, gehostet auf Cloudflare Workers und versioniert auf <a href=\"https://github.com/aaronjsmith/mat107\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>.",
     "scripture_quote": "“And I said: Lord, whither shall I go that I may find ore to molten, that I may make tools to construct the ship after the manner which thou hast shown unto me?”",
     "scripture_cite": "— 1 Nephi 17:9",
     "h.z_from_pct": "Scan the Percentile column on the table shown until you find {pct} (or the closest listed value), then read the matching z-score.",
@@ -475,6 +475,7 @@
     "notes_sum_line": "n = {n}, sum = {sum}",
     "notes_unique_line": "unique: {list}",
     "feedback_note_hinted_locked": "Hints used → {credit}% credit; mastery stays locked ({progress}).",
-    "btn_notecard": "5×7 formula notecard"
+    "btn_notecard": "5×7 formula notecard",
+    "footer_github": "View source on GitHub"
   }
 }

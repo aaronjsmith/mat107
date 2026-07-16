@@ -141,6 +141,17 @@ html[dir="rtl"] .lang-wrap {
   max-width: 52rem;
 }
 
+.site-footer a {
+  color: var(--accent);
+  text-underline-offset: 2px;
+}
+
+.site-footer .footer-links {
+  margin-top: 0.55rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .stats-bar {
   display: flex;
   gap: 1.5rem;

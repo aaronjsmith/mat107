@@ -5,7 +5,8 @@
   "strings": {
     "title": "Ensign College MAT 107 · Unofficial student practice",
     "brand_sub": "Ensign College MAT 107 · Assessment 1 practice",
-    "disclaimer": "Unofficial student practice tool for Ensign College MAT 107, based on a real course assignment. Not affiliated with, endorsed by, or connected to Ensign College or The Church of Jesus Christ of Latter-day Saints. Made by a student for personal study. Built with Cursor, hosted on Cloudflare Workers, and versioned on GitHub.",
+    "disclaimer": "Unofficial student practice tool for Ensign College MAT 107, based on a real course assignment. Not affiliated with, endorsed by, or connected to Ensign College or The Church of Jesus Christ of Latter-day Saints. Made by a student for personal study. Built with Cursor, hosted on Cloudflare Workers, and versioned on <a href=\"https://github.com/aaronjsmith/mat107\" target=\"_blank\" rel=\"noopener noreferrer\">GitHub</a>.",
+    "footer_github": "View source on GitHub",
     "lang_label": "Language",
     "stat_grade": "Grade",
     "stat_streak": "Unaided streak",
