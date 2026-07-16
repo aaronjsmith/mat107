@@ -85,6 +85,60 @@
   /** Unaided corrects needed to master a topic (badge at 10/10). */
   const UNAIDED_TO_MASTER = 10;
 
+  /**
+   * Nephite money (Alma 11) for Gadianton boss fights.
+   * Teaching rate: 1 senine of gold = 1 senum of silver = $SENINE_USD.
+   */
+  const SENINE_USD = 8;
+  const NEPHITE_COINS = [
+    { key: "leah", senines: 0.125 },
+    { key: "shiblum", senines: 0.25 },
+    { key: "shiblon", senines: 0.5 },
+    { key: "senine", senines: 1 },
+    { key: "senum", senines: 1 },
+    { key: "antion", senines: 1.5 },
+    { key: "seon", senines: 2 },
+    { key: "amnor", senines: 2 },
+    { key: "shum", senines: 4 },
+    { key: "ezrom", senines: 4 },
+    { key: "limnah", senines: 7 },
+    { key: "onti", senines: 7 },
+  ];
+
+  function formatUsd(amount) {
+    const n = Math.round(Number(amount) * 100) / 100;
+    if (!isFinite(n)) return "$0";
+    if (Math.abs(n - Math.round(n)) < 1e-9) return "$" + Math.round(n);
+    return "$" + n.toFixed(2);
+  }
+
+  function nephiteCoinLabel(key) {
+    return t("nephite." + key);
+  }
+
+  /** Price string for prompts: "$25" normally, Nephite + $ equivalent in boss fights. */
+  function moneyLabel(usdAmount) {
+    const usd = Math.round(Number(usdAmount) * 100) / 100;
+    if (!gadiantonBossTheme) return formatUsd(usd);
+    const senines = usd / SENINE_USD;
+    for (let i = 0; i < NEPHITE_COINS.length; i++) {
+      const c = NEPHITE_COINS[i];
+      if (Math.abs(c.senines - senines) < 1e-9) {
+        return t("nephite.price_coin", {
+          coin: nephiteCoinLabel(c.key),
+          usd: formatUsd(usd),
+          rate: SENINE_USD,
+        });
+      }
+    }
+    const rounded = Math.round(senines * 1000) / 1000;
+    return t("nephite.price_senines", {
+      n: rounded,
+      usd: formatUsd(usd),
+      rate: SENINE_USD,
+    });
+  }
+
   // --- Helpers ----------------------------------------------------------------
 
   /** Recent rolls — avoid repeating topic / generator / answer fingerprint. */
@@ -105,6 +159,13 @@
 
   function choice(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  /** Prefer clean Nephite-friendly dollar amounts during boss fights. */
+  function bossFriendlyUsd(candidates) {
+    if (!gadiantonBossTheme) return choice(candidates);
+    const clean = [8, 12, 16, 24, 32, 40, 48, 56];
+    return choice(clean);
   }
 
   /** Prefer values not in `exclude` (falls back to full pool if needed). */
@@ -380,6 +441,106 @@
   }
 
   // --- Generators -------------------------------------------------------------
+
+  /** Alma 11 money ↔ dollar conversions (emphasized in boss fights). */
+  function genNephiteMoney() {
+    const rate = SENINE_USD;
+    const ask = choice(["coin_to_usd", "usd_to_senine", "days_wage", "limnah_usd", "coin_vs_coin"]);
+
+    if (ask === "coin_to_usd") {
+      const coin = choice([
+        { key: "senine", senines: 1 },
+        { key: "seon", senines: 2 },
+        { key: "shum", senines: 4 },
+        { key: "limnah", senines: 7 },
+        { key: "shiblon", senines: 0.5 },
+        { key: "antion", senines: 1.5 },
+      ]);
+      const usd = coin.senines * rate;
+      return _numeric(
+        tVar("q.nephite_coin_usd", {
+          coin: nephiteCoinLabel(coin.key),
+          rate: rate,
+        }),
+        num(usd),
+        "conversions",
+        0.01,
+        t("h.nephite_money"),
+        "USD = senines × " + rate + "\n" + coin.senines + " × " + rate + " = " + usd,
+        t("unit.dollars"),
+        calcHelp(coin.senines + " × " + rate + " =", coin.senines + " × " + rate + " =")
+      );
+    }
+
+    if (ask === "usd_to_senine") {
+      const senines = choice([1, 2, 3, 4, 5, 6, 7, 8]);
+      const usd = senines * rate;
+      return _numeric(
+        tVar("q.nephite_usd_senine", { usd: usd, rate: rate }),
+        num(senines),
+        "conversions",
+        0,
+        t("h.nephite_money"),
+        "senines = USD ÷ " + rate + "\n" + usd + " ÷ " + rate + " = " + senines,
+        t("unit.senines"),
+        calcHelp(usd + " ÷ " + rate + " =", usd + " ÷ " + rate + " =")
+      );
+    }
+
+    if (ask === "days_wage") {
+      const days = choice([3, 4, 5, 6, 7, 10]);
+      const usd = days * rate; // 1 senine per day (Alma 11:3)
+      return _numeric(
+        tVar("q.nephite_judge_wage", { days: days, rate: rate }),
+        num(usd),
+        "conversions",
+        0.01,
+        t("h.nephite_money"),
+        "1 senine/day × " + days + " days × $" + rate + "/senine = $" + usd,
+        t("unit.dollars"),
+        calcHelp(days + " × " + rate + " =", days + " × " + rate + " =")
+      );
+    }
+
+    if (ask === "limnah_usd") {
+      const usd = 7 * rate;
+      return _numeric(
+        tVar("q.nephite_limnah_usd", { rate: rate }),
+        num(usd),
+        "conversions",
+        0.01,
+        t("h.nephite_money"),
+        "1 limnah = 7 senines\n7 × $" + rate + " = $" + usd,
+        t("unit.dollars"),
+        calcHelp("7 × " + rate + " =", "7 × " + rate + " =")
+      );
+    }
+
+    // coin_vs_coin: how many smaller coins equal a larger one
+    const pair = choice([
+      { big: "seon", bigS: 2, small: "senine", smallS: 1, ans: 2 },
+      { big: "shum", bigS: 4, small: "senine", smallS: 1, ans: 4 },
+      { big: "shum", bigS: 4, small: "seon", smallS: 2, ans: 2 },
+      { big: "limnah", bigS: 7, small: "senine", smallS: 1, ans: 7 },
+      { big: "senine", bigS: 1, small: "shiblon", smallS: 0.5, ans: 2 },
+      { big: "senine", bigS: 1, small: "shiblum", smallS: 0.25, ans: 4 },
+    ]);
+    return _numeric(
+      tVar("q.nephite_coin_equal", {
+        big: nephiteCoinLabel(pair.big),
+        small: nephiteCoinLabel(pair.small),
+        rate: rate,
+      }),
+      num(pair.ans),
+      "conversions",
+      0,
+      t("h.nephite_money"),
+      pair.big + " = " + pair.bigS + " senines; " + pair.small + " = " + pair.smallS +
+        " senines\n" + pair.bigS + " ÷ " + pair.smallS + " = " + pair.ans,
+      t("unit.count"),
+      calcHelp(pair.bigS + " ÷ " + pair.smallS + " =", pair.bigS + " ÷ " + pair.smallS + " =")
+    );
+  }
 
   function genFeetInYard() {
     return _numeric(tVar("q.feet_in_yard"), 3, "conversions", 0, t("h.feet_in_yard"), t("s.feet_in_yard"));
@@ -1320,17 +1481,29 @@
       linear = strips * W;
     }
 
-    const costPerLinear = choice([25, 27, 29, 32]);
+    const costPerLinear = gadiantonBossTheme
+      ? bossFriendlyUsd([16, 24, 32, 40])
+      : choice([25, 27, 29, 32]);
     const costRoll = linear * costPerLinear;
     const areaSqft = L * W;
     const areaSqyd = areaSqft / 9;
-    const costPerSqyd = choice([20, 23, 25, 28]);
+    const costPerSqyd = gadiantonBossTheme
+      ? bossFriendlyUsd([8, 16, 24, 32])
+      : choice([20, 23, 25, 28]);
     const costYd = areaSqyd * costPerSqyd;
     const ask = choice(["roll", "yard", "cheaper"]);
+    const costLinLabel = moneyLabel(costPerLinear);
+    const costYdLabel = moneyLabel(costPerSqyd);
 
     if (ask === "roll") {
       return _numeric(
-        tVar("q.carpet_roll", { L: L, W: W, rollW: rollW, cost: costPerLinear }),
+        tVar("q.carpet_roll", {
+          L: L,
+          W: W,
+          rollW: rollW,
+          cost: costPerLinear,
+          costLabel: costLinLabel,
+        }),
         num(costRoll),
         "scale_rates",
         0.5,
@@ -1346,7 +1519,12 @@
     }
     if (ask === "yard") {
       return _numeric(
-        tVar("q.carpet_yd", { L: L, W: W, cost: costPerSqyd }),
+        tVar("q.carpet_yd", {
+          L: L,
+          W: W,
+          cost: costPerSqyd,
+          costLabel: costYdLabel,
+        }),
         num(costYd),
         "scale_rates",
         0.5,
@@ -1377,6 +1555,8 @@
         rollW: rollW,
         costLin: costPerLinear,
         costYd: costPerSqyd,
+        costLinLabel: costLinLabel,
+        costYdLabel: costYdLabel,
       }),
       [t("c.carpet_roll"), t("c.carpet_yd")],
       cheaper,
@@ -2315,6 +2495,7 @@
     genCuFtInCuYard,
     genCuYdToCuFt,
     genDimensionConcept,
+    genNephiteMoney,
     genFormulaSquarePerimeter,
     genFormulaSquareArea,
     genFormulaRectangle,
@@ -2406,6 +2587,16 @@
       const q = genFormulaFlashcard();
       q._gen = genFormulaFlashcard;
       remember(recentPick.gens, genFormulaFlashcard, 6);
+      remember(recentPick.topics, q.topic, 6);
+      remember(recentPick.fingerprints, fingerprint(q), RECENT_KEEP);
+      return q;
+    }
+
+    // During the Gadianton fight, prefer Alma 11 money ↔ dollar conversions.
+    if (targetTopic === "conversions" && gadiantonBossTheme && Math.random() < 0.6) {
+      const q = genNephiteMoney();
+      q._gen = genNephiteMoney;
+      remember(recentPick.gens, genNephiteMoney, 6);
       remember(recentPick.topics, q.topic, 6);
       remember(recentPick.fingerprints, fingerprint(q), RECENT_KEEP);
       return q;
