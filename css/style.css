@@ -322,9 +322,18 @@ a.linkish {
 
 .quiz-meta {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.quiz-meta-row {
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 .quiz-meta-left {
@@ -335,18 +344,21 @@ a.linkish {
 }
 
 .boss-face {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.1rem;
-  height: 2.1rem;
-  font-size: 1.55rem;
+  align-self: center;
+  width: auto;
+  height: auto;
+  margin: 0.15rem 0 0.25rem;
+  padding: 0;
+  font-size: 72pt;
   line-height: 1;
-  border-radius: 999px;
-  background: rgba(180, 83, 9, 0.12);
-  border: 1px solid rgba(180, 83, 9, 0.3);
+  border: none;
+  border-radius: 0;
+  background: transparent;
   flex-shrink: 0;
-  transition: transform 0.15s ease, background 0.15s ease;
+  transition: transform 0.15s ease;
 }
 
 .boss-face[hidden] {
@@ -354,21 +366,22 @@ a.linkish {
 }
 
 .boss-face.hit {
-  background: rgba(185, 28, 28, 0.16);
-  border-color: rgba(185, 28, 28, 0.4);
-  animation: boss-hit 0.45s ease;
+  animation: boss-hit 2s ease;
+  filter: drop-shadow(0 0 10px rgba(220, 38, 38, 0.95))
+    drop-shadow(0 0 22px rgba(185, 28, 28, 0.75))
+    drop-shadow(0 0 36px rgba(153, 27, 27, 0.45));
 }
 
 .boss-face.dead {
-  background: rgba(30, 41, 59, 0.12);
-  border-color: rgba(30, 41, 59, 0.35);
   animation: boss-dead 0.55s ease;
 }
 
 @keyframes boss-hit {
   0% { transform: scale(1) rotate(0deg); }
-  30% { transform: scale(1.35) rotate(-12deg); }
-  60% { transform: scale(0.92) rotate(8deg); }
+  12% { transform: scale(1.28) rotate(-14deg); }
+  28% { transform: scale(0.9) rotate(10deg); }
+  45% { transform: scale(1.12) rotate(-6deg); }
+  65% { transform: scale(0.96) rotate(4deg); }
   100% { transform: scale(1) rotate(0deg); }
 }
 
@@ -965,6 +978,45 @@ a.linkish {
 .modal-close:hover {
   background: rgba(26, 35, 50, 0.08);
   color: var(--ink);
+}
+
+.modal-body {
+  margin: 0 0 1.1rem;
+  color: var(--ink);
+  line-height: 1.45;
+  font-size: 0.98rem;
+}
+
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.modal-actions .primary,
+.modal-actions .ghost {
+  margin: 0;
+  min-width: 6.5rem;
+}
+
+.boss-invite-card {
+  width: min(100%, 380px);
+  text-align: center;
+}
+
+.boss-invite-card .modal-head {
+  text-align: left;
+}
+
+.boss-invite-face {
+  margin: 0.15rem 0 0.75rem;
+  font-size: 2.75rem;
+  line-height: 1;
+}
+
+.boss-invite-card .modal-actions {
+  justify-content: center;
 }
 
 .calc-display {

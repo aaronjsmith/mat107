@@ -84,10 +84,6 @@
   const RETRY_CREDIT = 0.05;
   /** Unaided corrects needed to master a topic (badge at 10/10). */
   const UNAIDED_TO_MASTER = 10;
-  /** Extra unaided corrects to fully lock mastery (shown as 20/10). */
-  const UNAIDED_TO_LOCK = 20;
-  /** Wrong/hint hits needed to break a full lock (20 → 9/10). */
-  const MASTER_LOCK_GRACE = 3;
 
   // --- Helpers ----------------------------------------------------------------
 
@@ -2619,8 +2615,6 @@
     HINT_CREDIT: HINT_CREDIT,
     RETRY_CREDIT: RETRY_CREDIT,
     UNAIDED_TO_MASTER: UNAIDED_TO_MASTER,
-    UNAIDED_TO_LOCK: UNAIDED_TO_LOCK,
-    MASTER_LOCK_GRACE: MASTER_LOCK_GRACE,
     setBossTheme: setBossTheme,
     randInt: randInt,
     choice: choice,

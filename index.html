@@ -35,9 +35,8 @@
       <p class="muted" data-i18n-html="topics_blurb">Mastery = <strong>10 correct with no hints</strong> per topic. Hints never reveal the answer — only how to work. Penalty if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%.</p>
       <button class="topic" data-topic="all" type="button" data-i18n="mode_all">All topics</button>
       <button class="topic active" data-topic="smart" type="button" data-i18n="mode_smart">Smart pick</button>
-      <button class="topic topic-sub" data-topic="lockin" type="button" data-i18n="mode_lockin">Lock in mastery</button>
       <button class="topic" data-topic="flashcards" type="button" data-i18n="mode_flashcards">Formula flashcards</button>
-      <button class="topic topic-boss" data-topic="finalboss" type="button" id="btn-final-boss">😈 Fight boss now (practice)</button>
+      <button class="topic topic-boss" data-topic="finalboss" type="button" id="btn-final-boss" data-i18n="mode_finalboss_practice">😈 Practice boss fight</button>
       <div class="topic-list" id="topic-list"></div>
       <div class="progress-actions">
         <a class="linkish" href="notecard.html" target="_blank" rel="noopener" data-i18n="btn_notecard">5×7 formula notecard</a>
@@ -51,16 +50,18 @@
 
     <section class="panel quiz">
       <div class="quiz-meta">
-        <div class="quiz-meta-left">
-          <span class="boss-face" id="boss-face" hidden aria-hidden="true">😈</span>
-          <span class="pill" id="q-topic">—</span>
-        </div>
-        <div class="hint-btns">
-          <button class="linkish" id="btn-hint1" type="button" hidden data-i18n="btn_hint1">Hint 1 · approach (−25%)</button>
-          <button class="linkish" id="btn-hint2" type="button" hidden data-i18n="btn_hint2">Hint 2 · setup (−50%)</button>
-          <button class="linkish" id="btn-hint3-ti" type="button" hidden data-i18n="btn_hint3_ti">TI-36X Pro (−75%)</button>
-          <button class="linkish" id="btn-hint3-casio" type="button" hidden data-i18n="btn_hint3_casio">Casio (−75%)</button>
-          <button class="linkish" id="btn-clarify" type="button" hidden data-i18n="btn_clarify">Need more clarification?</button>
+        <span class="boss-face" id="boss-face" hidden aria-hidden="true">😈</span>
+        <div class="quiz-meta-row">
+          <div class="quiz-meta-left">
+            <span class="pill" id="q-topic">—</span>
+          </div>
+          <div class="hint-btns">
+            <button class="linkish" id="btn-hint1" type="button" hidden data-i18n="btn_hint1">Hint 1 · approach (−25%)</button>
+            <button class="linkish" id="btn-hint2" type="button" hidden data-i18n="btn_hint2">Hint 2 · setup (−50%)</button>
+            <button class="linkish" id="btn-hint3-ti" type="button" hidden data-i18n="btn_hint3_ti">TI-36X Pro (−75%)</button>
+            <button class="linkish" id="btn-hint3-casio" type="button" hidden data-i18n="btn_hint3_casio">Casio (−75%)</button>
+            <button class="linkish" id="btn-clarify" type="button" hidden data-i18n="btn_clarify">Need more clarification?</button>
+          </div>
         </div>
       </div>
       <div id="q-figure" class="figure" hidden></div>
@@ -165,6 +166,22 @@
         <button type="button" data-calc="eq" class="calc-key eq">=</button>
         <button type="button" data-calc="pi" class="calc-key fn">π</button>
         <button type="button" data-calc="sq" class="calc-key fn">x²</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="boss-invite-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="boss-invite-title">
+    <div class="modal-backdrop" id="boss-invite-backdrop" tabindex="-1"></div>
+    <div class="modal-card boss-invite-card">
+      <header class="modal-head">
+        <h2 id="boss-invite-title" data-i18n="boss_invite_title">Gadianton Robber</h2>
+        <button type="button" class="modal-close" id="boss-invite-close" aria-label="Close" data-i18n-aria="boss_invite_close_aria">×</button>
+      </header>
+      <p class="boss-invite-face" aria-hidden="true">😈</p>
+      <p class="modal-body" id="boss-invite-msg" data-i18n="boss_invite_mastered">Every topic is mastered at 10/10. A Gadianton Robber threatens Zarahemla — fight him now?</p>
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="boss-invite-later" data-i18n="boss_invite_later">Not now</button>
+        <button type="button" class="primary" id="boss-invite-fight" data-i18n="boss_invite_fight">Fight</button>
       </div>
     </div>
   </div>

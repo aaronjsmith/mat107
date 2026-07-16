@@ -2,12 +2,8 @@
 (function () {
   const STORAGE_KEY = "mat107-assessment1-progress";
   const Q = window.QuizQuestions;
-  /** Mastery badge threshold (display denominator). */
+  /** Unaided corrects needed to master a topic. */
   const MASTER = Q.UNAIDED_TO_MASTER || 10;
-  /** Full lock threshold (keep practicing past mastery). */
-  const LOCK_AT = Q.UNAIDED_TO_LOCK || 20;
-  /** Hits to break a full lock → drop to MASTER - 1 (9/10). */
-  const LOCK_GRACE = Q.MASTER_LOCK_GRACE != null ? Q.MASTER_LOCK_GRACE : 3;
 
   function emptyTopic(label) {
     return {
@@ -16,7 +12,6 @@
       credit: 0,
       unaided_correct: 0,
       mastered: false,
-      lock_strikes: 0,
       label: label,
     };
   }
@@ -44,7 +39,6 @@
   function syncMasteredFlag(rec) {
     const n = Number(rec.unaided_correct) || 0;
     rec.mastered = n >= MASTER;
-    if (n < LOCK_AT) rec.lock_strikes = 0;
   }
 
   function load() {
@@ -61,9 +55,9 @@
         t.label = Q.TOPICS[key];
         t.credit = t.credit != null ? t.credit : t.correct || 0;
         t.unaided_correct = Number(t.unaided_correct) || 0;
-        t.lock_strikes = Number(t.lock_strikes) || 0;
-        // Cap at full lock; keep mastered only when >= 10.
-        if (t.unaided_correct > LOCK_AT) t.unaided_correct = LOCK_AT;
+        // Cap at mastery; migrate any old lock scores (11–20) down to 10.
+        if (t.unaided_correct > MASTER) t.unaided_correct = MASTER;
+        delete t.lock_strikes;
         syncMasteredFlag(t);
         data.topics[key] = t;
       });
@@ -83,7 +77,6 @@
     return Math.round((1000 * credit) / attempted) / 10;
   }
 
-  /** Pie / % mastery is out of 10 (lock buffer beyond 10 still reads 100%). */
   function topicMastery(unaided) {
     return Math.round((1000 * Math.min(unaided, MASTER)) / MASTER) / 10;
   }
@@ -92,8 +85,13 @@
     return (Number(unaided) || 0) >= MASTER;
   }
 
-  function isLocked(unaided) {
-    return (Number(unaided) || 0) >= LOCK_AT;
+  function allTopicsMastered() {
+    const p = load();
+    const keys = Object.keys(Q.TOPICS);
+    if (!keys.length) return false;
+    return keys.every(function (t) {
+      return (Number((p.topics[t] || {}).unaided_correct) || 0) >= MASTER;
+    });
   }
 
   function getProgressView() {
@@ -111,9 +109,6 @@
         ...info,
         unaided_correct: unaided,
         unaided_needed: MASTER,
-        lock_at: LOCK_AT,
-        locked: isLocked(unaided),
-        lock_strikes: Number(info.lock_strikes) || 0,
         mastery: topicMastery(unaided),
         mastered: mastered,
         label: Q.TOPICS[key] || info.label,
@@ -137,9 +132,6 @@
       topic_count: topicCount,
       overall_mastery: overallMastery,
       unaided_to_master: MASTER,
-      unaided_to_lock: LOCK_AT,
-      lock_grace: LOCK_GRACE,
-      all_locked: allTopicsLocked(),
       all_mastered: allTopicsMastered(),
       final_boss_cleared: Boolean(p.final_boss_cleared),
       final_boss_cleared_at: p.final_boss_cleared_at || null,
@@ -147,24 +139,6 @@
       history: (p.history || []).slice(-20),
       updated_at: p.updated_at,
     };
-  }
-
-  function allTopicsLocked() {
-    const p = load();
-    const keys = Object.keys(Q.TOPICS);
-    if (!keys.length) return false;
-    return keys.every(function (t) {
-      return (Number((p.topics[t] || {}).unaided_correct) || 0) >= LOCK_AT;
-    });
-  }
-
-  function allTopicsMastered() {
-    const p = load();
-    const keys = Object.keys(Q.TOPICS);
-    if (!keys.length) return false;
-    return keys.every(function (t) {
-      return (Number((p.topics[t] || {}).unaided_correct) || 0) >= MASTER;
-    });
   }
 
   function markFinalBossCleared() {
@@ -175,19 +149,18 @@
     return p;
   }
 
-  /** Boss fail: only the missed topic drops just below lock (20 → 19). */
+  /** Boss fail: missed topic drops to 9/10 if it was mastered. */
   function penalizeBossFail(topic) {
     const p = load();
-    const droppedTo = LOCK_AT - 1; // 19 — mastered, but lock broken
+    const droppedTo = MASTER - 1;
     if (!topic || !Q.TOPICS[topic]) {
       return { dropped_to: droppedTo, topic: null, topics_affected: 0 };
     }
     if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic]);
     const rec = p.topics[topic];
     const prev = Number(rec.unaided_correct) || 0;
-    if (prev >= LOCK_AT) {
+    if (prev >= MASTER) {
       rec.unaided_correct = droppedTo;
-      rec.lock_strikes = 0;
       syncMasteredFlag(rec);
       p.total_unaided_correct = Math.max(
         0,
@@ -213,10 +186,7 @@
 
   function pickSmartTopic(avoidTopic) {
     const p = load();
-    const keys = Object.keys(Q.TOPICS).filter(function (t) {
-      const n = Number((p.topics[t] || {}).unaided_correct) || 0;
-      return n < LOCK_AT; // skip fully locked subjects
-    });
+    const keys = Object.keys(Q.TOPICS);
     if (!keys.length) return null;
     const weights = keys.map((t) => {
       const info = p.topics[t] || { unaided_correct: 0, attempted: 0 };
@@ -235,56 +205,9 @@
     return keys[keys.length - 1];
   }
 
-  /**
-   * Lock-in mode: focus topics that are mastered (10+) but not fully locked (20).
-   * Never serves fully locked subjects. Falls back to near-mastery topics.
-   * Returns null when every topic is locked at 20.
-   */
-  function pickLockInTopic(avoidTopic) {
-    const p = load();
-    const soft = []; // 10–19
-    const climbing = []; // under 10
-
-    Object.keys(Q.TOPICS).forEach((t) => {
-      const n = Number((p.topics[t] || {}).unaided_correct) || 0;
-      if (n >= LOCK_AT) return; // never show locked subjects
-      if (n >= MASTER) soft.push(t);
-      else climbing.push(t);
-    });
-
-    const pool = soft.length ? soft : climbing;
-    if (!pool.length) return null;
-
-    const weights = pool.map((t) => {
-      const n = Number((p.topics[t] || {}).unaided_correct) || 0;
-      let w;
-      if (n >= MASTER) {
-        const toLock = LOCK_AT - n;
-        const fragility = n === MASTER ? 14 : 6;
-        w = toLock * 10 + fragility + Math.random() * 5;
-      } else {
-        w = (MASTER - n) * 6 + Math.random() * 4;
-      }
-      if (avoidTopic && t === avoidTopic) w *= 0.08;
-      return Math.max(w, 0.4);
-    });
-
-    const total = weights.reduce((a, b) => a + b, 0);
-    let r = Math.random() * total;
-    for (let i = 0; i < pool.length; i++) {
-      r -= weights[i];
-      if (r <= 0) return pool[i];
-    }
-    return pool[pool.length - 1];
-  }
-
-  /** Mix mode across unlocked topics only (skips locked-at-20 subjects). */
   function pickAllTopic(avoidTopic) {
     const p = load();
-    const keys = Object.keys(Q.TOPICS).filter(function (t) {
-      const n = Number((p.topics[t] || {}).unaided_correct) || 0;
-      return n < LOCK_AT;
-    });
+    const keys = Object.keys(Q.TOPICS);
     if (!keys.length) return null;
     const weighted = [];
     keys.forEach(function (k) {
@@ -299,7 +222,7 @@
   function setUnaided(p, topic, next) {
     const rec = p.topics[topic];
     const prev = Number(rec.unaided_correct) || 0;
-    const clamped = Math.max(0, Math.min(LOCK_AT, next));
+    const clamped = Math.max(0, Math.min(MASTER, next));
     const applied = clamped - prev;
     rec.unaided_correct = clamped;
     syncMasteredFlag(rec);
@@ -310,35 +233,10 @@
     return applied;
   }
 
-  /** Soft mastery (10–19): one kill → 9/10. Full lock (20): 3 strikes → 9/10. */
-  function applyMasteryHit(p, topic) {
-    const rec = p.topics[topic];
-    const n = Number(rec.unaided_correct) || 0;
-    if (n >= LOCK_AT) {
-      rec.lock_strikes = (Number(rec.lock_strikes) || 0) + 1;
-      if (rec.lock_strikes >= LOCK_GRACE) {
-        rec.lock_strikes = 0;
-        return setUnaided(p, topic, MASTER - 1); // 9
-      }
-      return 0; // strike absorbed; still 20/10
-    }
-    if (n >= MASTER) {
-      rec.lock_strikes = 0;
-      return setUnaided(p, topic, MASTER - 1); // 9
-    }
-    return 0;
-  }
-
-  /** Hinted correct: erodes buffer by 1, or chips a full lock like a wrong. */
   function applyHintPenalty(p, topic) {
     const rec = p.topics[topic];
     const n = Number(rec.unaided_correct) || 0;
-    if (n >= LOCK_AT) {
-      return applyMasteryHit(p, topic);
-    }
-    if (n > 0) {
-      return setUnaided(p, topic, n - 1);
-    }
+    if (n > 0) return setUnaided(p, topic, n - 1);
     return 0;
   }
 
@@ -357,7 +255,6 @@
 
     let masteryDelta = 0;
     const wasMastered = isMastered(p.topics[topic].unaided_correct);
-    const wasLocked = isLocked(p.topics[topic].unaided_correct);
 
     if (ok) {
       p.total_correct += 1;
@@ -367,23 +264,17 @@
         p.best_streak = Math.max(p.best_streak || 0, p.streak);
         const prev = Number(p.topics[topic].unaided_correct) || 0;
         masteryDelta = setUnaided(p, topic, prev + 1);
-        p.topics[topic].lock_strikes = 0;
       } else {
         p.streak = 0;
         masteryDelta = applyHintPenalty(p, topic);
       }
     } else {
+      // Wrong answers never change mastery (streak only).
       p.streak = 0;
-      // Wrong: kill soft mastery in one hit; chip full lock (3 → 9/10).
-      // Before mastery (under 10), wrongs do not lower the counter.
-      if (wasMastered) {
-        masteryDelta = applyMasteryHit(p, topic);
-      }
     }
 
     const unaided = Number(p.topics[topic].unaided_correct) || 0;
     const mastered = isMastered(unaided);
-    const locked = isLocked(unaided);
 
     p.history = p.history || [];
     p.history.push({
@@ -407,15 +298,10 @@
       streak: p.streak,
       unaided_correct: unaided,
       unaided_needed: MASTER,
-      lock_at: LOCK_AT,
-      lock_strikes: Number(p.topics[topic].lock_strikes) || 0,
       topic_mastery: topicMastery(unaided),
       mastered: mastered,
-      locked: locked,
       mastery_delta: masteryDelta,
       just_mastered: Boolean(ok && hintsUsed === 0 && mastered && !wasMastered),
-      just_locked: Boolean(ok && hintsUsed === 0 && locked && !wasLocked),
-      lock_broken: Boolean(wasMastered && !mastered),
       note: "",
     };
   }
@@ -428,7 +314,6 @@
     const p = load();
     const topic = question.topic;
     if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic] || topic);
-    const wasMastered = isMastered(p.topics[topic].unaided_correct);
     const masteryDelta = applyHintPenalty(p, topic);
     p.streak = 0;
     p.history = p.history || [];
@@ -445,16 +330,12 @@
     p.history = p.history.slice(-100);
     save(p);
     const unaided = Number(p.topics[topic].unaided_correct) || 0;
-    const mastered = isMastered(unaided);
     return {
       mastery_delta: masteryDelta,
       unaided_correct: unaided,
       unaided_needed: MASTER,
       topic_mastery: topicMastery(unaided),
-      mastered: mastered,
-      locked: isLocked(unaided),
-      lock_strikes: Number(p.topics[topic].lock_strikes) || 0,
-      lock_broken: Boolean(wasMastered && !mastered),
+      mastered: isMastered(unaided),
     };
   }
 
@@ -487,7 +368,6 @@
       unaided_correct: unaided,
       unaided_needed: MASTER,
       mastered: isMastered(unaided),
-      locked: isLocked(unaided),
     };
   }
 
@@ -499,7 +379,7 @@
     const p = load();
     return {
       format: "mat107-assessment1-progress",
-      version: 2,
+      version: 3,
       exported_at: new Date().toISOString(),
       progress: p,
     };
@@ -528,14 +408,13 @@
     Object.keys(Q.TOPICS).forEach((key) => {
       const src = (p.topics && p.topics[key]) || {};
       let unaided = Number(src.unaided_correct) || 0;
-      if (unaided > LOCK_AT) unaided = LOCK_AT;
+      if (unaided > MASTER) unaided = MASTER;
       next.topics[key] = {
         correct: src.correct || 0,
         attempted: src.attempted || 0,
         credit: src.credit != null ? src.credit : src.correct || 0,
         unaided_correct: unaided,
         mastered: unaided >= MASTER,
-        lock_strikes: Number(src.lock_strikes) || 0,
         label: Q.TOPICS[key],
       };
     });
@@ -566,9 +445,7 @@
   window.QuizProgress = {
     getProgressView: getProgressView,
     pickSmartTopic: pickSmartTopic,
-    pickLockInTopic: pickLockInTopic,
     pickAllTopic: pickAllTopic,
-    allTopicsLocked: allTopicsLocked,
     allTopicsMastered: allTopicsMastered,
     shuffleTopics: shuffleTopics,
     markFinalBossCleared: markFinalBossCleared,
