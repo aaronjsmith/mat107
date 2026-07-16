@@ -24,6 +24,8 @@
     lastTopic: null,
     clarifyShown: false,
     clarifyAiShown: false,
+    /** After a miss, serve a remix of the same generator next. */
+    remixAfterFail: false,
     boss: {
       active: false,
       queue: [],
@@ -908,6 +910,7 @@
 
   function beginRetry(result) {
     state.retryPhase = true;
+    state.remixAfterFail = true;
     state.lastExpected = result.expected;
     els.feedback.className = "feedback no";
     const tip =
@@ -963,6 +966,7 @@
 
   function finishAfterRetry(ok, expected) {
     state.retryPhase = false;
+    if (ok) state.remixAfterFail = false;
     state.answered = true;
     lockInputs();
     els.skip.hidden = true;
@@ -1046,6 +1050,7 @@
     els.feedback.hidden = false;
 
     if (result.correct) {
+      state.remixAfterFail = false;
       els.feedback.className = "feedback ok";
       const creditPct = Math.round(result.credit * 100);
       const progress = `${result.unaided_correct}/${result.unaided_needed}`;
@@ -1210,11 +1215,31 @@
     });
   }
 
+  function goToNextQuestion() {
+    if (state.mode === "finalboss" && state.boss.status === "won") {
+      state.boss.status = null;
+    }
+    // After a miss (and failed/skipped retry), drill the same problem type.
+    if (
+      state.remixAfterFail &&
+      state.mode !== "finalboss" &&
+      state.fullQuestion &&
+      typeof state.fullQuestion._gen === "function"
+    ) {
+      state.remixAfterFail = false;
+      loadRemix();
+      return;
+    }
+    state.remixAfterFail = false;
+    loadQuestion();
+  }
+
   document.querySelectorAll(".topic[data-topic]").forEach((btn) => {
     btn.addEventListener("click", () => {
       if (btn.disabled) return;
       const nextMode = btn.dataset.topic;
       state.mode = nextMode;
+      state.remixAfterFail = false;
       if (nextMode === "finalboss") {
         state.boss = { active: false, queue: [], index: 0, status: null, fullStakes: false };
       }
@@ -1224,10 +1249,7 @@
   });
 
   els.next.addEventListener("click", () => {
-    if (state.mode === "finalboss" && state.boss.status === "won") {
-      state.boss.status = null;
-    }
-    loadQuestion();
+    goToNextQuestion();
   });
   els.skip.addEventListener("click", () => {
     if (state.mode === "finalboss" && state.boss.active) {
@@ -1242,6 +1264,7 @@
       P.recordHintSkip(state.fullQuestion, state.hintsUsed);
       refreshProgress();
     }
+    state.remixAfterFail = false;
     loadQuestion();
   });
 
