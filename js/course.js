@@ -34,7 +34,17 @@
       .join("");
   }
 
-  function progressLine(summary) {
+  function tAssessment(assessment, key, vars) {
+    if (assessment && assessment.theme) {
+      const themed = assessment.theme + "." + key;
+      if (I18n && I18n.has && I18n.has(themed)) {
+        return t(themed, vars);
+      }
+    }
+    return t(key, vars);
+  }
+
+  function progressLine(assessment, summary) {
     if (!summary || !summary.total) {
       return '<p class="card-progress muted">' + escapeHtml(t("course_no_progress")) + "</p>";
     }
@@ -53,7 +63,7 @@
         });
     }
     if (summary.bossCleared) {
-      text += " · " + t("course_boss_cleared");
+      text += " · " + tAssessment(assessment, "course_boss_cleared");
     }
     return (
       '<p class="card-progress">' +
@@ -86,7 +96,7 @@
         '<div class="topic-pills">' +
         topicPills(assessment.topicIds || []) +
         "</div>" +
-        progressLine(summary) +
+        progressLine(assessment, summary) +
         '<div class="card-actions">' +
         '<a class="primary card-btn" href="' +
         escapeHtml(C.quizHref(assessment.id)) +

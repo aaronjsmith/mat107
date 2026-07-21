@@ -407,9 +407,38 @@ a.linkish {
   font-family: var(--display);
   font-weight: 500;
   font-size: clamp(1.25rem, 2.2vw, 1.65rem);
-  line-height: 1.35;
+  line-height: 1.45;
   margin: 0 0 1rem;
   white-space: pre-wrap;
+}
+
+/* Math notation — subscripts, superscripts, and inline formulas */
+.math-text sub,
+.math-text sup {
+  font-size: 0.72em;
+  font-weight: 600;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.math-text sub {
+  bottom: -0.22em;
+}
+
+.math-text sup {
+  top: -0.5em;
+}
+
+.hint.math-text,
+.setup.math-text,
+.calc.math-text {
+  font-family: var(--mono);
+}
+
+.choice.math-text {
+  text-align: left;
+  line-height: 1.5;
 }
 
 .figure {

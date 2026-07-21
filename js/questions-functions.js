@@ -11,6 +11,10 @@
     gadiantonBossTheme = Boolean(on);
   }
 
+  function activeTheme() {
+    return window.MAT107_THEME || "";
+  }
+
   function t(key, vars) {
     if (window.QuizI18n && window.QuizI18n.t) {
       return window.QuizI18n.t(key, vars || {});
@@ -23,12 +27,18 @@
   }
 
   function tVar(key, vars) {
+    const theme = activeTheme();
+    if (theme && i18nHas(key + "." + theme)) {
+      return t(key + "." + theme, vars);
+    }
+    if (gadiantonBossTheme && i18nHas(key + ".boss")) {
+      return t(key + ".boss", vars);
+    }
     const opts = [key];
     for (let n = 2; n <= 4; n++) {
       const k = key + ".v" + n;
       if (i18nHas(k)) opts.push(k);
     }
-    if (gadiantonBossTheme && i18nHas(key + ".boss")) opts.unshift(key + ".boss");
     const pick = opts.length > 1 ? choice(opts) : opts[0];
     return t(pick, vars);
   }

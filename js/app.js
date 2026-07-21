@@ -8,6 +8,63 @@
     return I18n && I18n.t ? I18n.t(key, vars) : key;
   }
 
+  function setMathText(el, text) {
+    if (!el) return;
+    if (!text) {
+      el.textContent = "";
+      el.classList.remove("math-text");
+      return;
+    }
+    const MF = window.QuizMathFormat;
+    if (MF && MF.toHtml) {
+      el.innerHTML = MF.toHtml(text);
+      el.classList.add("math-text");
+    } else {
+      el.textContent = text;
+      el.classList.remove("math-text");
+    }
+  }
+
+  function choiceRaw(btn) {
+    return (btn && btn.dataset && btn.dataset.choice) || btn.textContent;
+  }
+
+  function getCurrentAssessment() {
+    const course = window.Mat107Course;
+    const id = P && P.ASSESSMENT_ID;
+    if (!course || !id || !course.getAssessment) return null;
+    return course.getAssessment(id);
+  }
+
+  /** Prefer winter.* (or other assessment theme) strings when defined. */
+  function tTheme(key, vars) {
+    const a = getCurrentAssessment();
+    if (a && a.theme) {
+      const themed = a.theme + "." + key;
+      if (I18n && I18n.has && I18n.has(themed)) {
+        return t(themed, vars);
+      }
+    }
+    return t(key, vars);
+  }
+
+  function bossEmoji(kind) {
+    const a = getCurrentAssessment();
+    if (!a) {
+      if (kind === "win") return "💀";
+      if (kind === "hit") return "👹";
+      return "😈";
+    }
+    if (kind === "win") return a.bossEmojiWin || a.bossEmojiDead || "💀";
+    if (kind === "hit") return a.bossEmojiHit || "👹";
+    if (kind === "dead") return a.bossEmojiDead || "💀";
+    return a.bossEmoji || "😈";
+  }
+
+  function bossWinFaceMode() {
+    return getCurrentAssessment() && getCurrentAssessment().theme ? null : "dead";
+  }
+
   if (!Q || !P) {
     document.getElementById("q-prompt").textContent = t("load_fail");
     return;
@@ -345,15 +402,15 @@
     // Never mark the button as practice during a real (all-mastered) fight.
     btn.classList.toggle("practice", !ready && !realFight);
     if (inFight && realFight) {
-      btn.textContent = "😈 " + t("mode_finalboss_fighting");
+      btn.textContent = bossEmoji() + " " + tTheme("mode_finalboss_fighting");
     } else if (inFight) {
-      btn.textContent = "😈 " + t("mode_finalboss_practice_active");
+      btn.textContent = bossEmoji() + " " + tTheme("mode_finalboss_practice_active");
     } else if (p && p.final_boss_cleared && ready) {
-      btn.textContent = "💀 " + t("mode_finalboss_cleared");
+      btn.textContent = bossEmoji("win") + " " + tTheme("mode_finalboss_cleared");
     } else if (ready) {
-      btn.textContent = "😈 " + t("mode_finalboss_ready");
+      btn.textContent = bossEmoji() + " " + tTheme("mode_finalboss_ready");
     } else {
-      btn.textContent = "😈 " + t("mode_finalboss_practice");
+      btn.textContent = bossEmoji() + " " + tTheme("mode_finalboss_practice");
     }
   }
 
@@ -421,7 +478,7 @@
     }
     els.bossFace.hidden = true;
     els.bossFace.classList.remove("hit", "dead");
-    els.bossFace.textContent = "😈";
+    els.bossFace.textContent = bossEmoji();
     els.bossFace.setAttribute("aria-hidden", "true");
   }
 
@@ -441,7 +498,7 @@
       return;
     }
     playBossHitSound();
-    setBossFace("👹", "hit");
+    setBossFace(bossEmoji("hit"), "hit");
     bossFaceTimer = setTimeout(function () {
       if (!bossFightActive()) {
         hideBossFace();
@@ -451,7 +508,7 @@
         onDone();
         return;
       }
-      setBossFace("😈");
+      setBossFace(bossEmoji());
     }, 2000);
   }
 
@@ -498,7 +555,7 @@
       real: real,
     };
     persistBossRun();
-    setBossFace("😈");
+    setBossFace(bossEmoji());
     updateFinalBossButton(P.getProgressView());
     if (P.clearBossDrillTopic) P.clearBossDrillTopic();
   }
@@ -511,7 +568,7 @@
       (state.boss.queue && state.boss.queue[state.boss.index]) ||
       null;
     const topicLabel =
-      missedTopic && Q.TOPICS[missedTopic] ? Q.TOPICS[missedTopic] : t("mode_finalboss");
+      missedTopic && Q.TOPICS[missedTopic] ? Q.TOPICS[missedTopic] : tTheme("mode_finalboss");
     const real = Boolean(state.boss.real);
     let penalty = { dropped_to: 9, topic: missedTopic, topics_affected: 0 };
     if (real) {
@@ -553,7 +610,7 @@
       (state.boss.queue && state.boss.queue[state.boss.index]) ||
       null;
     const topicLabel =
-      missedTopic && Q.TOPICS[missedTopic] ? Q.TOPICS[missedTopic] : t("mode_finalboss");
+      missedTopic && Q.TOPICS[missedTopic] ? Q.TOPICS[missedTopic] : tTheme("mode_finalboss");
     const penalty =
       P.penalizeBossMiss && missedTopic
         ? P.penalizeBossMiss(missedTopic)
@@ -593,17 +650,17 @@
     }
     if (els.bossRetreatMsg) {
       if (opts.continueFight) {
-        els.bossRetreatMsg.textContent = t("boss_miss_msg", {
+        els.bossRetreatMsg.textContent = tTheme("boss_miss_msg", {
           topic: opts.topicLabel || "",
           progress: opts.progress || "—",
         });
       } else {
         els.bossRetreatMsg.textContent = opts.real
-          ? t("boss_retreat_msg_real", {
+          ? tTheme("boss_retreat_msg_real", {
               topic: opts.topicLabel || "",
               progress: opts.progress || "9/10",
             })
-          : t("boss_retreat_msg", { topic: opts.topicLabel || "" });
+          : tTheme("boss_retreat_msg", { topic: opts.topicLabel || "" });
       }
     }
     if (els.bossRetreatOk) {
@@ -612,7 +669,7 @@
         : t("boss_retreat_ok");
     }
     const face = els.bossRetreatModal.querySelector(".boss-invite-face");
-    if (face) face.textContent = opts.continueFight ? "👹" : "🏃";
+    if (face) face.textContent = opts.continueFight ? bossEmoji("hit") : "🏃";
     bossRetreatOpen = true;
     els.bossRetreatModal.hidden = false;
     const focusBtn = els.bossRetreatOk;
@@ -666,7 +723,7 @@
     state.boss.active = false;
     if (P.clearBossRun) P.clearBossRun();
     state.answered = true;
-    setBossFace("💀", "dead");
+    setBossFace(bossEmoji("win"), bossWinFaceMode());
     bossFaceTimer = setTimeout(hideBossFace, 1100);
     lockInputs();
     hideHintControls();
@@ -677,11 +734,11 @@
     els.feedback.hidden = false;
     els.feedback.className = "feedback ok";
     if (real) {
-      els.feedback.textContent = already ? t("boss_win_again") : t("boss_win");
-      els.topic.textContent = t("mode_finalboss_cleared");
+      els.feedback.textContent = already ? tTheme("boss_win_again") : tTheme("boss_win");
+      els.topic.textContent = tTheme("mode_finalboss_cleared");
     } else {
-      els.feedback.textContent = t("boss_win_practice");
-      els.topic.textContent = t("mode_finalboss");
+      els.feedback.textContent = tTheme("boss_win_practice");
+      els.topic.textContent = tTheme("mode_finalboss");
     }
     if (P.clearBossDrillTopic) P.clearBossDrillTopic();
     refreshProgress();
@@ -692,7 +749,7 @@
     if (state.boss.index >= state.boss.queue.length) {
       if (P.clearBossRun) P.clearBossRun();
       playBossHitSound();
-      setBossFace("👹", "hit");
+      setBossFace(bossEmoji("hit"), "hit");
       bossFaceTimer = setTimeout(function () {
         winBoss();
       }, 2000);
@@ -701,7 +758,7 @@
     persistBossRun();
     els.feedback.hidden = false;
     els.feedback.className = "feedback ok";
-    els.feedback.textContent = t("boss_ok", {
+    els.feedback.textContent = tTheme("boss_ok", {
       current: state.boss.index,
       total: state.boss.queue.length,
     });
@@ -785,7 +842,7 @@
   function openBossInviteModal() {
     if (!els.bossInviteModal) return;
     if (els.bossInviteMsg) {
-      els.bossInviteMsg.textContent = t("boss_invite_mastered");
+      els.bossInviteMsg.textContent = tTheme("boss_invite_mastered");
     }
     bossInviteOpen = true;
     els.bossInviteModal.hidden = false;
@@ -1225,22 +1282,22 @@
           els.feedback.className = "feedback ok";
           // Real fights never use practice copy.
           els.feedback.textContent = state.boss.real
-            ? t("boss_start")
-            : t("boss_start_practice");
+            ? tTheme("boss_start")
+            : tTheme("boss_start_practice");
         } else {
-          setBossFace("😈");
+          setBossFace(bossEmoji());
           updateFinalBossButton(P.getProgressView());
           els.feedback.hidden = false;
           els.feedback.className = "feedback ok";
           if (state.boss.index > 0) {
-            els.feedback.textContent = t("boss_ok", {
+            els.feedback.textContent = tTheme("boss_ok", {
               current: state.boss.index,
               total: state.boss.queue.length,
             });
           } else {
             els.feedback.textContent = state.boss.real
-              ? t("boss_start")
-              : t("boss_start_practice");
+              ? tTheme("boss_start")
+              : tTheme("boss_start_practice");
           }
         }
       }
@@ -1258,7 +1315,7 @@
     if (!topic) {
       els.prompt.textContent = t("loading");
       els.topic.textContent =
-        state.mode === "finalboss" ? t("mode_finalboss") : t("mode_smart");
+        state.mode === "finalboss" ? tTheme("mode_finalboss") : t("mode_smart");
       els.check.hidden = true;
       els.skip.hidden = true;
       if (els.remix) els.remix.hidden = true;
@@ -1297,22 +1354,22 @@
       state.mode === "flashcards"
         ? t("mode_flashcards")
         : state.mode === "finalboss"
-          ? t("boss_progress", {
+          ? tTheme("boss_progress", {
               current: state.boss.index + 1,
               total: state.boss.queue.length,
               topic: pub.topic_label,
             })
           : pub.topic_label;
     if (bossFightActive()) {
-      setBossFace("😈");
+      setBossFace(bossEmoji());
     } else if (state.mode !== "finalboss" || state.boss.status !== "won") {
       hideBossFace();
     }
-    els.prompt.textContent = pub.prompt;
-    els.hint1.textContent = pub.hint1 || "";
-    els.hint2.textContent = pub.hint2 || "";
-    els.hint3ti.textContent = pub.hint3_ti || "";
-    els.hint3casio.textContent = pub.hint3_casio || "";
+    setMathText(els.prompt, pub.prompt);
+    setMathText(els.hint1, pub.hint1 || "");
+    setMathText(els.hint2, pub.hint2 || "");
+    setMathText(els.hint3ti, pub.hint3_ti || "");
+    setMathText(els.hint3casio, pub.hint3_casio || "");
 
     if (pub.has_hint1 && state.mode !== "finalboss") {
       els.hint1Btn.hidden = false;
@@ -1342,8 +1399,13 @@
       pub.choices.forEach((c) => {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "choice";
-        btn.textContent = c;
+        btn.className = "choice math-text";
+        btn.dataset.choice = c;
+        if (window.QuizMathFormat && window.QuizMathFormat.toHtml) {
+          btn.innerHTML = window.QuizMathFormat.toHtml(c);
+        } else {
+          btn.textContent = c;
+        }
         btn.addEventListener("click", () => submitAnswer(c));
         els.choices.appendChild(btn);
       });
@@ -1526,7 +1588,7 @@
       if (state.publicQ.type === "mc") {
         [...els.choices.children].forEach((btn) => {
           btn.disabled = true;
-          if (btn.textContent === expected) btn.classList.add("right");
+          if (choiceRaw(btn) === expected) btn.classList.add("right");
         });
       }
       refreshProgress();
@@ -1540,7 +1602,7 @@
     if (state.publicQ.type === "mc") {
       [...els.choices.children].forEach((btn) => {
         btn.disabled = true;
-        if (btn.textContent === (expected || state.lastExpected)) {
+        if (choiceRaw(btn) === (expected || state.lastExpected)) {
           btn.classList.add("right");
         }
       });
@@ -1573,8 +1635,8 @@
       if (state.publicQ.type === "mc") {
         [...els.choices.children].forEach((btn) => {
           btn.disabled = true;
-          if (ok && btn.textContent === expected) btn.classList.add("right");
-          if (!ok && btn.textContent === String(answer)) btn.classList.add("wrong");
+          if (ok && choiceRaw(btn) === expected) btn.classList.add("right");
+          if (!ok && choiceRaw(btn) === String(answer)) btn.classList.add("wrong");
         });
       }
       if (!ok || state.hintsUsed > 0) {
@@ -1614,7 +1676,7 @@
       if (state.publicQ.type === "mc") {
         [...els.choices.children].forEach((btn) => {
           btn.disabled = true;
-          if (btn.textContent === result.expected) btn.classList.add("right");
+          if (choiceRaw(btn) === result.expected) btn.classList.add("right");
         });
       }
       els.next.hidden = false;
@@ -1626,7 +1688,7 @@
     if (state.publicQ.type === "mc") {
       [...els.choices.children].forEach((btn) => {
         btn.disabled = true;
-        if (btn.textContent === String(answer)) btn.classList.add("wrong");
+        if (choiceRaw(btn) === String(answer)) btn.classList.add("wrong");
       });
     }
     beginRetry(result);
@@ -1777,7 +1839,7 @@
           loadQuestion();
           els.feedback.hidden = false;
           els.feedback.className = "feedback no";
-          els.feedback.textContent = t("boss_drill_blocked", {
+          els.feedback.textContent = tTheme("boss_drill_blocked", {
             topic: Q.TOPICS[drill] || drill,
           });
           return;
@@ -2406,6 +2468,12 @@
       assessment.pageTitleKey || "assessment." + assessment.number + ".page_title";
     if (I18n && I18n.has && I18n.has(titleKey)) {
       document.title = t(titleKey);
+    }
+    const inviteTitle = document.getElementById("boss-invite-title");
+    if (inviteTitle) inviteTitle.textContent = tTheme("boss_invite_title");
+    if (els.bossInviteModal) {
+      const inviteFace = els.bossInviteModal.querySelector(".boss-invite-face");
+      if (inviteFace) inviteFace.textContent = bossEmoji();
     }
   }
 
