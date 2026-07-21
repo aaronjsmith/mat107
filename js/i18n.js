@@ -7,7 +7,6 @@
   "use strict";
 
   const STORAGE_KEY = "mat107-assessment1-lang";
-  const RTL = { ar: true, ur: true };
 
   const meta = window.QUIZ_LANGUAGES;
   window.QUIZ_LANG_PACKS = window.QUIZ_LANG_PACKS || {};
@@ -79,7 +78,7 @@
 
   function applyDir() {
     document.documentElement.lang = lang;
-    document.documentElement.dir = RTL[lang] ? "rtl" : "ltr";
+    document.documentElement.dir = "ltr";
   }
 
   function applyStatic() {

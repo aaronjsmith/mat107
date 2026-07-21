@@ -156,7 +156,6 @@
     notesSortDesc: document.getElementById("notes-sort-desc"),
     notesSum: document.getElementById("notes-sum"),
     notesUnique: document.getElementById("notes-unique"),
-    lang: document.getElementById("lang-select"),
   };
 
   const PIE_COLORS = [
@@ -1959,23 +1958,6 @@
         els.feedback.textContent = t("progress_load_fail");
       };
       reader.readAsText(file);
-    });
-  }
-
-  if (I18n && els.lang) {
-    I18n.fillSelect(els.lang);
-    els.lang.addEventListener("change", () => {
-      const wanted = els.lang.value;
-      I18n.setLang(wanted).then((active) => {
-        if (active && els.lang.value !== active) {
-          els.lang.value = active;
-        }
-      });
-    });
-    I18n.onChange(() => {
-      els.topicList.innerHTML = "";
-      refreshProgress();
-      loadQuestion();
     });
   }
 

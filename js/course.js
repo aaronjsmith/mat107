@@ -13,7 +13,6 @@
 
   const els = {
     assessmentList: document.getElementById("assessment-list"),
-    lang: document.getElementById("lang-select"),
   };
 
   function escapeHtml(s) {
@@ -114,11 +113,7 @@
   }
 
   function start() {
-    if (I18n && els.lang) {
-      I18n.fillSelect(els.lang);
-      els.lang.addEventListener("change", function () {
-        I18n.setLang(els.lang.value);
-      });
+    if (I18n) {
       I18n.onChange(function () {
         I18n.applyStatic();
         render();
