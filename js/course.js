@@ -71,7 +71,11 @@
       return (
         '<article class="course-card assessment-card">' +
         '<div class="card-badge">' +
-        escapeHtml(t("course_assessment_n", { n: assessment.number })) +
+        escapeHtml(
+          t(assessment.badgeKey || "course_assessment_n", {
+            n: assessment.number,
+          })
+        ) +
         "</div>" +
         "<h3>" +
         escapeHtml(t(assessment.titleKey)) +

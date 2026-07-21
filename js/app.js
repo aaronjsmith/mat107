@@ -2392,19 +2392,45 @@
     const id = (P && P.ASSESSMENT_ID) || "assessment1";
     const course = window.Mat107Course;
     const brandSub = document.querySelector(".brand-sub");
-    if (!brandSub || !course || !course.getAssessment) return;
+    const backLink = document.querySelector(".brand-link");
+    if (!course || !course.getAssessment) return;
     const assessment = course.getAssessment(id);
     if (!assessment) return;
-    brandSub.textContent = t(assessment.titleKey);
-    const titleKey = "assessment." + assessment.number + ".page_title";
+    if (brandSub) {
+      brandSub.textContent = t(assessment.brandSubKey || assessment.titleKey);
+    }
+    if (backLink && assessment.backKey) {
+      backLink.textContent = t(assessment.backKey);
+    }
+    const titleKey =
+      assessment.pageTitleKey || "assessment." + assessment.number + ".page_title";
     if (I18n && I18n.has && I18n.has(titleKey)) {
       document.title = t(titleKey);
     }
   }
 
+  function applyAssessmentFeatures() {
+    const course = window.Mat107Course;
+    const id = (P && P.ASSESSMENT_ID) || "assessment1";
+    const assessment = course && course.getAssessment ? course.getAssessment(id) : null;
+    const features = (assessment && assessment.features) || {
+      flashcards: true,
+      notecard: true,
+      boss: true,
+    };
+    const flashBtn = document.querySelector('[data-topic="flashcards"]');
+    if (flashBtn) flashBtn.hidden = !features.flashcards;
+    const notecardLink = document.querySelector('a[href="notecard.html"]');
+    const notecardNote = document.querySelector(".notecard-note");
+    if (notecardLink) notecardLink.hidden = !features.notecard;
+    if (notecardNote) notecardNote.hidden = !features.notecard;
+    if (els.finalBossBtn) els.finalBossBtn.hidden = features.boss === false;
+  }
+
   function start() {
     if (I18n && I18n.applyStatic) I18n.applyStatic();
     applyAssessmentBranding();
+    applyAssessmentFeatures();
     hideBossFace();
     if (restoreBossRunFromStorage()) {
       state.mode = "finalboss";
