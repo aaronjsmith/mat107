@@ -493,13 +493,13 @@ a.linkish {
 .math-doc {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  font-size: 1.08rem;
-  line-height: 1.55;
+  gap: 0.75rem;
+  font-size: 1.22rem;
+  line-height: 1.6;
 }
 
 .math-doc .katex {
-  font-size: 1.18em;
+  font-size: 1.42em;
 }
 
 .math-gap {
@@ -508,9 +508,13 @@ a.linkish {
 
 .math-overview {
   margin: 0;
-  font-size: 1.08rem;
-  line-height: 1.55;
+  font-size: 1.22rem;
+  line-height: 1.65;
   color: var(--ink);
+}
+
+.math-overview .katex {
+  font-size: 1.5em;
 }
 
 .math-overview-label {
@@ -529,9 +533,10 @@ a.linkish {
 
 .math-prose {
   margin: 0;
-  font-size: 1.08rem;
-  line-height: 1.55;
+  font-size: 1.22rem;
+  line-height: 1.6;
   color: var(--ink);
+  word-spacing: 0.04em;
 }
 
 .math-step {
@@ -560,15 +565,19 @@ a.linkish {
 }
 
 .math-block .katex-display {
-  margin: 0.15rem 0;
+  margin: 0.2rem 0;
 }
 
 .math-block .katex {
-  font-size: 1.28em;
+  font-size: 1.55em;
 }
 
 .math-inline .katex {
-  font-size: 1.15em;
+  font-size: 1.48em;
+}
+
+.math-inline .katex .mfrac {
+  font-size: 1.05em;
 }
 
 .math-fallback {
@@ -584,9 +593,9 @@ a.linkish {
 .hint {
   background: rgba(154, 52, 18, 0.08);
   border-left: 3px solid var(--warn);
-  padding: 0.85rem 1.05rem;
-  font-size: 1.08rem;
-  line-height: 1.55;
+  padding: 0.95rem 1.15rem;
+  font-size: 1.22rem;
+  line-height: 1.6;
   margin: 0;
   white-space: pre-wrap;
   border-radius: 0 10px 10px 0;

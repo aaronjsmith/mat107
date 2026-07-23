@@ -94,7 +94,7 @@
     "c.h.fv_compound": "Compound growth: multiply by (1+r) once per year.",
     "c.h.linear_eval": "Plug the given x into f(x) = mx + b.",
     "c.h.linear_model": "Distance grows by the same amount each minute: rate times time, plus the starting distance.",
-    "c.h.linear_points_eval": "Find slope, use the y-intercept from x=0, then substitute the given x.",
+    "c.h.linear_points_eval": "Find slope, use the y-intercept from x = 0, then substitute the given x.",
     "c.h.linear_table": "Read the intercept, find the slope from Δy/Δx, then evaluate mx + b.",
     "c.h.loan_cost": "Multiply the monthly payment by the number of months, then subtract principal for interest.",
     "c.h.oop": "Pay the deductible, then coinsurance on the remaining claim amount.",

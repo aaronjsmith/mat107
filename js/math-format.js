@@ -49,15 +49,15 @@
     s = s.replace(/\b([A-Za-z])_([0-9]+|[nN])\b/g, "$1_{$2}");
     s = s.replace(/\b([A-Za-z])\^([0-9]+|[nN])\b/g, "$1^{$2}");
 
-    // (num)/(den) → fraction when both sides look math-y
+    // (num)/(den) → display-sized fraction (dfrac stays readable inline)
     s = s.replace(
       /\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g,
-      "\\frac{$1}{$2}"
+      "\\dfrac{$1}{$2}"
     );
     // simple token / token → fraction (after subscripts are normalized)
     s = s.replace(
       /(^|[=+\-]\s*|,\s*)([A-Za-z0-9\\_{}]+)\s*\/\s*([A-Za-z0-9\\_{}]+)(?=\s*$|\s*[.,;])/g,
-      "$1\\frac{$2}{$3}"
+      "$1\\dfrac{$2}{$3}"
     );
 
     // n! for permutations display
@@ -97,10 +97,24 @@
 
   /** True when a string looks like English prose (not a pure formula). */
   function looksLikeProse(s) {
-    const mid = String(s).match(/\b[A-Za-z]{3,}\b/g) || [];
-    const long = String(s).match(/\b[A-Za-z]{4,}\b/g) || [];
+    const text = String(s);
+    const mid = text.match(/\b[A-Za-z]{3,}\b/g) || [];
+    const long = text.match(/\b[A-Za-z]{4,}\b/g) || [];
     // "Find slope, use the..." (≥4 short words) or "Point … intercept" (≥2 longer words)
-    return mid.length >= 4 || long.length >= 2;
+    if (mid.length >= 4 || long.length >= 2) return true;
+    // Function words + another English token → sentence, not an equation
+    if (
+      /\b(find|use|then|from|when|where|with|into|over|between|substitute|given|after|before|each|your|this|that|and|for|the|slope|intercept)\b/i.test(
+        text
+      ) &&
+      mid.length >= 2
+    ) {
+      return true;
+    }
+    // Three or more space-separated tokens with letters → keep as prose
+    const tokens = text.trim().split(/\s+/);
+    if (tokens.length >= 5 && /[A-Za-z]{3,}/.test(text)) return true;
+    return false;
   }
 
   function isEquationLine(line) {
