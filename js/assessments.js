@@ -1,13 +1,14 @@
 /**
  * MAT107 assessment catalog.
  * Each assessment gets its own localStorage progress key: mat107-{id}-progress
+ * Aligned with Canvas course 25999 modules (Weeks 1–7).
  */
 (function () {
   "use strict";
 
   const MASTER = 10;
 
-  const TOPIC_IDS = [
+  const GEO_STATS_TOPICS = [
     "conversions",
     "formulas",
     "perimeter_area",
@@ -22,19 +23,88 @@
     "literacy",
   ];
 
+  const PROB_TOPICS = ["prob_basic", "prob_compound", "prob_counting"];
+
+  const FN1_TOPICS = [
+    "fn_arith_seq",
+    "fn_arith_terms",
+    "fn_geom_seq",
+    "fn_geom_terms",
+    "fn_arith_series",
+    "fn_geom_series",
+  ];
+
+  const FN2_TOPICS = ["fn_linear", "fn_exp", "fn_slope", "fn_interest"];
+
+  const FINANCE_TOPICS = ["fin_budget", "fin_percent", "fin_excel"];
+
+  const SAVINGS_CREDIT_TOPICS = [
+    "save_compound",
+    "save_annuity",
+    "credit_loan",
+    "credit_apr",
+  ];
+
+  const INSURANCE_TOPICS = ["ins_premium", "ins_expected"];
+
+  const OVERVIEW_TOPICS = GEO_STATS_TOPICS.concat(
+    PROB_TOPICS,
+    FN1_TOPICS,
+    FN2_TOPICS,
+    FINANCE_TOPICS,
+    SAVINGS_CREDIT_TOPICS,
+    INSURANCE_TOPICS
+  );
+
+  const TOPIC_IDS = GEO_STATS_TOPICS.slice();
+
   const ASSESSMENTS = [
+    {
+      id: "overview",
+      number: 0,
+      titleKey: "lesson.overview.title",
+      summaryKey: "lesson.overview.summary",
+      badgeKey: "lesson.overview.badge",
+      brandSubKey: "lesson.overview.brand_sub",
+      pageTitleKey: "lesson.overview.page_title",
+      backKey: "course_back",
+      available: true,
+      compose: true,
+      questionsScripts: [
+        "js/questions.js",
+        "js/questions-functions.js",
+        "js/questions-course.js",
+      ],
+      features: { flashcards: false, notecard: true, boss: true },
+      topicIds: OVERVIEW_TOPICS.slice(),
+    },
     {
       id: "assessment1",
       number: 1,
       titleKey: "assessment.1.title",
       summaryKey: "assessment.1.summary",
+      badgeKey: "assessment.1.badge",
       brandSubKey: "brand_sub",
       pageTitleKey: "assessment.1.page_title",
       backKey: "course_back",
       available: true,
       questionsScript: "js/questions.js",
       features: { flashcards: true, notecard: true, boss: true },
-      topicIds: TOPIC_IDS.slice(),
+      topicIds: GEO_STATS_TOPICS.slice(),
+    },
+    {
+      id: "lesson_prob",
+      number: 3,
+      titleKey: "lesson.prob.title",
+      summaryKey: "lesson.prob.summary",
+      badgeKey: "lesson.prob.badge",
+      brandSubKey: "lesson.prob.brand_sub",
+      pageTitleKey: "lesson.prob.page_title",
+      backKey: "course_back",
+      available: true,
+      questionsScript: "js/questions-course.js",
+      features: { flashcards: false, notecard: false, boss: true },
+      topicIds: PROB_TOPICS.slice(),
     },
     {
       id: "lesson41",
@@ -53,14 +123,63 @@
       available: true,
       questionsScript: "js/questions-functions.js",
       features: { flashcards: false, notecard: false, boss: true },
-      topicIds: [
-        "fn_arith_seq",
-        "fn_arith_terms",
-        "fn_geom_seq",
-        "fn_geom_terms",
-        "fn_arith_series",
-        "fn_geom_series",
-      ],
+      topicIds: FN1_TOPICS.slice(),
+    },
+    {
+      id: "lesson_fn2",
+      number: 44,
+      titleKey: "lesson.fn2.title",
+      summaryKey: "lesson.fn2.summary",
+      badgeKey: "lesson.fn2.badge",
+      brandSubKey: "lesson.fn2.brand_sub",
+      pageTitleKey: "lesson.fn2.page_title",
+      backKey: "course_back",
+      available: true,
+      questionsScript: "js/questions-course.js",
+      features: { flashcards: false, notecard: false, boss: true },
+      topicIds: FN2_TOPICS.slice(),
+    },
+    {
+      id: "lesson_finance",
+      number: 5,
+      titleKey: "lesson.finance.title",
+      summaryKey: "lesson.finance.summary",
+      badgeKey: "lesson.finance.badge",
+      brandSubKey: "lesson.finance.brand_sub",
+      pageTitleKey: "lesson.finance.page_title",
+      backKey: "course_back",
+      available: true,
+      questionsScript: "js/questions-course.js",
+      features: { flashcards: false, notecard: false, boss: true },
+      topicIds: FINANCE_TOPICS.slice(),
+    },
+    {
+      id: "lesson_savings",
+      number: 6,
+      titleKey: "lesson.savings.title",
+      summaryKey: "lesson.savings.summary",
+      badgeKey: "lesson.savings.badge",
+      brandSubKey: "lesson.savings.brand_sub",
+      pageTitleKey: "lesson.savings.page_title",
+      backKey: "course_back",
+      available: true,
+      questionsScript: "js/questions-course.js",
+      features: { flashcards: false, notecard: false, boss: true },
+      topicIds: SAVINGS_CREDIT_TOPICS.slice(),
+    },
+    {
+      id: "lesson_insurance",
+      number: 7,
+      titleKey: "lesson.insurance.title",
+      summaryKey: "lesson.insurance.summary",
+      badgeKey: "lesson.insurance.badge",
+      brandSubKey: "lesson.insurance.brand_sub",
+      pageTitleKey: "lesson.insurance.page_title",
+      backKey: "course_back",
+      available: true,
+      questionsScript: "js/questions-course.js",
+      features: { flashcards: false, notecard: false, boss: true },
+      topicIds: INSURANCE_TOPICS.slice(),
     },
   ];
 
@@ -83,7 +202,7 @@
   }
 
   function getDefaultAssessmentId() {
-    return "assessment1";
+    return "overview";
   }
 
   function resolveAssessmentId(id) {

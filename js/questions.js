@@ -3335,23 +3335,32 @@
     return out;
   }
 
-  window.QuizQuestions = {
-    get TOPICS() { return buildTopics(); },
-    PI: PI,
-    get PI_NOTE() { return piNote(); },
-    HINT_CREDIT: HINT_CREDIT,
-    RETRY_CREDIT: RETRY_CREDIT,
-    UNAIDED_TO_MASTER: UNAIDED_TO_MASTER,
+  window.Mat107Banks = window.Mat107Banks || {};
+  window.Mat107Banks.assessment1 = {
+    topics: buildTopics(),
+    generators: GENERATORS,
     setBossTheme: setBossTheme,
-    randInt: randInt,
-    choice: choice,
-    shuffle: shuffle,
-    gcd: gcd,
-    num: num,
-    id: id,
-    generateQuestion: generateQuestion,
-    remixQuestion: remixQuestion,
-    checkAnswer: checkAnswer,
-    publicQuestion: publicQuestion,
   };
+
+  if (!window.Mat107BankMode) {
+    window.QuizQuestions = {
+      get TOPICS() { return buildTopics(); },
+      PI: PI,
+      get PI_NOTE() { return piNote(); },
+      HINT_CREDIT: HINT_CREDIT,
+      RETRY_CREDIT: RETRY_CREDIT,
+      UNAIDED_TO_MASTER: UNAIDED_TO_MASTER,
+      setBossTheme: setBossTheme,
+      randInt: randInt,
+      choice: choice,
+      shuffle: shuffle,
+      gcd: gcd,
+      num: num,
+      id: id,
+      generateQuestion: generateQuestion,
+      remixQuestion: remixQuestion,
+      checkAnswer: checkAnswer,
+      publicQuestion: publicQuestion,
+    };
+  }
 })();

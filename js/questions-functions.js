@@ -909,17 +909,26 @@
     return out;
   }
 
-  window.QuizQuestions = {
-    get TOPICS() {
-      return buildTopics();
-    },
-    HINT_CREDIT: HINT_CREDIT,
-    RETRY_CREDIT: RETRY_CREDIT,
-    UNAIDED_TO_MASTER: UNAIDED_TO_MASTER,
+  window.Mat107Banks = window.Mat107Banks || {};
+  window.Mat107Banks.functions = {
+    topics: buildTopics(),
+    generators: GENERATORS,
     setBossTheme: setBossTheme,
-    generateQuestion: generateQuestion,
-    remixQuestion: remixQuestion,
-    checkAnswer: checkAnswer,
-    publicQuestion: publicQuestion,
   };
+
+  if (!window.Mat107BankMode) {
+    window.QuizQuestions = {
+      get TOPICS() {
+        return buildTopics();
+      },
+      HINT_CREDIT: HINT_CREDIT,
+      RETRY_CREDIT: RETRY_CREDIT,
+      UNAIDED_TO_MASTER: UNAIDED_TO_MASTER,
+      setBossTheme: setBossTheme,
+      generateQuestion: generateQuestion,
+      remixQuestion: remixQuestion,
+      checkAnswer: checkAnswer,
+      publicQuestion: publicQuestion,
+    };
+  }
 })();
