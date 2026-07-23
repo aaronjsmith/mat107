@@ -1274,34 +1274,6 @@
     els.input.focus();
   }
 
-  function formatExpectedAnswer(full) {
-    if (!full || !Q.checkAnswer) return "";
-    try {
-      const pair = Q.checkAnswer(full, "__teach_me_unused__");
-      return pair && pair[1] != null ? String(pair[1]) : "";
-    } catch (e) {
-      if (full.answer != null) return String(full.answer);
-      if (Array.isArray(full.answers) && full.answers[0] != null) {
-        return String(full.answers[0]);
-      }
-      return "";
-    }
-  }
-
-  function teachHowtoText(pub, full) {
-    if (pub && pub.clarify) return pub.clarify;
-    if (full && full.clarify) return full.clarify;
-    const parts = [];
-    if (pub && pub.hint1) parts.push(pub.hint1);
-    if (pub && pub.hint2) parts.push(pub.hint2);
-    return parts.join("\n\n") || t("clarify_fallback");
-  }
-
-  /**
-   * Teach Me scaffolding by remaining layers (5→1).
-   * 5–4: hints + how-to · 3–2: hint1+2 · 1: hint1
-   * Answer and calculator steps are never auto-opened.
-   */
   function applyTeachScaffolding(pub, full) {
     if (state.mode !== "teachme" || !full || !full.topic) return;
     const layers =
@@ -1310,21 +1282,12 @@
         : P.TEACH_MAX || 5;
     if (layers <= 0) return;
 
-    const showHint1 = layers >= 1 && pub.has_hint1;
-    const showHint2 = layers >= 2 && pub.has_hint2;
-    const showHowto = layers >= 4;
-
-    // Auto-open panels; count as hinted so normal mastery isn't farmed if we fall through.
-    if (showHint1 && els.hint1.textContent) {
+    // Teach Me only auto-opens Hint 1 (approach). Setup / walkthrough / answer stay closed.
+    if (pub.has_hint1 && els.hint1.textContent) {
       els.hint1.hidden = false;
       state.hintsUsed = Math.max(state.hintsUsed, 1);
     }
-    if (showHint2 && els.hint2.textContent) {
-      els.hint2.hidden = false;
-      state.hintsUsed = Math.max(state.hintsUsed, 2);
-    }
 
-    // Hint 1/2 are already open; calc stays opt-in via buttons.
     els.hint1Btn.hidden = true;
     els.hint2Btn.hidden = true;
     if (pub.has_hint3) showCalcButtons(false);
@@ -1334,26 +1297,15 @@
     }
     if (els.clarifyBtn) els.clarifyBtn.hidden = true;
 
-    if (els.teachPanel && showHowto) {
-      const bits = [];
-      bits.push(
+    if (els.teachPanel) {
+      els.teachPanel.innerHTML =
         '<span class="teach-badge">' +
-          escapeHtml(t("teach_badge", { layers: String(layers) })) +
-          "</span>"
-      );
-      bits.push('<div class="teach-block teach-howto">');
-      bits.push(
-        '<p class="teach-label">' + escapeHtml(t("teach_howto_label")) + "</p>"
-      );
-      bits.push('<div class="teach-body"></div></div>');
-      bits.push(
-        '<p class="teach-note">' + escapeHtml(t("teach_layer_hint")) + "</p>"
-      );
-      els.teachPanel.innerHTML = bits.join("");
+        escapeHtml(t("teach_badge", { layers: String(layers) })) +
+        "</span>" +
+        '<p class="teach-note">' +
+        escapeHtml(t("teach_layer_hint")) +
+        "</p>";
       els.teachPanel.hidden = false;
-
-      const howtoEl = els.teachPanel.querySelector(".teach-howto .teach-body");
-      if (howtoEl) setMathText(howtoEl, teachHowtoText(pub, full), true);
     }
   }
 
@@ -1590,7 +1542,11 @@
       state.clarifyShown = true;
       els.clarifyPanel.hidden = false;
       els.clarifyPanel.className = "clarify";
-      els.clarifyPanel.textContent = state.publicQ.clarify || t("clarify_fallback");
+      // Prefer the first hint (approach) over the long synthesized walkthrough.
+      const firstHint =
+        (state.publicQ && state.publicQ.hint1) ||
+        t("clarify_fallback");
+      setMathText(els.clarifyPanel, firstHint, true);
       els.clarifyBtn.textContent = t("btn_clarify_more");
       // Opening clarification counts as using at least Hint 1 help.
       if (!state.answered) {
@@ -1629,13 +1585,19 @@
   }
 
   function showHintsAfterMiss() {
+    // Prefer the first hint only — setup / calc stay behind buttons.
     if (els.hint1.textContent) els.hint1.hidden = false;
-    if (els.hint2.textContent) els.hint2.hidden = false;
-    // Keep each calculator behind its own button until opened.
+    els.hint2.hidden = true;
     els.hint3ti.hidden = true;
     els.hint3casio.hidden = true;
     els.hint1Btn.hidden = true;
-    els.hint2Btn.hidden = true;
+    if (els.hint2.textContent) {
+      els.hint2Btn.hidden = false;
+      els.hint2Btn.disabled = false;
+      els.hint2Btn.textContent = t("btn_hint2");
+    } else {
+      els.hint2Btn.hidden = true;
+    }
     showCalcButtons(true);
     if (els.clarifyBtn && state.publicQ?.has_clarify) {
       els.clarifyBtn.hidden = false;

@@ -320,7 +320,7 @@
     "teach_badge": "Teach me · {layers} layers left",
     "teach_howto_label": "How to work it",
     "teach_answer_label": "Answer",
-    "teach_layer_hint": "Each correct answer hides one more hint until this topic works like normal practice.",
+    "teach_layer_hint": "Each correct answer peels training wheels until this topic works like normal practice — only the first hint stays open.",
     "feedback_note_hinted": "Hints used → {credit}% credit; mastery −1 ({progress}).",
     "feedback_note_mastery_drop": " Mastery → {progress}.",
     "feedback_note_unaided": "Unaided · mastery progress {progress}.",

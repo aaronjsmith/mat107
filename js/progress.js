@@ -13,8 +13,7 @@
   const MASTER = Q.UNAIDED_TO_MASTER || 10;
   /**
    * Teach Me layers still showing (5 → 0). Each correct answer removes one layer.
-   * 5–4: hints + how-to · 3–2: hint1+2 · 1: hint1 · 0: graduated
-   * Answer and calculator steps are never part of the auto scaffold.
+   * While layers remain, only Hint 1 (approach) is auto-shown.
    */
   const TEACH_MAX = 5;
 
