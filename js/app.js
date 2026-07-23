@@ -1290,6 +1290,20 @@
     els.input.focus();
   }
 
+  function teachHowtoText(pub, full) {
+    if (pub && pub.clarify) return pub.clarify;
+    if (full && full.clarify) return full.clarify;
+    const parts = [];
+    if (pub && pub.hint1) parts.push(pub.hint1);
+    if (pub && pub.hint2) parts.push(pub.hint2);
+    return parts.join("\n\n") || t("clarify_fallback");
+  }
+
+  /**
+   * Teach Me scaffolding by remaining layers (5→1).
+   * 5–4: hint1+2 + how-to walkthrough · 3–2: hint1+2 · 1: hint1
+   * Answer and calculator steps stay opt-in (not auto-opened).
+   */
   function applyTeachScaffolding(pub, full) {
     if (state.mode !== "teachme" || !full || !full.topic) return;
     const layers =
@@ -1298,10 +1312,17 @@
         : P.TEACH_MAX || 5;
     if (layers <= 0) return;
 
-    // Teach Me only auto-opens Hint 1 (approach). Setup / walkthrough / answer stay closed.
-    if (pub.has_hint1 && els.hint1.textContent) {
+    const showHint1 = layers >= 1 && pub.has_hint1;
+    const showHint2 = layers >= 2 && pub.has_hint2;
+    const showHowto = layers >= 4;
+
+    if (showHint1 && els.hint1.textContent) {
       els.hint1.hidden = false;
       state.hintsUsed = Math.max(state.hintsUsed, 1);
+    }
+    if (showHint2 && els.hint2.textContent) {
+      els.hint2.hidden = false;
+      state.hintsUsed = Math.max(state.hintsUsed, 2);
     }
 
     els.hint1Btn.hidden = true;
@@ -1314,14 +1335,29 @@
     if (els.clarifyBtn) els.clarifyBtn.hidden = true;
 
     if (els.teachPanel) {
-      els.teachPanel.innerHTML =
+      const bits = [];
+      bits.push(
         '<span class="teach-badge">' +
-        escapeHtml(t("teach_badge", { layers: String(layers) })) +
-        "</span>" +
-        '<p class="teach-note">' +
-        escapeHtml(t("teach_layer_hint")) +
-        "</p>";
+          escapeHtml(t("teach_badge", { layers: String(layers) })) +
+          "</span>"
+      );
+      if (showHowto) {
+        bits.push('<div class="teach-block teach-howto">');
+        bits.push(
+          '<p class="teach-label">' + escapeHtml(t("teach_howto_label")) + "</p>"
+        );
+        bits.push('<div class="teach-body"></div></div>');
+      }
+      bits.push(
+        '<p class="teach-note">' + escapeHtml(t("teach_layer_hint")) + "</p>"
+      );
+      els.teachPanel.innerHTML = bits.join("");
       els.teachPanel.hidden = false;
+
+      if (showHowto) {
+        const howtoEl = els.teachPanel.querySelector(".teach-howto .teach-body");
+        if (howtoEl) setMathText(howtoEl, teachHowtoText(pub, full), true);
+      }
     }
   }
 
@@ -1607,11 +1643,18 @@
     els.hint3ti.hidden = true;
     els.hint3casio.hidden = true;
     els.hint1Btn.hidden = true;
-    // Teach Me stays on Hint 1 only (no Hint 2 / calc / clarify reopen).
+    // Teach Me: keep both approach + setup open; calc stays opt-in.
     if (state.mode === "teachme") {
+      if (els.hint2.textContent) {
+        els.hint2.hidden = false;
+        state.hintsUsed = Math.max(state.hintsUsed, 2);
+      }
       els.hint2Btn.hidden = true;
-      els.hint3tiBtn.hidden = true;
-      els.hint3casioBtn.hidden = true;
+      if (state.publicQ && state.publicQ.has_hint3) showCalcButtons(true);
+      else {
+        els.hint3tiBtn.hidden = true;
+        els.hint3casioBtn.hidden = true;
+      }
       if (els.clarifyBtn) els.clarifyBtn.hidden = true;
       return;
     }
