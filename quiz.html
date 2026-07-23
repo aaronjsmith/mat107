@@ -33,6 +33,7 @@
       <p class="muted" data-i18n-html="topics_blurb">Mastery = <strong>10 correct with no hints</strong> per topic. Hints never reveal the answer — only how to work. Penalty if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%.</p>
       <button class="topic" data-topic="all" type="button" data-i18n="mode_all">All topics</button>
       <button class="topic active" data-topic="smart" type="button" data-i18n="mode_smart">Smart pick</button>
+      <button class="topic" data-topic="teachme" type="button" data-i18n="mode_teachme">Teach me</button>
       <button class="topic" data-topic="flashcards" type="button" data-i18n="mode_flashcards">Formula flashcards</button>
       <button class="topic topic-boss" data-topic="finalboss" type="button" id="btn-final-boss" data-i18n="mode_finalboss_practice">😈 Practice boss fight</button>
       <div class="topic-list" id="topic-list"></div>
@@ -65,6 +66,7 @@
       <div id="q-figure" class="figure" hidden></div>
       <h1 class="prompt" id="q-prompt" data-i18n="loading">Loading…</h1>
       <div class="hint-stack">
+        <div class="teach" id="q-teach" hidden></div>
         <div class="hint level1" id="q-hint1" hidden></div>
         <div class="setup level2" id="q-hint2" hidden></div>
         <div class="calc level3" id="q-hint3-ti" hidden></div>

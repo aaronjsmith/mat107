@@ -11,6 +11,11 @@
   const Q = window.QuizQuestions;
   /** Unaided corrects needed to master a topic. */
   const MASTER = Q.UNAIDED_TO_MASTER || 10;
+  /**
+   * Teach Me layers still showing (5 → 0). Each correct answer removes one layer.
+   * 5: hints + how-to + answer · 4: hints + how-to · 3: hint1+2+calc · 2: hint1+2 · 1: hint1 · 0: graduated
+   */
+  const TEACH_MAX = 5;
 
   function emptyTopic(label) {
     return {
@@ -19,6 +24,7 @@
       credit: 0,
       unaided_correct: 0,
       mastered: false,
+      teach_scaffold: null,
       label: label,
     };
   }
@@ -71,6 +77,14 @@
         t.unaided_correct = Number(t.unaided_correct) || 0;
         // Cap at mastery; migrate any old lock scores (11–20) down to 10.
         if (t.unaided_correct > MASTER) t.unaided_correct = MASTER;
+        if (t.teach_scaffold != null) {
+          t.teach_scaffold = Math.max(
+            0,
+            Math.min(TEACH_MAX, Number(t.teach_scaffold) || 0)
+          );
+        } else {
+          t.teach_scaffold = null;
+        }
         delete t.lock_strikes;
         syncMasteredFlag(t);
         data.topics[key] = t;
@@ -353,6 +367,7 @@
         unaided_needed: MASTER,
         mastery: topicMastery(unaided),
         mastered: mastered,
+        teach_scaffold: getTeachScaffold(key),
         label: Q.TOPICS[key] || info.label,
       };
     });
@@ -485,6 +500,89 @@
     });
     const pool = weighted.length ? weighted : keys;
     return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function teachableTopicKeys() {
+    return Object.keys(Q.TOPICS).filter(function (k) {
+      return k !== "flashcards";
+    });
+  }
+
+  /**
+   * Remaining Teach Me layers for a topic (0 = training wheels off).
+   * Unset topics: full scaffold unless already mastered.
+   */
+  function getTeachScaffold(topic) {
+    if (!topic || !Q.TOPICS[topic] || topic === "flashcards") return 0;
+    const p = load();
+    const rec = p.topics[topic] || emptyTopic(Q.TOPICS[topic]);
+    if (rec.teach_scaffold != null) {
+      return Math.max(0, Math.min(TEACH_MAX, Number(rec.teach_scaffold) || 0));
+    }
+    if ((Number(rec.unaided_correct) || 0) >= MASTER) return 0;
+    return TEACH_MAX;
+  }
+
+  function teachTopicsRemaining() {
+    return teachableTopicKeys().filter(function (k) {
+      return getTeachScaffold(k) > 0;
+    });
+  }
+
+  function allTeachGraduated() {
+    return teachTopicsRemaining().length === 0;
+  }
+
+  /** Prefer topics that still have Teach Me layers; weight by layers left. */
+  function pickTeachTopic(avoidTopic) {
+    const keys = teachTopicsRemaining();
+    if (!keys.length) return null;
+    const weights = keys.map(function (t) {
+      let w = getTeachScaffold(t) * 10 + 4 + Math.random() * 5;
+      if (avoidTopic && t === avoidTopic) w *= 0.12;
+      return Math.max(w, 0.5);
+    });
+    const total = weights.reduce(function (a, b) {
+      return a + b;
+    }, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < keys.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return keys[i];
+    }
+    return keys[keys.length - 1];
+  }
+
+  /**
+   * After a correct Teach Me answer: peel one scaffold layer.
+   * Does not award unaided mastery (training wheels).
+   */
+  function recordTeachCorrect(topic) {
+    if (!topic || !Q.TOPICS[topic] || topic === "flashcards") {
+      return {
+        teach_scaffold: 0,
+        graduated: false,
+        all_graduated: allTeachGraduated(),
+      };
+    }
+    const p = load();
+    if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic]);
+    const rec = p.topics[topic];
+    let cur = getTeachScaffold(topic);
+    const next = Math.max(0, cur - 1);
+    rec.teach_scaffold = next;
+    // Light attempt tracking so grade isn't empty, but no unaided bump.
+    rec.attempted = (Number(rec.attempted) || 0) + 1;
+    rec.correct = (Number(rec.correct) || 0) + 1;
+    p.total_attempted = (p.total_attempted || 0) + 1;
+    p.total_correct = (p.total_correct || 0) + 1;
+    save(p);
+    return {
+      teach_scaffold: next,
+      graduated: cur > 0 && next === 0,
+      all_graduated: allTeachGraduated(),
+      teach_max: TEACH_MAX,
+    };
   }
 
   function setUnaided(p, topic, next) {
@@ -707,6 +805,10 @@
         credit: src.credit != null ? src.credit : src.correct || 0,
         unaided_correct: unaided,
         mastered: unaided >= MASTER,
+        teach_scaffold:
+          src.teach_scaffold != null
+            ? Math.max(0, Math.min(TEACH_MAX, Number(src.teach_scaffold) || 0))
+            : null,
         label: Q.TOPICS[key],
       };
     });
@@ -739,6 +841,12 @@
     getProgressView: getProgressView,
     pickSmartTopic: pickSmartTopic,
     pickAllTopic: pickAllTopic,
+    pickTeachTopic: pickTeachTopic,
+    getTeachScaffold: getTeachScaffold,
+    teachTopicsRemaining: teachTopicsRemaining,
+    allTeachGraduated: allTeachGraduated,
+    recordTeachCorrect: recordTeachCorrect,
+    TEACH_MAX: TEACH_MAX,
     allTopicsMastered: allTopicsMastered,
     shuffleTopics: shuffleTopics,
     markFinalBossCleared: markFinalBossCleared,

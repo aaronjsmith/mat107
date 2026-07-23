@@ -146,6 +146,7 @@
     masteryPie: document.getElementById("mastery-pie"),
     clarifyBtn: document.getElementById("btn-clarify"),
     clarifyPanel: document.getElementById("q-clarify"),
+    teachPanel: document.getElementById("q-teach"),
     calcOpen: document.getElementById("btn-calc-open"),
     calcModal: document.getElementById("calc-modal"),
     calcClose: document.getElementById("btn-calc-close"),
@@ -393,6 +394,7 @@
       const active =
         (state.mode === "all" && topic === "all") ||
         (state.mode === "smart" && topic === "smart") ||
+        (state.mode === "teachme" && topic === "teachme") ||
         (state.mode === "flashcards" && topic === "flashcards") ||
         (state.mode === "finalboss" && topic === "finalboss") ||
         state.mode === topic;
@@ -943,6 +945,10 @@
       els.clarifyPanel.textContent = "";
       els.clarifyPanel.className = "clarify";
     }
+    if (els.teachPanel) {
+      els.teachPanel.hidden = true;
+      els.teachPanel.innerHTML = "";
+    }
     els.feedback.hidden = true;
     els.feedback.textContent = "";
     els.feedback.className = "feedback";
@@ -1268,6 +1274,111 @@
     els.input.focus();
   }
 
+  function formatExpectedAnswer(full) {
+    if (!full || !Q.checkAnswer) return "";
+    try {
+      const pair = Q.checkAnswer(full, "__teach_me_unused__");
+      return pair && pair[1] != null ? String(pair[1]) : "";
+    } catch (e) {
+      if (full.answer != null) return String(full.answer);
+      if (Array.isArray(full.answers) && full.answers[0] != null) {
+        return String(full.answers[0]);
+      }
+      return "";
+    }
+  }
+
+  function teachHowtoText(pub, full) {
+    if (pub && pub.clarify) return pub.clarify;
+    if (full && full.clarify) return full.clarify;
+    const parts = [];
+    if (pub && pub.hint1) parts.push(pub.hint1);
+    if (pub && pub.hint2) parts.push(pub.hint2);
+    return parts.join("\n\n") || t("clarify_fallback");
+  }
+
+  /**
+   * Teach Me scaffolding by remaining layers (5→1).
+   * 5: hints + how-to + answer · 4: hints + how-to · 3: hint1+2+calc · 2: hint1+2 · 1: hint1
+   */
+  function applyTeachScaffolding(pub, full) {
+    if (state.mode !== "teachme" || !full || !full.topic) return;
+    const layers =
+      P.getTeachScaffold && typeof P.getTeachScaffold === "function"
+        ? P.getTeachScaffold(full.topic)
+        : P.TEACH_MAX || 5;
+    if (layers <= 0) return;
+
+    const showHint1 = layers >= 1 && pub.has_hint1;
+    const showHint2 = layers >= 2 && pub.has_hint2;
+    const showCalc = layers >= 3 && pub.has_hint3;
+    const showHowto = layers >= 4;
+    const showAnswer = layers >= 5;
+
+    // Auto-open panels; count as hinted so normal mastery isn't farmed if we fall through.
+    if (showHint1 && els.hint1.textContent) {
+      els.hint1.hidden = false;
+      state.hintsUsed = Math.max(state.hintsUsed, 1);
+    }
+    if (showHint2 && els.hint2.textContent) {
+      els.hint2.hidden = false;
+      state.hintsUsed = Math.max(state.hintsUsed, 2);
+    }
+    if (showCalc) {
+      if (els.hint3ti.textContent) {
+        els.hint3ti.hidden = false;
+        state.hintsUsed = Math.max(state.hintsUsed, 3);
+      } else if (els.hint3casio.textContent) {
+        els.hint3casio.hidden = false;
+        state.hintsUsed = Math.max(state.hintsUsed, 3);
+      }
+    }
+
+    // Hide the progressive-unlock buttons — content is already open.
+    els.hint1Btn.hidden = true;
+    els.hint2Btn.hidden = true;
+    els.hint3tiBtn.hidden = true;
+    els.hint3casioBtn.hidden = true;
+    if (els.clarifyBtn) els.clarifyBtn.hidden = true;
+
+    if (els.teachPanel && (showHowto || showAnswer)) {
+      const bits = [];
+      bits.push(
+        '<span class="teach-badge">' +
+          escapeHtml(t("teach_badge", { layers: String(layers) })) +
+          "</span>"
+      );
+      if (showHowto) {
+        bits.push('<div class="teach-block teach-howto">');
+        bits.push(
+          '<p class="teach-label">' + escapeHtml(t("teach_howto_label")) + "</p>"
+        );
+        bits.push('<div class="teach-body"></div></div>');
+      }
+      if (showAnswer) {
+        bits.push('<div class="teach-block teach-answer">');
+        bits.push(
+          '<p class="teach-label">' + escapeHtml(t("teach_answer_label")) + "</p>"
+        );
+        bits.push('<div class="teach-body teach-answer-body"></div></div>');
+      }
+      bits.push(
+        '<p class="teach-note">' + escapeHtml(t("teach_layer_hint")) + "</p>"
+      );
+      els.teachPanel.innerHTML = bits.join("");
+      els.teachPanel.hidden = false;
+
+      if (showHowto) {
+        const howtoEl = els.teachPanel.querySelector(".teach-howto .teach-body");
+        if (howtoEl) setMathText(howtoEl, teachHowtoText(pub, full), true);
+      }
+      if (showAnswer) {
+        const ansEl = els.teachPanel.querySelector(".teach-answer-body");
+        if (ansEl) setMathText(ansEl, formatExpectedAnswer(full), true);
+      }
+    }
+  }
+
   function loadQuestion() {
     resetUI();
     els.next.textContent = t("btn_next");
@@ -1320,6 +1431,19 @@
       topic = state.boss.queue[state.boss.index];
     } else if (state.mode === "smart") {
       topic = P.pickSmartTopic(state.lastTopic);
+    } else if (state.mode === "teachme") {
+      if (P.allTeachGraduated && P.allTeachGraduated()) {
+        state.mode = "smart";
+        setModeButtons();
+        topic = P.pickSmartTopic(state.lastTopic);
+        els.feedback.hidden = false;
+        els.feedback.className = "feedback ok";
+        els.feedback.textContent = t("feedback_teach_all_done");
+      } else {
+        topic = P.pickTeachTopic
+          ? P.pickTeachTopic(state.lastTopic)
+          : P.pickSmartTopic(state.lastTopic);
+      }
     } else if (state.mode === "all") {
       topic = P.pickAllTopic(state.lastTopic);
     } else if (state.mode === "flashcards") {
@@ -1369,13 +1493,15 @@
     els.topic.textContent =
       state.mode === "flashcards"
         ? t("mode_flashcards")
-        : state.mode === "finalboss"
-          ? tTheme("boss_progress", {
-              current: state.boss.index + 1,
-              total: state.boss.queue.length,
-              topic: pub.topic_label,
-            })
-          : pub.topic_label;
+        : state.mode === "teachme"
+          ? t("mode_teachme") + " · " + pub.topic_label
+          : state.mode === "finalboss"
+            ? tTheme("boss_progress", {
+                current: state.boss.index + 1,
+                total: state.boss.queue.length,
+                topic: pub.topic_label,
+              })
+            : pub.topic_label;
     if (bossFightActive()) {
       setBossFace(bossEmoji("live"), "live");
     } else if (state.mode !== "finalboss" || state.boss.status !== "won") {
@@ -1386,15 +1512,20 @@
     setMathText(els.hint2, pub.hint2 || "", true);
     setMathText(els.hint3ti, pub.hint3_ti || "", true, "ti");
     setMathText(els.hint3casio, pub.hint3_casio || "", true, "casio");
-    if (pub.has_hint1 && state.mode !== "finalboss") {
+    if (pub.has_hint1 && state.mode !== "finalboss" && state.mode !== "teachme") {
       els.hint1Btn.hidden = false;
-    } else if (pub.has_hint2 && state.mode !== "finalboss") {
+    } else if (pub.has_hint2 && state.mode !== "finalboss" && state.mode !== "teachme") {
       els.hint2Btn.hidden = false;
-    } else if (pub.has_hint3 && state.mode !== "finalboss") {
+    } else if (pub.has_hint3 && state.mode !== "finalboss" && state.mode !== "teachme") {
       showCalcButtons(false);
     }
-    // Clarification is available outside the Final Boss gauntlet.
-    if (els.clarifyBtn && pub.has_clarify && state.mode !== "finalboss") {
+    // Clarification is available outside the Final Boss gauntlet and Teach me (auto-shown there).
+    if (
+      els.clarifyBtn &&
+      pub.has_clarify &&
+      state.mode !== "finalboss" &&
+      state.mode !== "teachme"
+    ) {
       els.clarifyBtn.hidden = false;
     }
 
@@ -1435,6 +1566,8 @@
       if (pub.placeholder) els.input.placeholder = pub.placeholder;
       focusFirstAnswerInput();
     }
+
+    applyTeachScaffolding(pub, full);
   }
 
   function detectBrowserAI() {
@@ -1597,6 +1730,37 @@
     els.next.hidden = false;
 
     if (ok) {
+      if (state.mode === "teachme" && state.fullQuestion && P.recordTeachCorrect) {
+        const topic = state.fullQuestion.topic;
+        const label =
+          (state.publicQ && state.publicQ.topic_label) ||
+          (Q.TOPICS && Q.TOPICS[topic]) ||
+          topic;
+        const teach = P.recordTeachCorrect(topic);
+        els.feedback.className = "feedback ok";
+        if (teach.all_graduated) {
+          els.feedback.textContent = t("feedback_teach_all_done");
+          state.mode = "smart";
+          setModeButtons();
+        } else if (teach.graduated) {
+          els.feedback.textContent = t("feedback_teach_graduated", {
+            topic: label,
+          });
+        } else {
+          els.feedback.textContent = t("feedback_teach_correct", {
+            layers: String(teach.teach_scaffold),
+            topic: label,
+          });
+        }
+        if (state.publicQ.type === "mc") {
+          [...els.choices.children].forEach((btn) => {
+            btn.disabled = true;
+            if (choiceRaw(btn) === expected) btn.classList.add("right");
+          });
+        }
+        refreshProgress();
+        return null;
+      }
       const credited = P.awardRetryCredit(state.fullQuestion);
       els.feedback.className = "feedback ok";
       els.feedback.textContent = t("feedback_retry_ok");
@@ -1659,6 +1823,59 @@
         return;
       }
       advanceBossAfterCorrect();
+      return;
+    }
+
+    // Teach Me: peel one scaffold layer on correct; no unaided mastery while training.
+    if (state.mode === "teachme") {
+      const [ok, expected] = Q.checkAnswer(state.fullQuestion, answer);
+      els.feedback.hidden = false;
+      if (state.publicQ.type === "mc") {
+        [...els.choices.children].forEach((btn) => {
+          btn.disabled = true;
+          if (ok && choiceRaw(btn) === expected) btn.classList.add("right");
+          if (!ok && choiceRaw(btn) === String(answer)) btn.classList.add("wrong");
+        });
+      }
+      if (!ok) {
+        // Keep teach panels open; allow retry like normal recovery.
+        beginRetry({
+          expected: expected,
+          hint: "",
+          unaided_correct: 0,
+          unaided_needed: P.TEACH_MAX || 5,
+          mastery_delta: 0,
+        });
+        els.feedback.className = "feedback no";
+        els.feedback.textContent = t("feedback_teach_wrong");
+        return;
+      }
+
+      const topic = state.fullQuestion.topic;
+      const label =
+        (state.publicQ && state.publicQ.topic_label) ||
+        (Q.TOPICS && Q.TOPICS[topic]) ||
+        topic;
+      const teach = P.recordTeachCorrect
+        ? P.recordTeachCorrect(topic)
+        : { teach_scaffold: 0, graduated: false, all_graduated: true };
+      els.feedback.className = "feedback ok";
+      if (teach.all_graduated) {
+        els.feedback.textContent = t("feedback_teach_all_done");
+        state.mode = "smart";
+        setModeButtons();
+      } else if (teach.graduated) {
+        els.feedback.textContent = t("feedback_teach_graduated", {
+          topic: label,
+        });
+      } else {
+        els.feedback.textContent = t("feedback_teach_correct", {
+          layers: String(teach.teach_scaffold),
+          topic: label,
+        });
+      }
+      els.next.hidden = false;
+      refreshProgress();
       return;
     }
 
@@ -1885,7 +2102,13 @@
       finishAfterRetry(false, state.lastExpected);
       return;
     }
-    if (state.fullQuestion && state.hintsUsed > 0 && !state.answered) {
+    // Teach Me auto-opens hints — skipping must not punish mastery.
+    if (
+      state.mode !== "teachme" &&
+      state.fullQuestion &&
+      state.hintsUsed > 0 &&
+      !state.answered
+    ) {
       P.recordHintSkip(state.fullQuestion, state.hintsUsed);
       refreshProgress();
     }

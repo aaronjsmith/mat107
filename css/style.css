@@ -963,6 +963,63 @@ a.linkish {
   white-space: pre-wrap;
 }
 
+.teach {
+  font-size: 1.15rem;
+  line-height: 1.55;
+  background: rgba(15, 110, 86, 0.1);
+  border-left: 3px solid var(--accent);
+  padding: 0.9rem 1.1rem;
+  margin: 0;
+  border-radius: 0 10px 10px 0;
+}
+
+.teach-badge {
+  display: inline-block;
+  margin: 0 0 0.55rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(15, 110, 86, 0.16);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+
+.teach-block {
+  margin: 0.55rem 0 0;
+}
+
+.teach-block:first-of-type {
+  margin-top: 0.15rem;
+}
+
+.teach-label {
+  margin: 0 0 0.25rem;
+  font-family: var(--display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+
+.teach-body {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.55;
+}
+
+.teach-answer .teach-body {
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.teach-note {
+  margin: 0.65rem 0 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
 .clarify.ai {
   white-space: normal;
 }
