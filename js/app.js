@@ -1299,8 +1299,8 @@
 
   /**
    * Teach Me scaffolding by remaining layers (5→1).
-   * 5: hints + how-to + answer · 4: hints + how-to · 3: hint1+2 · 2: hint1+2 · 1: hint1
-   * Calculator steps stay behind their buttons (never auto-opened).
+   * 5–4: hints + how-to · 3–2: hint1+2 · 1: hint1
+   * Answer and calculator steps are never auto-opened.
    */
   function applyTeachScaffolding(pub, full) {
     if (state.mode !== "teachme" || !full || !full.topic) return;
@@ -1313,7 +1313,6 @@
     const showHint1 = layers >= 1 && pub.has_hint1;
     const showHint2 = layers >= 2 && pub.has_hint2;
     const showHowto = layers >= 4;
-    const showAnswer = layers >= 5;
 
     // Auto-open panels; count as hinted so normal mastery isn't farmed if we fall through.
     if (showHint1 && els.hint1.textContent) {
@@ -1335,41 +1334,26 @@
     }
     if (els.clarifyBtn) els.clarifyBtn.hidden = true;
 
-    if (els.teachPanel && (showHowto || showAnswer)) {
+    if (els.teachPanel && showHowto) {
       const bits = [];
       bits.push(
         '<span class="teach-badge">' +
           escapeHtml(t("teach_badge", { layers: String(layers) })) +
           "</span>"
       );
-      if (showHowto) {
-        bits.push('<div class="teach-block teach-howto">');
-        bits.push(
-          '<p class="teach-label">' + escapeHtml(t("teach_howto_label")) + "</p>"
-        );
-        bits.push('<div class="teach-body"></div></div>');
-      }
-      if (showAnswer) {
-        bits.push('<div class="teach-block teach-answer">');
-        bits.push(
-          '<p class="teach-label">' + escapeHtml(t("teach_answer_label")) + "</p>"
-        );
-        bits.push('<div class="teach-body teach-answer-body"></div></div>');
-      }
+      bits.push('<div class="teach-block teach-howto">');
+      bits.push(
+        '<p class="teach-label">' + escapeHtml(t("teach_howto_label")) + "</p>"
+      );
+      bits.push('<div class="teach-body"></div></div>');
       bits.push(
         '<p class="teach-note">' + escapeHtml(t("teach_layer_hint")) + "</p>"
       );
       els.teachPanel.innerHTML = bits.join("");
       els.teachPanel.hidden = false;
 
-      if (showHowto) {
-        const howtoEl = els.teachPanel.querySelector(".teach-howto .teach-body");
-        if (howtoEl) setMathText(howtoEl, teachHowtoText(pub, full), true);
-      }
-      if (showAnswer) {
-        const ansEl = els.teachPanel.querySelector(".teach-answer-body");
-        if (ansEl) setMathText(ansEl, formatExpectedAnswer(full), true);
-      }
+      const howtoEl = els.teachPanel.querySelector(".teach-howto .teach-body");
+      if (howtoEl) setMathText(howtoEl, teachHowtoText(pub, full), true);
     }
   }
 
