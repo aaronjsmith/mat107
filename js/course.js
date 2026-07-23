@@ -1,4 +1,4 @@
-/* MAT107 course hub — assessment picker */
+/* MAT107 course hub — assessment picker grouped by week */
 (function () {
   "use strict";
 
@@ -73,39 +73,73 @@
     );
   }
 
+  function renderCard(assessment) {
+    const summary = C.readProgressSummary(assessment);
+    return (
+      '<article class="course-card assessment-card">' +
+      '<div class="card-badge">' +
+      escapeHtml(
+        t(assessment.badgeKey || "course_assessment_n", {
+          n: assessment.number,
+        })
+      ) +
+      "</div>" +
+      "<h3>" +
+      escapeHtml(t(assessment.titleKey)) +
+      "</h3>" +
+      '<p class="card-summary">' +
+      escapeHtml(t(assessment.summaryKey)) +
+      "</p>" +
+      '<div class="topic-pills">' +
+      topicPills(assessment.topicIds || []) +
+      "</div>" +
+      progressLine(assessment, summary) +
+      '<div class="card-actions">' +
+      '<a class="primary card-btn" href="' +
+      escapeHtml(C.quizHref(assessment.id)) +
+      '">' +
+      escapeHtml(t("course_open_practice")) +
+      "</a>" +
+      "</div>" +
+      "</article>"
+    );
+  }
+
+  function assessmentsForWeek(weekId) {
+    return (C.ASSESSMENTS || []).filter(function (a) {
+      return a.available !== false && a.weekId === weekId;
+    });
+  }
+
   function renderAssessments() {
     if (!els.assessmentList) return;
-    els.assessmentList.innerHTML = C.ASSESSMENTS.map(function (assessment) {
-      const summary = C.readProgressSummary(assessment);
-      return (
-        '<article class="course-card assessment-card">' +
-        '<div class="card-badge">' +
-        escapeHtml(
-          t(assessment.badgeKey || "course_assessment_n", {
-            n: assessment.number,
-          })
-        ) +
-        "</div>" +
-        "<h3>" +
-        escapeHtml(t(assessment.titleKey)) +
-        "</h3>" +
-        '<p class="card-summary">' +
-        escapeHtml(t(assessment.summaryKey)) +
-        "</p>" +
-        '<div class="topic-pills">' +
-        topicPills(assessment.topicIds || []) +
-        "</div>" +
-        progressLine(assessment, summary) +
-        '<div class="card-actions">' +
-        '<a class="primary card-btn" href="' +
-        escapeHtml(C.quizHref(assessment.id)) +
-        '">' +
-        escapeHtml(t("course_open_practice")) +
-        "</a>" +
-        "</div>" +
-        "</article>"
-      );
-    }).join("");
+    const groups = C.WEEK_GROUPS || [];
+    const html = groups
+      .map(function (week) {
+        const quizzes = assessmentsForWeek(week.id);
+        if (!quizzes.length) return "";
+        return (
+          '<section class="week-group" data-week="' +
+          escapeHtml(week.id) +
+          '">' +
+          '<header class="week-group-head">' +
+          "<h3 class=\"week-group-title\">" +
+          escapeHtml(t(week.titleKey)) +
+          "</h3>" +
+          (week.blurbKey
+            ? '<p class="muted week-group-blurb">' +
+              escapeHtml(t(week.blurbKey)) +
+              "</p>"
+            : "") +
+          "</header>" +
+          '<div class="card-grid">' +
+          quizzes.map(renderCard).join("") +
+          "</div>" +
+          "</section>"
+        );
+      })
+      .join("");
+    els.assessmentList.innerHTML = html;
   }
 
   function render() {

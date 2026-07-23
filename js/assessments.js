@@ -58,9 +58,49 @@
 
   const TOPIC_IDS = GEO_STATS_TOPICS.slice();
 
+  /** Hub groups aligned with Canvas modules (Weeks 1–7). */
+  const WEEK_GROUPS = [
+    {
+      id: "overview",
+      titleKey: "week.overview.title",
+      blurbKey: "week.overview.blurb",
+    },
+    {
+      id: "weeks12",
+      titleKey: "week.12.title",
+      blurbKey: "week.12.blurb",
+    },
+    {
+      id: "week3",
+      titleKey: "week.3.title",
+      blurbKey: "week.3.blurb",
+    },
+    {
+      id: "week4",
+      titleKey: "week.4.title",
+      blurbKey: "week.4.blurb",
+    },
+    {
+      id: "week5",
+      titleKey: "week.5.title",
+      blurbKey: "week.5.blurb",
+    },
+    {
+      id: "week6",
+      titleKey: "week.6.title",
+      blurbKey: "week.6.blurb",
+    },
+    {
+      id: "week7",
+      titleKey: "week.7.title",
+      blurbKey: "week.7.blurb",
+    },
+  ];
+
   const ASSESSMENTS = [
     {
       id: "overview",
+      weekId: "overview",
       number: 0,
       titleKey: "lesson.overview.title",
       summaryKey: "lesson.overview.summary",
@@ -80,6 +120,7 @@
     },
     {
       id: "assessment1",
+      weekId: "weeks12",
       number: 1,
       titleKey: "assessment.1.title",
       summaryKey: "assessment.1.summary",
@@ -94,6 +135,7 @@
     },
     {
       id: "lesson_prob",
+      weekId: "week3",
       number: 3,
       titleKey: "lesson.prob.title",
       summaryKey: "lesson.prob.summary",
@@ -108,6 +150,7 @@
     },
     {
       id: "lesson41",
+      weekId: "week4",
       number: 41,
       titleKey: "lesson.41.title",
       summaryKey: "lesson.41.summary",
@@ -127,6 +170,7 @@
     },
     {
       id: "lesson_fn2",
+      weekId: "week4",
       number: 44,
       titleKey: "lesson.fn2.title",
       summaryKey: "lesson.fn2.summary",
@@ -141,6 +185,7 @@
     },
     {
       id: "lesson_finance",
+      weekId: "week5",
       number: 5,
       titleKey: "lesson.finance.title",
       summaryKey: "lesson.finance.summary",
@@ -155,6 +200,7 @@
     },
     {
       id: "lesson_savings",
+      weekId: "week6",
       number: 6,
       titleKey: "lesson.savings.title",
       summaryKey: "lesson.savings.summary",
@@ -169,6 +215,7 @@
     },
     {
       id: "lesson_insurance",
+      weekId: "week7",
       number: 7,
       titleKey: "lesson.insurance.title",
       summaryKey: "lesson.insurance.summary",
@@ -246,6 +293,7 @@
   window.Mat107Course = {
     MASTER: MASTER,
     TOPIC_IDS: TOPIC_IDS,
+    WEEK_GROUPS: WEEK_GROUPS,
     ASSESSMENTS: ASSESSMENTS,
     progressStorageKey: progressStorageKey,
     notesStorageKey: notesStorageKey,
