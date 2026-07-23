@@ -96,6 +96,38 @@
     return "mat107-" + assessmentId + "-progress";
   }
 
+  function currentAssessment() {
+    return window.Mat107Course && window.Mat107Course.getAssessment
+      ? window.Mat107Course.getAssessment(ASSESSMENT_ID)
+      : null;
+  }
+
+  function isComposeAssessment() {
+    const a = currentAssessment();
+    return Boolean(a && a.compose);
+  }
+
+  /** Unaided count from the week quiz that owns this topic (0 if none / unread). */
+  function weekUnaidedForTopic(topic) {
+    if (!topic || !window.Mat107Course || !window.Mat107Course.weekAssessmentForTopic) {
+      return 0;
+    }
+    const week = window.Mat107Course.weekAssessmentForTopic(topic);
+    if (!week) return 0;
+    const fp = loadForeign(week.id);
+    return Number((fp.topics[topic] || {}).unaided_correct) || 0;
+  }
+
+  /**
+   * Display/logic unaided for a topic. On the overview (compose) quiz, take the
+   * max of overview storage and the owning week quiz so prior week practice counts.
+   */
+  function effectiveUnaided(p, topic) {
+    const local = Number((p.topics[topic] || {}).unaided_correct) || 0;
+    if (!isComposeAssessment()) return Math.min(local, MASTER);
+    return Math.min(MASTER, Math.max(local, weekUnaidedForTopic(topic)));
+  }
+
   function emptyForeignProgress() {
     return {
       total_correct: 0,
@@ -274,8 +306,7 @@
     const key = getBossDrillTopic();
     if (!key) return null;
     const p = load();
-    const unaided = Number((p.topics[key] || {}).unaided_correct) || 0;
-    if (unaided >= MASTER) {
+    if (effectiveUnaided(p, key) >= MASTER) {
       clearBossDrillTopic();
       return null;
     }
@@ -300,7 +331,7 @@
     const keys = Object.keys(Q.TOPICS);
     if (!keys.length) return false;
     return keys.every(function (t) {
-      return (Number((p.topics[t] || {}).unaided_correct) || 0) >= MASTER;
+      return effectiveUnaided(p, t) >= MASTER;
     });
   }
 
@@ -309,10 +340,11 @@
     const topics = {};
     let masteredCount = 0;
     let unaidedSum = 0;
-    Object.keys(p.topics).forEach((key) => {
-      const info = p.topics[key];
-      const unaided = Number(info.unaided_correct) || 0;
-      unaidedSum += Math.min(unaided, MASTER);
+    // Always iterate course topics (not only keys present in storage).
+    Object.keys(Q.TOPICS).forEach((key) => {
+      const info = p.topics[key] || emptyTopic(Q.TOPICS[key]);
+      const unaided = effectiveUnaided(p, key);
+      unaidedSum += unaided;
       const mastered = isMastered(unaided);
       if (mastered) masteredCount += 1;
       topics[key] = {
@@ -426,7 +458,7 @@
     if (!keys.length) return null;
     const weights = keys.map((t) => {
       const info = p.topics[t] || { unaided_correct: 0, attempted: 0 };
-      const remaining = Math.max(MASTER - (info.unaided_correct || 0), 0);
+      const remaining = Math.max(MASTER - effectiveUnaided(p, t), 0);
       let w = remaining * 8 + (info.attempted < 3 ? 12 : 0) + Math.random() * 6;
       if (remaining === 0) w = 2 + Math.random() * 2;
       if (avoidTopic && t === avoidTopic) w *= 0.08;

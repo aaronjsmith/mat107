@@ -95,11 +95,22 @@
     );
   }
 
+  /** True when a string looks like English prose (not a pure formula). */
+  function looksLikeProse(s) {
+    const mid = String(s).match(/\b[A-Za-z]{3,}\b/g) || [];
+    const long = String(s).match(/\b[A-Za-z]{4,}\b/g) || [];
+    // "Find slope, use the..." (≥4 short words) or "Point … intercept" (≥2 longer words)
+    return mid.length >= 4 || long.length >= 2;
+  }
+
   function isEquationLine(line) {
     const s = line.trim();
     if (!s || s.length > 160) return false;
     if (/^overview:/i.test(s)) return false;
     if (isStepLabel(s) && !/=/.test(s)) return false;
+    // Sentences with an embedded "=" (e.g. "... from x=0, then ...") must
+    // stay prose — KaTeX would otherwise collapse word spaces.
+    if (looksLikeProse(s)) return false;
     // Calculator instruction lines often end with "=" and are fine as equations
     if (/[=≈]/.test(s)) return true;
     // Pure formula fragments like "P(A and B)" or "a_n"
@@ -107,16 +118,35 @@
     return false;
   }
 
+  /**
+   * RHS of an inline "var = ..." chunk: math tokens only.
+   * Stops before English connectors so "x=0, then ..." keeps the prose.
+   */
+  const INLINE_MATH_RHS =
+    "(?:\\\\[a-zA-Z]+|[A-Za-z](?:_[0-9nN]+|\\([A-Za-z0-9]+\\))?[0-9]*|[0-9]+(?:\\.[0-9]+)?|[+\\-*/^()_{}]|[·⋅×÷π≈]|\\s+(?=[0-9A-Za-z+(\\\\π]))+";
+
   /** Pull inline math-ish tokens out of prose and render them. */
   function formatInlineProse(line) {
     const s = String(line);
     // Split on likely formula chunks: f(x) = mx + b, d(t) = rate·t + start, a_n = ...
     const parts = [];
-    const re =
-      /([A-Za-z](?:_[\{0-9A-Za-z]+|\([A-Za-z0-9]+\))?(?:\([^)]*\))?(?:\s*[=≈]\s*[^.;]+)|[A-Za-z]_\{?[^}\s=]+\}?(?:\^[\{(]?[^})\s]+[})]?)?|[A-Za-z]\([^)]*\)\s*=\s*[^=;]+)/g;
+    const re = new RegExp(
+      "([A-Za-z](?:_[\\{0-9A-Za-z]+|\\([A-Za-z0-9]+\\))?(?:\\([^)]*\\))?\\s*[=≈]\\s*" +
+        INLINE_MATH_RHS +
+        "|[A-Za-z]_\\{?[^}\\s=]+\\}?(?:\\^[\\{(]?[^})\\s]+[})])?" +
+        "|[A-Za-z]\\([^)]*\\)\\s*[=≈]\\s*" +
+        INLINE_MATH_RHS +
+        ")",
+      "g"
+    );
     let last = 0;
     let m;
     while ((m = re.exec(s)) !== null) {
+      // Reject greedy/prose matches (KaTeX would strip spaces)
+      if (looksLikeProse(m[0])) {
+        re.lastIndex = m.index + 1;
+        continue;
+      }
       if (m.index > last) {
         parts.push({ type: "text", value: s.slice(last, m.index) });
       }
@@ -161,7 +191,7 @@
       if (!rest) {
         return '<p class="math-step-label">' + label + "</p>";
       }
-      if (isEquationLine(rest) || /[=≈]/.test(rest)) {
+      if (isEquationLine(rest)) {
         return (
           '<div class="math-step">' +
           '<p class="math-step-label">' +
@@ -219,9 +249,306 @@
     return s;
   }
 
+  /* ── Calculator keycap hints (TI-36X Pro / Casio fx-115ES·991ES) ── */
+
+  function spokenKeyLabel(label) {
+    const map = {
+      "2nd": "second",
+      SHIFT: "shift",
+      "S⇔D": "S to D",
+      "◄►": "toggle decimal",
+      "×": "times",
+      "÷": "divide",
+      "−": "minus",
+      "+": "plus",
+      "=": "equals",
+      "x²": "x squared",
+      "x³": "x cubed",
+      "x□": "power",
+      "√": "square root",
+      π: "pi",
+      "(": "open parenthesis",
+      ")": "close parenthesis",
+      ".": "decimal point",
+      nPr: "n P r",
+      nCr: "n C r",
+    };
+    return map[label] || label;
+  }
+
+  function keyKind(label, brand) {
+    if (label === "2nd" || label === "SHIFT") return "shift";
+    if (label === "=") return "enter";
+    if (/^[0-9.]$/.test(label)) return "num";
+    if (/^[×÷−+]$/.test(label)) return "op";
+    if (label === "◄►" || label === "S⇔D") return brand === "ti" ? "op" : "fn";
+    return "fn";
+  }
+
+  /** Expand brand-specific aliases into physical key presses. */
+  function expandBrandKeys(label, brand) {
+    if (brand === "ti") {
+      if (label === "√") return ["2nd", "x²"];
+      if (label === "x³") return ["x□", "3"];
+      if (label === "^") return ["x□"];
+    }
+    if (brand === "casio") {
+      if (label === "2nd") return ["SHIFT"];
+      if (label === "x³") return ["SHIFT", "x²"];
+      if (label === "^") return ["x□"];
+      if (label === "◄►") return ["S⇔D"];
+    }
+    if (label === "^") return ["x□"];
+    return [label];
+  }
+
+  /**
+   * Tokenize a calculator step line into keys + plain text.
+   * Numbers become per-digit keycaps; known keys match physical labels.
+   */
+  function tokenizeCalcLine(line, brand) {
+    const s = String(line);
+    const out = [];
+    let i = 0;
+
+    function pushKeys(label) {
+      const labels = expandBrandKeys(label, brand);
+      for (let k = 0; k < labels.length; k++) {
+        out.push({
+          type: "key",
+          label: labels[k],
+          kind: keyKind(labels[k], brand),
+        });
+      }
+    }
+
+    function pushText(value) {
+      if (!value) return;
+      const last = out[out.length - 1];
+      if (last && last.type === "text") {
+        last.value += value;
+      } else {
+        out.push({ type: "text", value: value });
+      }
+    }
+
+    // Longest-first key matchers
+    const matchers = [
+      { re: /^(2nd)\b/i, label: "2nd" },
+      { re: /^(SHIFT)\b/i, label: "SHIFT" },
+      { re: /^(S⇔D|S<=>D|S↔D)/, label: "S⇔D" },
+      { re: /^(◄►|<>≈)/, label: "◄►" },
+      { re: /^(nPr)\b/, label: "nPr" },
+      { re: /^(nCr)\b/, label: "nCr" },
+      { re: /^(x\^\()/, label: "x□", after: "(" },
+      { re: /^(x\^)/, label: "x□" },
+      { re: /^(x²|x2\b)/, label: "x²" },
+      { re: /^(x³|x3\b)/, label: "x³" },
+      { re: /^(√)/, label: "√" },
+      { re: /^(π)/, label: "π" },
+      { re: /^(÷)/, label: "÷" },
+      { re: /^(×)/, label: "×" },
+      { re: /^([−–—])/, label: "−" },
+      { re: /^(\+)/, label: "+" },
+      { re: /^(=)/, label: "=" },
+      { re: /^(\^)/, label: "^" },
+      { re: /^(\()/, label: "(" },
+      { re: /^(\))/, label: ")" },
+      { re: /^(\.)/, label: "." },
+      { re: /^([0-9])/, label: null }, // digit — label from match
+    ];
+
+    while (i < s.length) {
+      if (/\s/.test(s.charAt(i))) {
+        i++;
+        continue;
+      }
+
+      const rest = s.slice(i);
+      let matched = false;
+      for (let m = 0; m < matchers.length; m++) {
+        const spec = matchers[m];
+        const hit = rest.match(spec.re);
+        if (!hit) continue;
+        const raw = hit[1] || hit[0];
+        const label = spec.label == null ? raw : spec.label;
+        pushKeys(label);
+        if (spec.after) pushKeys(spec.after);
+        i += hit[0].length;
+        matched = true;
+        break;
+      }
+      if (matched) continue;
+
+      // ASCII hyphen as minus when it looks like an operator
+      if (s.charAt(i) === "-") {
+        const prev = out[out.length - 1];
+        const prevIsKey = prev && prev.type === "key";
+        const nextIsDigit = /[0-9]/.test(s.charAt(i + 1) || "");
+        if (prevIsKey && prev.label !== "(" && nextIsDigit) {
+          // e.g. × -3 → treat as minus then digits (unary)
+          pushKeys("−");
+          i++;
+          continue;
+        }
+        if (!prev || prev.type === "text" || (prevIsKey && /[×÷+−(=]/.test(prev.label))) {
+          pushKeys("−");
+          i++;
+          continue;
+        }
+        pushKeys("−");
+        i++;
+        continue;
+      }
+
+      // Plain text run until next key-like character
+      let j = i + 1;
+      while (j < s.length) {
+        const ch = s.charAt(j);
+        if (/\s/.test(ch)) break;
+        const slice = s.slice(j);
+        let keyNext = false;
+        for (let m = 0; m < matchers.length; m++) {
+          if (matchers[m].re.test(slice)) {
+            keyNext = true;
+            break;
+          }
+        }
+        if (keyNext || ch === "-") break;
+        j++;
+      }
+      pushText(s.slice(i, j));
+      i = j;
+    }
+
+    return out;
+  }
+
+  function isCalcKeyLine(line) {
+    const s = line.trim();
+    if (!s) return false;
+    if (/^(TI-36X|Casio\b)/i.test(s)) return false;
+    // Tip / instruction sentences stay as prose (even if they mention π, ×, etc.)
+    if (
+      /^(or |do not |round |type |convert |hints?\b|you |never |enter each|start at)/i.test(
+        s
+      )
+    ) {
+      return false;
+    }
+    if (looksLikeProse(s)) return false;
+
+    // Explicit key vocabulary
+    if (
+      /\b2nd\b|SHIFT|S⇔D|S<=>D|◄►|x²|x³|x\^|\bnPr\b|\bnCr\b|[×÷√π]/.test(s)
+    ) {
+      return true;
+    }
+    // Compact entry lines ending with = or built from ops
+    if (/[=]/.test(s) && /[×÷+\-−^()]/.test(s)) {
+      return true;
+    }
+    if (/^[0-9.()\s×÷+\-−^=x²³√π^]+$/i.test(s) && /[×÷+\-−^=]/.test(s)) {
+      return true;
+    }
+    return false;
+  }
+
+  function renderKeycap(token, brand) {
+    const label = token.label;
+    const kind = token.kind || keyKind(label, brand);
+    const spoken = spokenKeyLabel(label);
+    return (
+      '<kbd class="calc-keycap calc-keycap--' +
+      escapeHtml(brand) +
+      " calc-keycap--" +
+      escapeHtml(kind) +
+      '" title="' +
+      escapeHtml(spoken) +
+      '" aria-label="' +
+      escapeHtml(spoken) +
+      '"><span class="calc-keycap-label" aria-hidden="true">' +
+      escapeHtml(label) +
+      "</span></kbd>"
+    );
+  }
+
+  function renderCalcSequence(line, brand) {
+    const tokens = tokenizeCalcLine(line, brand);
+    if (!tokens.length) {
+      return '<p class="math-prose">' + formatInlineProse(line) + "</p>";
+    }
+
+    const spokenParts = [];
+    const htmlParts = [];
+    for (let i = 0; i < tokens.length; i++) {
+      const tok = tokens[i];
+      if (tok.type === "key") {
+        spokenParts.push(spokenKeyLabel(tok.label));
+        htmlParts.push(renderKeycap(tok, brand));
+      } else {
+        const t = String(tok.value).trim();
+        if (!t) continue;
+        spokenParts.push(t);
+        htmlParts.push(
+          '<span class="calc-seq-text">' + escapeHtml(tok.value) + "</span>"
+        );
+      }
+    }
+
+    const brandName = brand === "casio" ? "Casio" : "TI-36X Pro";
+    return (
+      '<div class="calc-seq" role="group" aria-label="' +
+      escapeHtml(brandName + " keys: " + spokenParts.join(", ")) +
+      '">' +
+      htmlParts.join("") +
+      "</div>"
+    );
+  }
+
+  /**
+   * Rich HTML for calculator hint panels with stylized keycaps.
+   * brand: "ti" | "casio"
+   */
+  function formatCalcHtml(text, brand) {
+    if (text == null || text === "") return "";
+    const b = brand === "casio" ? "casio" : "ti";
+    const lines = String(text).replace(/\r\n/g, "\n").split("\n");
+    const out = ['<div class="math-doc calc-doc calc-doc--' + b + '">'];
+
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i];
+      const trimmed = raw.trim();
+      if (!trimmed) {
+        out.push('<div class="math-gap" aria-hidden="true"></div>');
+        continue;
+      }
+
+      // Brand header line
+      if (/^(TI-36X Pro|Casio)\b/i.test(trimmed)) {
+        out.push(
+          '<p class="calc-brand-header">' + escapeHtml(trimmed) + "</p>"
+        );
+        continue;
+      }
+
+      if (isCalcKeyLine(trimmed)) {
+        out.push(renderCalcSequence(trimmed, b));
+        continue;
+      }
+
+      out.push(formatLine(raw));
+    }
+
+    out.push("</div>");
+    return out.join("");
+  }
+
   window.QuizMathFormat = {
     toHtml: formatMathHtml,
     toRichHtml: formatRichHtml,
+    formatCalcHtml: formatCalcHtml,
+    tokenizeCalcLine: tokenizeCalcLine,
     toTex: toTex,
     renderTex: renderTex,
   };

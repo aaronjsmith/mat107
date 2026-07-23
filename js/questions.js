@@ -23,9 +23,16 @@
     return Boolean(window.QuizI18n && window.QuizI18n.has && window.QuizI18n.has(key));
   }
 
-  /** Pick a random prompt variant: key, key.v2, key.v3, … when present.
-   *  During the Gadianton boss fight, prefer key.boss / key.boss2… if available. */
+  function activeTheme() {
+    return window.MAT107_THEME || "";
+  }
+
+  /** Prefer assessment theme prompts, then boss .boss variants, then .vN. */
   function tVar(key, vars) {
+    const theme = activeTheme();
+    if (theme && i18nHas(key + "." + theme)) {
+      return t(key + "." + theme, vars);
+    }
     const opts = [];
     if (gadiantonBossTheme) {
       if (i18nHas(key + ".boss")) opts.push(key + ".boss");
@@ -539,6 +546,8 @@
 
   function getFormulaCards() {
     function front(key) {
+      const theme = activeTheme();
+      if (theme && i18nHas(key + "." + theme)) return t(key + "." + theme);
       if (gadiantonBossTheme && i18nHas(key + ".boss")) return t(key + ".boss");
       return t(key);
     }

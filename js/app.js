@@ -8,26 +8,32 @@
     return I18n && I18n.t ? I18n.t(key, vars) : key;
   }
 
-  function setMathText(el, text, rich) {
+  function setMathText(el, text, rich, calcBrand) {
     if (!el) return;
     if (!text) {
       el.textContent = "";
-      el.classList.remove("math-text", "math-rich");
+      el.classList.remove("math-text", "math-rich", "calc-keys-hint");
       return;
     }
     const MF = window.QuizMathFormat;
+    if (calcBrand && MF && MF.formatCalcHtml) {
+      el.innerHTML = MF.formatCalcHtml(text, calcBrand);
+      el.classList.add("math-text", "math-rich", "calc-keys-hint");
+      return;
+    }
     if (rich && MF && MF.toRichHtml) {
       el.innerHTML = MF.toRichHtml(text);
       el.classList.add("math-text", "math-rich");
+      el.classList.remove("calc-keys-hint");
       return;
     }
     if (MF && MF.toHtml) {
       el.innerHTML = MF.toHtml(text);
       el.classList.add("math-text");
-      el.classList.remove("math-rich");
+      el.classList.remove("math-rich", "calc-keys-hint");
     } else {
       el.textContent = text;
-      el.classList.remove("math-text", "math-rich");
+      el.classList.remove("math-text", "math-rich", "calc-keys-hint");
     }
   }
 
@@ -54,21 +60,21 @@
     return t(key, vars);
   }
 
+  /**
+   * Boss face emoji by fight state.
+   * kind: "live"|"idle" (default), "hit", "win", "dead"
+   */
   function bossEmoji(kind) {
     const a = getCurrentAssessment();
     if (!a) {
-      if (kind === "win") return "💀";
+      if (kind === "win" || kind === "dead") return "💀";
       if (kind === "hit") return "👹";
       return "😈";
     }
-    if (kind === "win") return a.bossEmojiWin || a.bossEmojiDead || "💀";
     if (kind === "hit") return a.bossEmojiHit || "👹";
-    if (kind === "dead") return a.bossEmojiDead || "💀";
+    if (kind === "win") return a.bossEmojiWin || a.bossEmojiDead || "💀";
+    if (kind === "dead") return a.bossEmojiDead || a.bossEmojiWin || "💀";
     return a.bossEmoji || "😈";
-  }
-
-  function bossWinFaceMode() {
-    return getCurrentAssessment() && getCurrentAssessment().theme ? null : "dead";
   }
 
   if (!Q || !P) {
@@ -407,15 +413,15 @@
     // Never mark the button as practice during a real (all-mastered) fight.
     btn.classList.toggle("practice", !ready && !realFight);
     if (inFight && realFight) {
-      btn.textContent = bossEmoji() + " " + tTheme("mode_finalboss_fighting");
+      btn.textContent = bossEmoji("live") + " " + tTheme("mode_finalboss_fighting");
     } else if (inFight) {
-      btn.textContent = bossEmoji() + " " + tTheme("mode_finalboss_practice_active");
+      btn.textContent = bossEmoji("live") + " " + tTheme("mode_finalboss_practice_active");
     } else if (p && p.final_boss_cleared && ready) {
-      btn.textContent = bossEmoji("win") + " " + tTheme("mode_finalboss_cleared");
+      btn.textContent = bossEmoji("dead") + " " + tTheme("mode_finalboss_cleared");
     } else if (ready) {
-      btn.textContent = bossEmoji() + " " + tTheme("mode_finalboss_ready");
+      btn.textContent = bossEmoji("live") + " " + tTheme("mode_finalboss_ready");
     } else {
-      btn.textContent = bossEmoji() + " " + tTheme("mode_finalboss_practice");
+      btn.textContent = bossEmoji("live") + " " + tTheme("mode_finalboss_practice");
     }
   }
 
@@ -470,8 +476,8 @@
     }
     els.bossFace.hidden = false;
     els.bossFace.textContent = emoji;
-    els.bossFace.classList.remove("hit", "dead");
-    if (mode) els.bossFace.classList.add(mode);
+    els.bossFace.classList.remove("live", "hit", "dead");
+    els.bossFace.classList.add(mode || "live");
     els.bossFace.setAttribute("aria-hidden", "false");
   }
 
@@ -482,8 +488,8 @@
       bossFaceTimer = null;
     }
     els.bossFace.hidden = true;
-    els.bossFace.classList.remove("hit", "dead");
-    els.bossFace.textContent = bossEmoji();
+    els.bossFace.classList.remove("live", "hit", "dead");
+    els.bossFace.textContent = bossEmoji("live");
     els.bossFace.setAttribute("aria-hidden", "true");
   }
 
@@ -496,7 +502,7 @@
     );
   }
 
-  /** Boss takes a hit: 👹 for 2s, then back to 😈 only while the fight continues. */
+  /** Boss takes a hit: hit emoji for 2s, then back to live only while the fight continues. */
   function bossTakeDamage(onDone) {
     if (!bossFightActive()) {
       hideBossFace();
@@ -513,7 +519,7 @@
         onDone();
         return;
       }
-      setBossFace(bossEmoji());
+      setBossFace(bossEmoji("live"), "live");
     }, 2000);
   }
 
@@ -560,7 +566,7 @@
       real: real,
     };
     persistBossRun();
-    setBossFace(bossEmoji());
+    setBossFace(bossEmoji("live"), "live");
     updateFinalBossButton(P.getProgressView());
     if (P.clearBossDrillTopic) P.clearBossDrillTopic();
   }
@@ -728,8 +734,13 @@
     state.boss.active = false;
     if (P.clearBossRun) P.clearBossRun();
     state.answered = true;
-    setBossFace(bossEmoji("win"), bossWinFaceMode());
-    bossFaceTimer = setTimeout(hideBossFace, 1100);
+    setBossFace(bossEmoji("win"), "dead");
+    bossFaceTimer = setTimeout(function () {
+      if (els.bossFace && !els.bossFace.hidden) {
+        setBossFace(bossEmoji("dead"), "dead");
+      }
+      bossFaceTimer = setTimeout(hideBossFace, 700);
+    }, 900);
     lockInputs();
     hideHintControls();
     els.skip.hidden = true;
@@ -1290,7 +1301,7 @@
             ? tTheme("boss_start")
             : tTheme("boss_start_practice");
         } else {
-          setBossFace(bossEmoji());
+          setBossFace(bossEmoji("live"), "live");
           updateFinalBossButton(P.getProgressView());
           els.feedback.hidden = false;
           els.feedback.className = "feedback ok";
@@ -1366,15 +1377,15 @@
             })
           : pub.topic_label;
     if (bossFightActive()) {
-      setBossFace(bossEmoji());
+      setBossFace(bossEmoji("live"), "live");
     } else if (state.mode !== "finalboss" || state.boss.status !== "won") {
       hideBossFace();
     }
     setMathText(els.prompt, pub.prompt);
     setMathText(els.hint1, pub.hint1 || "", true);
     setMathText(els.hint2, pub.hint2 || "", true);
-    setMathText(els.hint3ti, pub.hint3_ti || "", true);
-    setMathText(els.hint3casio, pub.hint3_casio || "", true);
+    setMathText(els.hint3ti, pub.hint3_ti || "", true, "ti");
+    setMathText(els.hint3casio, pub.hint3_casio || "", true, "casio");
     if (pub.has_hint1 && state.mode !== "finalboss") {
       els.hint1Btn.hidden = false;
     } else if (pub.has_hint2 && state.mode !== "finalboss") {
@@ -2460,7 +2471,7 @@
     if (inviteTitle) inviteTitle.textContent = tTheme("boss_invite_title");
     if (els.bossInviteModal) {
       const inviteFace = els.bossInviteModal.querySelector(".boss-invite-face");
-      if (inviteFace) inviteFace.textContent = bossEmoji();
+      if (inviteFace) inviteFace.textContent = bossEmoji("live");
     }
   }
 
