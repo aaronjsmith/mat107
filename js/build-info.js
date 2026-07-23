@@ -3,8 +3,8 @@
  * Live pages prefer the GitHub API (see footer-updated.js).
  */
 window.MAT107_BUILD = {
-  "sha": "3259508fe5f45d07e4625834e355837a3afd5794",
-  "short": "3259508",
-  "date": "2026-07-23T07:13:15-06:00",
-  "url": "https://github.com/aaronjsmith/mat107/commit/3259508fe5f45d07e4625834e355837a3afd5794"
+  "sha": "37f4d6a90f3f5e114cd7bf641f68e4b252580271",
+  "short": "37f4d6a",
+  "date": "2026-07-23T07:23:55-06:00",
+  "url": "https://github.com/aaronjsmith/mat107/commit/37f4d6a90f3f5e114cd7bf641f68e4b252580271"
 };
