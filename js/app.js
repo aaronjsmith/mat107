@@ -1299,7 +1299,8 @@
 
   /**
    * Teach Me scaffolding by remaining layers (5→1).
-   * 5: hints + how-to + answer · 4: hints + how-to · 3: hint1+2+calc · 2: hint1+2 · 1: hint1
+   * 5: hints + how-to + answer · 4: hints + how-to · 3: hint1+2 · 2: hint1+2 · 1: hint1
+   * Calculator steps stay behind their buttons (never auto-opened).
    */
   function applyTeachScaffolding(pub, full) {
     if (state.mode !== "teachme" || !full || !full.topic) return;
@@ -1311,7 +1312,6 @@
 
     const showHint1 = layers >= 1 && pub.has_hint1;
     const showHint2 = layers >= 2 && pub.has_hint2;
-    const showCalc = layers >= 3 && pub.has_hint3;
     const showHowto = layers >= 4;
     const showAnswer = layers >= 5;
 
@@ -1324,21 +1324,15 @@
       els.hint2.hidden = false;
       state.hintsUsed = Math.max(state.hintsUsed, 2);
     }
-    if (showCalc) {
-      if (els.hint3ti.textContent) {
-        els.hint3ti.hidden = false;
-        state.hintsUsed = Math.max(state.hintsUsed, 3);
-      } else if (els.hint3casio.textContent) {
-        els.hint3casio.hidden = false;
-        state.hintsUsed = Math.max(state.hintsUsed, 3);
-      }
-    }
 
-    // Hide the progressive-unlock buttons — content is already open.
+    // Hint 1/2 are already open; calc stays opt-in via buttons.
     els.hint1Btn.hidden = true;
     els.hint2Btn.hidden = true;
-    els.hint3tiBtn.hidden = true;
-    els.hint3casioBtn.hidden = true;
+    if (pub.has_hint3) showCalcButtons(false);
+    else {
+      els.hint3tiBtn.hidden = true;
+      els.hint3casioBtn.hidden = true;
+    }
     if (els.clarifyBtn) els.clarifyBtn.hidden = true;
 
     if (els.teachPanel && (showHowto || showAnswer)) {
