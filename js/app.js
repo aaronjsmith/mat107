@@ -1607,6 +1607,14 @@
     els.hint3ti.hidden = true;
     els.hint3casio.hidden = true;
     els.hint1Btn.hidden = true;
+    // Teach Me stays on Hint 1 only (no Hint 2 / calc / clarify reopen).
+    if (state.mode === "teachme") {
+      els.hint2Btn.hidden = true;
+      els.hint3tiBtn.hidden = true;
+      els.hint3casioBtn.hidden = true;
+      if (els.clarifyBtn) els.clarifyBtn.hidden = true;
+      return;
+    }
     if (els.hint2.textContent) {
       els.hint2Btn.hidden = false;
       els.hint2Btn.disabled = false;

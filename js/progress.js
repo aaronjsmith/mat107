@@ -517,10 +517,11 @@
     if (!topic || !Q.TOPICS[topic] || topic === "flashcards") return 0;
     const p = load();
     const rec = p.topics[topic] || emptyTopic(Q.TOPICS[topic]);
+    // Already mastered (overview max-merges week progress) — skip Teach Me.
+    if (effectiveUnaided(p, topic) >= MASTER) return 0;
     if (rec.teach_scaffold != null) {
       return Math.max(0, Math.min(TEACH_MAX, Number(rec.teach_scaffold) || 0));
     }
-    if ((Number(rec.unaided_correct) || 0) >= MASTER) return 0;
     return TEACH_MAX;
   }
 

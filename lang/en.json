@@ -317,7 +317,7 @@
     "feedback_teach_correct": "Got it. Training wheels peeling off — {layers} hint layer(s) left on {topic}.",
     "feedback_teach_graduated": "Nice — {topic} no longer needs Teach me hints. Keep going on other topics.",
     "feedback_teach_all_done": "Teach me complete for every topic. Switching you to Smart pick — unaided mastery from here.",
-    "feedback_teach_wrong": "Not yet — study the walkthrough above, then try again.",
+    "feedback_teach_wrong": "Not yet — use the hint above, then try again.",
     "teach_badge": "Teach me · {layers} layers left",
     "teach_howto_label": "How to work it",
     "teach_answer_label": "Answer",
