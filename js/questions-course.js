@@ -245,7 +245,17 @@
       "prob_basic",
       0.01,
       t("c.h.prob_simple"),
-      "P = " + fav + " / " + total + " ≈ " + pct + "%",
+      [
+        "Identify:",
+        "favorable = " + fav,
+        "total = " + total,
+        "",
+        "Write the model:",
+        "P = favorable / total",
+        "",
+        "Substitute:",
+        "P = " + fav + "/" + total,
+      ].join("\n"),
       "",
       calcHelp(fav + " ÷ " + total + " =", fav + " ÷ " + total + " =")
     );
@@ -330,6 +340,125 @@
     );
   }
 
+  /** Homework-style: single fair die outcomes. */
+  function genProbDice() {
+    const kind = choice(["even", "prime", "gt4", "leq2"]);
+    let fav;
+    let label;
+    if (kind === "even") {
+      fav = 3;
+      label = t("c.q.dice_even_label");
+    } else if (kind === "prime") {
+      fav = 3;
+      label = t("c.q.dice_prime_label");
+    } else if (kind === "gt4") {
+      fav = 2;
+      label = t("c.q.dice_gt4_label");
+    } else {
+      fav = 2;
+      label = t("c.q.dice_leq2_label");
+    }
+    const ans = num(fav / 6, 4);
+    return _numeric(
+      tVar("c.q.prob_dice", { event: label }),
+      ans,
+      "prob_basic",
+      0.01,
+      t("c.h.prob_dice"),
+      "Fair die: 6 outcomes. Favorable = " + fav + ". P = " + fav + "/6",
+      "",
+      calcHelp(fav + " ÷ 6 =", fav + " ÷ 6 =")
+    );
+  }
+
+  /** Homework-style: standard deck card draw. */
+  function genProbCard() {
+    const kind = choice(["heart", "face", "ace", "red"]);
+    let fav;
+    let label;
+    if (kind === "heart") {
+      fav = 13;
+      label = t("c.q.card_heart_label");
+    } else if (kind === "face") {
+      fav = 12;
+      label = t("c.q.card_face_label");
+    } else if (kind === "ace") {
+      fav = 4;
+      label = t("c.q.card_ace_label");
+    } else {
+      fav = 26;
+      label = t("c.q.card_red_label");
+    }
+    const ans = num(fav / 52, 4);
+    return _numeric(
+      tVar("c.q.prob_card", { event: label }),
+      ans,
+      "prob_basic",
+      0.01,
+      t("c.h.prob_card"),
+      "Standard deck: 52 cards. Favorable = " + fav + ". P = " + fav + "/52",
+      "",
+      calcHelp(fav + " ÷ 52 =", fav + " ÷ 52 =")
+    );
+  }
+
+  /** Two draws without replacement (dependent). */
+  function genProbWithoutReplacement() {
+    const red = choice([4, 5, 6, 7]);
+    const blue = choice([3, 4, 5, 6]);
+    const total = red + blue;
+    const ans = num((red / total) * ((red - 1) / (total - 1)), 4);
+    return _numeric(
+      tVar("c.q.prob_wo_replace", { red: red, blue: blue, total: total }),
+      ans,
+      "prob_compound",
+      0.01,
+      t("c.h.prob_wo_replace"),
+      "P(both red) = (" + red + "/" + total + ") × (" + (red - 1) + "/" + (total - 1) + ")",
+      "",
+      calcHelp(
+        "(" + red + " ÷ " + total + ") × (" + (red - 1) + " ÷ " + (total - 1) + ") =",
+        "(" + red + " ÷ " + total + ") × (" + (red - 1) + " ÷ " + (total - 1) + ") ="
+      )
+    );
+  }
+
+  /** Inclusive OR for non-exclusive events: P(A or B) = P(A)+P(B)−P(A and B). */
+  function genProbOrInclusive() {
+    const pA = choice([0.3, 0.35, 0.4, 0.45]);
+    const pB = choice([0.2, 0.25, 0.3, 0.35]);
+    const pBoth = choice([0.05, 0.1, 0.12, 0.15]);
+    const ans = num(pA + pB - pBoth, 4);
+    return _numeric(
+      tVar("c.q.prob_or_inclusive", { pA: pA, pB: pB, pBoth: pBoth }),
+      ans,
+      "prob_compound",
+      0.01,
+      t("c.h.prob_or_inclusive"),
+      "P(A or B) = P(A) + P(B) − P(A and B)",
+      "",
+      calcHelp(pA + " + " + pB + " − " + pBoth + " =", pA + " + " + pB + " − " + pBoth + " =")
+    );
+  }
+
+  /** Fundamental counting principle (menus / outfits). */
+  function genCountingMenu() {
+    const a = choice([3, 4, 5, 6]);
+    const b = choice([2, 3, 4, 5]);
+    const c = choice([2, 3, 4]);
+    const ans = a * b * c;
+    return _numeric(
+      tVar("c.q.counting_menu", { a: a, b: b, c: c }),
+      ans,
+      "prob_counting",
+      0,
+      t("c.h.counting_menu"),
+      "Multiply the choices: " + a + " × " + b + " × " + c,
+      "",
+      calcHelp(a + " × " + b + " × " + c + " =", a + " × " + b + " × " + c + " =")
+    );
+  }
+
   // --- Functions 2 ------------------------------------------------------------
 
   function genLinearEval() {
@@ -337,15 +466,28 @@
     const b = choice([10, 20, 50, 100, -5]);
     const x = choice([0, 1, 2, 3, 5, 8]);
     const ans = m * x + b;
+    const bTex = b >= 0 ? "+ " + b : "- " + Math.abs(b);
     return _numeric(
       tVar("c.q.linear_eval", { m: m, b: b, x: x }),
       ans,
       "fn_linear",
       0,
       t("c.h.linear_eval"),
-      "f(x) = " + m + "x + " + b + "; substitute x = " + x,
+      [
+        "Identify:",
+        "m = " + m,
+        "b = " + b,
+        "x = " + x,
+        "",
+        "Write the model:",
+        "f(x) = mx + b",
+        "f(x) = " + m + "x " + bTex,
+        "",
+        "Substitute x = " + x + ":",
+        "f(" + x + ") = " + m + "(" + x + ") " + bTex,
+      ].join("\n"),
       "",
-      calcHelp(m + " × " + x + " + " + b + " =", m + " × " + x + " + " + b + " =")
+      calcHelp(m + " × " + x + " + (" + b + ") =", m + " × " + x + " + (" + b + ") =")
     );
   }
 
@@ -360,7 +502,19 @@
       "fn_linear",
       0,
       t("c.h.linear_model"),
-      "d(t) = " + rate + "t + " + start,
+      [
+        "Identify:",
+        "rate = " + rate,
+        "start = " + start,
+        "t = " + tHours,
+        "",
+        "Write the model:",
+        "d(t) = rate · t + start",
+        "d(t) = " + rate + "t + " + start,
+        "",
+        "Substitute t = " + tHours + ":",
+        "d(" + tHours + ") = " + rate + "(" + tHours + ") + " + start,
+      ].join("\n"),
       "",
       calcHelp(rate + " × " + tHours + " + " + start + " =", rate + " × " + tHours + " + " + start + " =")
     );
@@ -380,9 +534,113 @@
       "fn_slope",
       0.01,
       t("c.h.slope_points"),
-      "m = (y₂ − y₁)/(x₂ − x₁) = (" + y2 + " − " + y1 + ")/(" + x2 + " − " + x1 + ")",
+      [
+        "Identify:",
+        "(x_1, y_1) = (" + x1 + ", " + y1 + ")",
+        "(x_2, y_2) = (" + x2 + ", " + y2 + ")",
+        "",
+        "Write the model:",
+        "m = (y_2 - y_1)/(x_2 - x_1)",
+        "",
+        "Substitute:",
+        "m = (" + y2 + " - " + y1 + ")/(" + x2 + " - " + x1 + ")",
+      ].join("\n"),
       "",
       calcHelp("(" + y2 + " − " + y1 + ") ÷ (" + x2 + " − " + x1 + ") =", "(" + y2 + " − " + y1 + ") ÷ (" + x2 + " − " + x1 + ") =")
+    );
+  }
+
+  /** Homework-style: build linear model from a table, then evaluate. */
+  function genLinearFromTable() {
+    const b = choice([50, 100, 200, 255, 300]);
+    const m = choice([15, 20, 40, 120, 240]);
+    const step = choice([1, 2]);
+    const w = choice([5, 8, 10, 11, 12]);
+    const x1 = step;
+    const y1 = b + m * x1;
+    const x2 = step * 2;
+    const y2 = b + m * x2;
+    const ans = b + m * w;
+    return _numeric(
+      tVar("c.q.linear_table", {
+        b: b,
+        x1: x1,
+        y1: y1,
+        x2: x2,
+        y2: y2,
+        w: w,
+      }),
+      ans,
+      "fn_linear",
+      0,
+      t("c.h.linear_table"),
+      [
+        "Initial value b = " + b + " (when x = 0).",
+        "Slope m = (" + y1 + " − " + b + ")/(" + x1 + " − 0) = " + m,
+        "Model: f(x) = " + m + "x + " + b,
+        "Evaluate at x = " + w,
+      ].join("\n"),
+      "",
+      calcHelp(m + " × " + w + " + " + b + " =", m + " × " + w + " + " + b + " =")
+    );
+  }
+
+  /** Write slope-intercept from two points, then evaluate at a given x. */
+  function genLinearFromPointsEval() {
+    const b = choice([2, 5, 7, 10, -3]);
+    const m = choice([-2, -1, 1, 2, 3, -3]);
+    const x2 = choice([2, 3, 4, 5]);
+    const y2 = b + m * x2;
+    const xAsk = choice([6, 8, 9, 10]);
+    const ans = b + m * xAsk;
+    return _numeric(
+      tVar("c.q.linear_points_eval", {
+        x1: 0,
+        y1: b,
+        x2: x2,
+        y2: y2,
+        x: xAsk,
+      }),
+      ans,
+      "fn_slope",
+      0,
+      t("c.h.linear_points_eval"),
+      [
+        "Point (0, " + b + ") ⇒ y-intercept b = " + b,
+        "m = (" + y2 + " − " + b + ")/(" + x2 + " − 0) = " + m,
+        "f(x) = " + m + "x + " + b,
+        "f(" + xAsk + ") = " + m + "(" + xAsk + ") + " + b,
+      ].join("\n"),
+      "",
+      calcHelp(m + " × " + xAsk + " + " + b + " =", m + " × " + xAsk + " + " + b + " =")
+    );
+  }
+
+  /** Exponential growth/decay word problem (population, investment factor). */
+  function genExpWord() {
+    const a = choice([80, 120, 200, 500, 1000]);
+    const grow = Math.random() < 0.55;
+    const pct = choice([5, 8, 10, 12, 15, 20]);
+    const r = grow ? 1 + pct / 100 : 1 - pct / 100;
+    const n = choice([3, 4, 5, 6]);
+    const ans = num(a * Math.pow(r, n), 2);
+    return _numeric(
+      tVar(grow ? "c.q.exp_growth" : "c.q.exp_decay", {
+        a: a,
+        pct: pct,
+        n: n,
+      }),
+      ans,
+      "fn_exp",
+      0.5,
+      t("c.h.exp_word"),
+      [
+        "Initial a = " + a,
+        "Factor r = " + r + " each year",
+        "f(n) = " + a + "·(" + r + ")^" + n,
+      ].join("\n"),
+      "",
+      calcHelp(a + " × " + r + "^" + n + " =", a + " × " + r + "^" + n + " =")
     );
   }
 
@@ -397,7 +655,19 @@
       "fn_exp",
       0.5,
       t("c.h.exp_eval"),
-      "f(n) = " + a + " · (" + r + ")^" + n,
+      [
+        "Identify:",
+        "a = " + a,
+        "r = " + r,
+        "n = " + n,
+        "",
+        "Write the model:",
+        "f(n) = a · r^n",
+        "f(n) = " + a + " · (" + r + ")^n",
+        "",
+        "Substitute n = " + n + ":",
+        "f(" + n + ") = " + a + " · (" + r + ")^" + n,
+      ].join("\n"),
       "",
       calcHelp(a + " × " + r + " ^ " + n + " =", a + " × " + r + " ^ " + n + " =")
     );
@@ -414,7 +684,18 @@
       "fn_interest",
       0.5,
       t("c.h.simple_interest"),
-      "A = P(1 + rt) = " + P + "(1 + " + r + "·" + years + ")",
+      [
+        "Identify:",
+        "P = " + P,
+        "r = " + r,
+        "t = " + years,
+        "",
+        "Write the model:",
+        "A = P(1 + rt)",
+        "",
+        "Substitute:",
+        "A = " + P + "(1 + " + r + " · " + years + ")",
+      ].join("\n"),
       "dollars",
       calcHelp(P + " × (1 + " + r + " × " + years + ") =", P + " × (1 + " + r + " × " + years + ") =")
     );
@@ -431,7 +712,18 @@
       "fn_interest",
       1,
       t("c.h.compound_once"),
-      "A = P(1+r)^t = " + P + "(1+" + r + ")^" + years,
+      [
+        "Identify:",
+        "P = " + P,
+        "r = " + r,
+        "t = " + years,
+        "",
+        "Write the model:",
+        "A = P(1 + r)^t",
+        "",
+        "Substitute:",
+        "A = " + P + "(1 + " + r + ")^" + years,
+      ].join("\n"),
       "dollars",
       calcHelp(P + " × (1 + " + r + ") ^ " + years + " =", P + " × (1 + " + r + ") ^ " + years + " =")
     );
@@ -694,14 +986,22 @@
   const GENERATORS = [
     genProbSimple,
     genProbComplement,
+    genProbDice,
+    genProbCard,
     genProbIndependent,
     genProbOrExclusive,
+    genProbOrInclusive,
+    genProbWithoutReplacement,
     genPerm,
     genComb,
+    genCountingMenu,
     genLinearEval,
     genLinearModel,
+    genLinearFromTable,
     genSlopePoints,
+    genLinearFromPointsEval,
     genExpEval,
+    genExpWord,
     genSimpleInterest,
     genCompoundInterestBasic,
     genBudgetSurplus,

@@ -1681,6 +1681,54 @@
     );
   }
 
+  /** Homework-style: rectangular box / prism volume. */
+  function genBoxVolume() {
+    const L = nextChoice("boxL", [4, 5, 6, 8, 10, 12]);
+    const W = nextChoice("boxW", [2, 3, 4, 5, 6]);
+    const H = nextChoice("boxH", [2, 3, 4, 5, 7]);
+    const vol = L * W * H;
+    return _numeric(
+      tVar("q.box_vol", { L: L, W: W, H: H }),
+      num(vol),
+      "volume",
+      0,
+      t("h.box_vol"),
+      "V = L × W × H = " + L + " × " + W + " × " + H,
+      t("unit.cu_in"),
+      calcHelp(L + " × " + W + " × " + H + " =", L + " × " + W + " × " + H + " =")
+    );
+  }
+
+  /** Homework-style: convert inches → feet → yards in one chain. */
+  function genInchFootYard() {
+    const inches = nextChoice("ifyIn", [36, 48, 54, 72, 90, 108, 144]);
+    const ask = choice(["feet", "yards"]);
+    if (ask === "feet") {
+      const ans = inches / 12;
+      return _numeric(
+        tVar("q.inch_to_ft", { inches: inches }),
+        num(ans),
+        "conversions",
+        0.01,
+        t("h.inch_to_ft"),
+        inches + " in ÷ 12 = feet",
+        t("unit.ft"),
+        calcHelp(inches + " ÷ 12 =", inches + " ÷ 12 =")
+      );
+    }
+    const ans = inches / 36;
+    return _numeric(
+      tVar("q.inch_to_yd", { inches: inches }),
+      num(ans),
+      "conversions",
+      0.01,
+      t("h.inch_to_yd"),
+      inches + " in ÷ 36 = yards (or ÷12 then ÷3)",
+      t("unit.yd"),
+      calcHelp(inches + " ÷ 36 =", inches + " ÷ 36 =")
+    );
+  }
+
   function genSphereVolume() {
     const r = nextChoice("sphereR", [2, 2.5, 3, 3.5, 4, 4.5, 5, 6]);
     const vol = (4 / 3) * PI * r * r * r;
@@ -2248,6 +2296,27 @@
       0,
       t("h.range"),
       "range = " + Math.max.apply(null, data) + " − " + Math.min.apply(null, data)
+    );
+  }
+
+  /** Homework-style: midrange = (min + max) / 2. */
+  function genMidrange() {
+    const data = [];
+    for (let i = 0; i < 6; i++) data.push(randInt(4, 40));
+    shuffle(data);
+    const lo = Math.min.apply(null, data);
+    const hi = Math.max.apply(null, data);
+    const ans = num((lo + hi) / 2, 4);
+    const ds = "{" + data.join(", ") + "}";
+    return _numeric(
+      tVar("q.midrange", { ds: ds }),
+      ans,
+      "stats_center",
+      0.05,
+      t("h.midrange"),
+      "midrange = (min + max) / 2 = (" + lo + " + " + hi + ") / 2",
+      "",
+      calcHelp("(" + lo + " + " + hi + ") ÷ 2 =", "(" + lo + " + " + hi + ") ÷ 2 =")
     );
   }
 
@@ -2993,6 +3062,7 @@
     genFence,
     genSoupCan,
     genCubeVolume,
+    genBoxVolume,
     genSphereVolume,
     genDriveway,
     genTv,
@@ -3001,7 +3071,9 @@
     genCarpet,
     genPizza,
     genBallAir,
+    genInchFootYard,
     genMeanMedianModeRange,
+    genMidrange,
     genBestMeasureFixed,
     genRangeRule,
     genCompareVariation,

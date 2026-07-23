@@ -23,6 +23,26 @@
     "literacy",
   ];
 
+  /** Canvas Geometry reading / homework skill set (Weeks 1–2). */
+  const GEO_HW_TOPICS = [
+    "conversions",
+    "formulas",
+    "perimeter_area",
+    "volume",
+    "pythagorean",
+    "scale_rates",
+    "scaling",
+  ];
+
+  /** Canvas Statistics homework skill set (Weeks 1–2). */
+  const STATS_HW_TOPICS = [
+    "stats_center",
+    "stats_spread",
+    "z_scores",
+    "distributions",
+    "literacy",
+  ];
+
   const PROB_TOPICS = ["prob_basic", "prob_compound", "prob_counting"];
 
   const FN1_TOPICS = [
@@ -132,6 +152,36 @@
       questionsScript: "js/questions.js",
       features: { flashcards: true, notecard: true, boss: true },
       topicIds: GEO_STATS_TOPICS.slice(),
+    },
+    {
+      id: "hw_geo",
+      weekId: "weeks12",
+      number: 11,
+      titleKey: "hw.geo.title",
+      summaryKey: "hw.geo.summary",
+      badgeKey: "hw.geo.badge",
+      brandSubKey: "hw.geo.brand_sub",
+      pageTitleKey: "hw.geo.page_title",
+      backKey: "course_back",
+      available: true,
+      questionsScript: "js/questions.js",
+      features: { flashcards: true, notecard: true, boss: false },
+      topicIds: GEO_HW_TOPICS.slice(),
+    },
+    {
+      id: "hw_stats",
+      weekId: "weeks12",
+      number: 12,
+      titleKey: "hw.stats.title",
+      summaryKey: "hw.stats.summary",
+      badgeKey: "hw.stats.badge",
+      brandSubKey: "hw.stats.brand_sub",
+      pageTitleKey: "hw.stats.page_title",
+      backKey: "course_back",
+      available: true,
+      questionsScript: "js/questions.js",
+      features: { flashcards: false, notecard: true, boss: false },
+      topicIds: STATS_HW_TOPICS.slice(),
     },
     {
       id: "lesson_prob",
@@ -257,6 +307,60 @@
     return found ? found.id : null;
   }
 
+  function assessmentOwnsTopic(assessment, topicId) {
+    if (!assessment || !topicId) return false;
+    const ids = assessment.topicIds || [];
+    return ids.indexOf(topicId) >= 0;
+  }
+
+  /** Non-compose (week) quiz that owns a topic, if any. */
+  function weekAssessmentForTopic(topicId) {
+    if (!topicId) return null;
+    for (let i = 0; i < ASSESSMENTS.length; i++) {
+      const a = ASSESSMENTS[i];
+      if (a.compose) continue;
+      if (assessmentOwnsTopic(a, topicId)) return a;
+    }
+    return null;
+  }
+
+  /**
+   * Assessments that should receive topic-level progress sync from `fromAssessmentId`.
+   * Overview (compose) → week owner(s); week quiz → compose overview(s) that include the topic.
+   */
+  function relatedAssessmentIdsForTopic(topicId, fromAssessmentId) {
+    const from = getAssessment(fromAssessmentId);
+    if (!from || !topicId || !assessmentOwnsTopic(from, topicId)) return [];
+    const ids = [];
+    if (from.compose) {
+      ASSESSMENTS.forEach(function (a) {
+        if (a.compose || a.id === from.id) return;
+        if (assessmentOwnsTopic(a, topicId)) ids.push(a.id);
+      });
+    } else {
+      ASSESSMENTS.forEach(function (a) {
+        if (!a.compose || a.id === from.id) return;
+        if (assessmentOwnsTopic(a, topicId)) ids.push(a.id);
+      });
+    }
+    return ids;
+  }
+
+  function readStoredProgress(assessmentId) {
+    try {
+      const raw = localStorage.getItem(progressStorageKey(assessmentId));
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function topicUnaided(progress, topicId) {
+    if (!progress || !progress.topics) return 0;
+    return Number((progress.topics[topicId] || {}).unaided_correct) || 0;
+  }
+
   function readProgressSummary(assessment) {
     if (!assessment) return null;
     const topicIds = assessment.topicIds || [];
@@ -268,12 +372,18 @@
       bossCleared: false,
     };
     try {
-      const raw = localStorage.getItem(progressStorageKey(assessment.id));
-      if (!raw) return empty;
-      const p = JSON.parse(raw);
+      const p = readStoredProgress(assessment.id) || {};
       let mastered = 0;
       topicIds.forEach(function (tid) {
-        const n = Number((p.topics && p.topics[tid] || {}).unaided_correct) || 0;
+        let n = topicUnaided(p, tid);
+        // Overview hub: also count week-quiz mastery for the same topic.
+        if (assessment.compose) {
+          const week = weekAssessmentForTopic(tid);
+          if (week) {
+            const wp = readStoredProgress(week.id);
+            n = Math.max(n, topicUnaided(wp, tid));
+          }
+        }
         if (n >= MASTER) mastered += 1;
       });
       const attempted = Number(p.total_attempted) || 0;
@@ -301,6 +411,9 @@
     getAssessment: getAssessment,
     getDefaultAssessmentId: getDefaultAssessmentId,
     resolveAssessmentId: resolveAssessmentId,
+    assessmentOwnsTopic: assessmentOwnsTopic,
+    weekAssessmentForTopic: weekAssessmentForTopic,
+    relatedAssessmentIdsForTopic: relatedAssessmentIdsForTopic,
     readProgressSummary: readProgressSummary,
   };
 })();

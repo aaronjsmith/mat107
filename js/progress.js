@@ -86,6 +86,131 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
+  function foreignStorageKey(assessmentId) {
+    if (
+      window.Mat107Course &&
+      window.Mat107Course.progressStorageKey
+    ) {
+      return window.Mat107Course.progressStorageKey(assessmentId);
+    }
+    return "mat107-" + assessmentId + "-progress";
+  }
+
+  function emptyForeignProgress() {
+    return {
+      total_correct: 0,
+      total_attempted: 0,
+      total_credit: 0,
+      total_unaided_correct: 0,
+      streak: 0,
+      best_streak: 0,
+      topics: {},
+      history: [],
+      final_boss_cleared: false,
+      final_boss_cleared_at: null,
+      boss_run: null,
+      boss_drill_topic: null,
+      updated_at: null,
+    };
+  }
+
+  function loadForeign(assessmentId) {
+    try {
+      const raw = localStorage.getItem(foreignStorageKey(assessmentId));
+      if (!raw) return emptyForeignProgress();
+      const data = JSON.parse(raw);
+      data.topics = data.topics || {};
+      data.total_credit =
+        data.total_credit != null ? data.total_credit : data.total_correct || 0;
+      data.total_unaided_correct = data.total_unaided_correct || 0;
+      data.total_correct = data.total_correct || 0;
+      data.total_attempted = data.total_attempted || 0;
+      return data;
+    } catch (e) {
+      return emptyForeignProgress();
+    }
+  }
+
+  function saveForeign(assessmentId, data) {
+    data.updated_at = new Date().toISOString();
+    localStorage.setItem(foreignStorageKey(assessmentId), JSON.stringify(data));
+  }
+
+  /**
+   * Week-master sync: push topic progress between overview (compose) and the
+   * week quiz that owns the topic. Unaided uses max-merge so independent higher
+   * progress is never wiped; attempted/correct/credit apply the same deltas.
+   */
+  function syncTopicToRelated(topic, deltas) {
+    if (!topic || !window.Mat107Course) return;
+    const related =
+      window.Mat107Course.relatedAssessmentIdsForTopic &&
+      window.Mat107Course.relatedAssessmentIdsForTopic(topic, ASSESSMENT_ID);
+    if (!related || !related.length) return;
+
+    const attemptedDelta = Number(deltas && deltas.attempted) || 0;
+    const correctDelta = Number(deltas && deltas.correct) || 0;
+    const creditDelta = Number(deltas && deltas.credit) || 0;
+    const sourceUnaided =
+      deltas && deltas.unaided_correct != null
+        ? Math.max(0, Math.min(MASTER, Number(deltas.unaided_correct) || 0))
+        : null;
+    const label =
+      (Q.TOPICS && Q.TOPICS[topic]) ||
+      (deltas && deltas.label) ||
+      topic;
+
+    related.forEach(function (id) {
+      if (!id || id === ASSESSMENT_ID) return;
+      const p = loadForeign(id);
+      if (!p.topics[topic]) p.topics[topic] = emptyTopic(label);
+      const rec = p.topics[topic];
+      rec.label = label;
+
+      if (attemptedDelta) {
+        p.total_attempted = (p.total_attempted || 0) + attemptedDelta;
+        rec.attempted = (rec.attempted || 0) + attemptedDelta;
+      }
+      if (correctDelta) {
+        p.total_correct = (p.total_correct || 0) + correctDelta;
+        rec.correct = (rec.correct || 0) + correctDelta;
+      }
+      if (creditDelta) {
+        p.total_credit = (p.total_credit || 0) + creditDelta;
+        rec.credit = (rec.credit || 0) + creditDelta;
+      }
+
+      if (sourceUnaided != null) {
+        const prev = Number(rec.unaided_correct) || 0;
+        const next = Math.max(prev, sourceUnaided);
+        if (next !== prev) {
+          rec.unaided_correct = next;
+          syncMasteredFlag(rec);
+          p.total_unaided_correct = Math.max(
+            0,
+            (p.total_unaided_correct || 0) + (next - prev)
+          );
+        } else {
+          syncMasteredFlag(rec);
+        }
+      }
+
+      saveForeign(id, p);
+    });
+  }
+
+  /** After import, raise related assessment topics to at least this store's unaided. */
+  function syncAllTopicsFromCurrent() {
+    const p = load();
+    Object.keys(p.topics || {}).forEach(function (topic) {
+      const rec = p.topics[topic] || {};
+      syncTopicToRelated(topic, {
+        unaided_correct: Number(rec.unaided_correct) || 0,
+        label: rec.label,
+      });
+    });
+  }
+
   function normalizeBossRun(raw) {
     if (!raw || typeof raw !== "object") return null;
     if (!raw.active || raw.status !== "running") return null;
@@ -245,6 +370,7 @@
     const prev = Number(rec.unaided_correct) || 0;
     if (prev <= 0) {
       save(p);
+      syncTopicToRelated(topic, { unaided_correct: 0 });
       return { dropped_to: 0, topic: topic, topics_affected: 0, prev: prev };
     }
     const droppedTo = prev - 1;
@@ -252,6 +378,8 @@
     syncMasteredFlag(rec);
     p.total_unaided_correct = Math.max(0, (p.total_unaided_correct || 0) - 1);
     save(p);
+    // Max-merge will not lower related; still push current so gains stay aligned.
+    syncTopicToRelated(topic, { unaided_correct: droppedTo });
     return { dropped_to: droppedTo, topic: topic, topics_affected: 1, prev: prev };
   }
 
@@ -273,9 +401,11 @@
         (p.total_unaided_correct || 0) + (droppedTo - prev)
       );
       save(p);
+      syncTopicToRelated(topic, { unaided_correct: droppedTo });
       return { dropped_to: droppedTo, topic: topic, topics_affected: 1 };
     }
     save(p);
+    syncTopicToRelated(topic, { unaided_correct: Math.min(prev, droppedTo) });
     return { dropped_to: Math.min(prev, droppedTo), topic: topic, topics_affected: 0 };
   }
 
@@ -395,6 +525,14 @@
     p.history = p.history.slice(-100);
     save(p);
 
+    syncTopicToRelated(topic, {
+      attempted: 1,
+      correct: ok ? 1 : 0,
+      credit: credit,
+      unaided_correct: unaided,
+      label: Q.TOPICS[topic] || topic,
+    });
+
     return {
       correct: ok,
       expected: expected,
@@ -436,6 +574,10 @@
     p.history = p.history.slice(-100);
     save(p);
     const unaided = Number(p.topics[topic].unaided_correct) || 0;
+    syncTopicToRelated(topic, {
+      unaided_correct: unaided,
+      label: Q.TOPICS[topic] || topic,
+    });
     return {
       mastery_delta: masteryDelta,
       unaided_correct: unaided,
@@ -467,6 +609,12 @@
     p.history = p.history.slice(-100);
     save(p);
     const unaided = Number(p.topics[topic].unaided_correct) || 0;
+    syncTopicToRelated(topic, {
+      correct: 1,
+      credit: credit,
+      unaided_correct: unaided,
+      label: Q.TOPICS[topic] || topic,
+    });
     return {
       correct: true,
       credit: credit,
@@ -531,6 +679,7 @@
       };
     });
     save(next);
+    syncAllTopicsFromCurrent();
     return next;
   }
 

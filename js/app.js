@@ -8,20 +8,26 @@
     return I18n && I18n.t ? I18n.t(key, vars) : key;
   }
 
-  function setMathText(el, text) {
+  function setMathText(el, text, rich) {
     if (!el) return;
     if (!text) {
       el.textContent = "";
-      el.classList.remove("math-text");
+      el.classList.remove("math-text", "math-rich");
       return;
     }
     const MF = window.QuizMathFormat;
+    if (rich && MF && MF.toRichHtml) {
+      el.innerHTML = MF.toRichHtml(text);
+      el.classList.add("math-text", "math-rich");
+      return;
+    }
     if (MF && MF.toHtml) {
       el.innerHTML = MF.toHtml(text);
       el.classList.add("math-text");
+      el.classList.remove("math-rich");
     } else {
       el.textContent = text;
-      el.classList.remove("math-text");
+      el.classList.remove("math-text", "math-rich");
     }
   }
 
@@ -939,10 +945,10 @@
     els.hint2.hidden = true;
     els.hint3ti.hidden = true;
     els.hint3casio.hidden = true;
-    els.hint1.textContent = "";
-    els.hint2.textContent = "";
-    els.hint3ti.textContent = "";
-    els.hint3casio.textContent = "";
+    setMathText(els.hint1, "");
+    setMathText(els.hint2, "");
+    setMathText(els.hint3ti, "");
+    setMathText(els.hint3casio, "");
     els.hint1Btn.disabled = false;
     els.hint2Btn.disabled = false;
     els.hint3tiBtn.disabled = false;
@@ -1365,11 +1371,10 @@
       hideBossFace();
     }
     setMathText(els.prompt, pub.prompt);
-    setMathText(els.hint1, pub.hint1 || "");
-    setMathText(els.hint2, pub.hint2 || "");
-    setMathText(els.hint3ti, pub.hint3_ti || "");
-    setMathText(els.hint3casio, pub.hint3_casio || "");
-
+    setMathText(els.hint1, pub.hint1 || "", true);
+    setMathText(els.hint2, pub.hint2 || "", true);
+    setMathText(els.hint3ti, pub.hint3_ti || "", true);
+    setMathText(els.hint3casio, pub.hint3_casio || "", true);
     if (pub.has_hint1 && state.mode !== "finalboss") {
       els.hint1Btn.hidden = false;
     } else if (pub.has_hint2 && state.mode !== "finalboss") {
