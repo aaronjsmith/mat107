@@ -374,7 +374,12 @@
 
     while (i < s.length) {
       if (/\s/.test(s.charAt(i))) {
-        i++;
+        // Keep a single space between adjacent text runs ("if needed")
+        while (i < s.length && /\s/.test(s.charAt(i))) i++;
+        const last = out[out.length - 1];
+        if (last && last.type === "text" && !/\s$/.test(last.value)) {
+          last.value += " ";
+        }
         continue;
       }
 
@@ -444,27 +449,42 @@
     if (/^(TI-36X|Casio\b)/i.test(s)) return false;
     // Tip / instruction sentences stay as prose (even if they mention π, ×, etc.)
     if (
-      /^(or |do not |round |type |convert |hints?\b|you |never |enter each|start at)/i.test(
+      /^(or |do not |round |type |convert |hints?\b|you |never |enter each|start at|like )/i.test(
         s
       )
     ) {
       return false;
     }
-    if (looksLikeProse(s)) return false;
 
-    // Explicit key vocabulary
-    if (
-      /\b2nd\b|SHIFT|S⇔D|S<=>D|◄►|x²|x³|x\^|\bnPr\b|\bnCr\b|[×÷√π]/.test(s)
-    ) {
-      return true;
-    }
-    // Compact entry lines ending with = or built from ops
-    if (/[=]/.test(s) && /[×÷+\-−^()]/.test(s)) {
-      return true;
-    }
+    // Ignore trailing "then ◄► if needed" / "; round…" for prose checks
+    const core = s
+      .replace(/\s+then\b[\s\S]*$/i, "")
+      .replace(/\s*;\s*round\b[\s\S]*$/i, "")
+      .trim();
+    const probe = core || s;
+
+    // Entry sequences typically start with a number, paren, or named key
+    const startsLikeKeys =
+      /^(?:\d|√|π|\(|2nd\b|SHIFT\b|nPr\b|nCr\b)/i.test(s);
+    const hasOpsOrKeys =
+      /\b2nd\b|SHIFT|S⇔D|S<=>D|◄►|x²|x³|x\^|\bnPr\b|\bnCr\b|[×÷√π=]/.test(s);
+
+    if (startsLikeKeys && hasOpsOrKeys) return true;
+
+    // Compact symbolic line (no English)
     if (/^[0-9.()\s×÷+\-−^=x²³√π^]+$/i.test(s) && /[×÷+\-−^=]/.test(s)) {
       return true;
     }
+
+    // Formula core without prose (e.g. after stripping "then …")
+    if (
+      hasOpsOrKeys &&
+      !looksLikeProse(probe) &&
+      (/[×÷+\-−^=()]/.test(probe) || /\b2nd\b|x²|x³|√|SHIFT|S⇔D|◄►/.test(probe))
+    ) {
+      return true;
+    }
+
     return false;
   }
 
@@ -505,7 +525,7 @@
         if (!t) continue;
         spokenParts.push(t);
         htmlParts.push(
-          '<span class="calc-seq-text">' + escapeHtml(tok.value) + "</span>"
+          '<span class="calc-seq-text">' + escapeHtml(t) + "</span>"
         );
       }
     }
