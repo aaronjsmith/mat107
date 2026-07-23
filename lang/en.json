@@ -332,6 +332,7 @@
     "fn.q.seq_type": "Is the sequence {seq} arithmetic or geometric?",
     "fn.q.seq_type.winter": "Do the daily mile counts on the winter trail {seq} form an arithmetic or geometric sequence?",
     "footer_github": "View source on GitHub",
+    "footer_updated": "Last updated July 23, 2026",
     "h.area_room_multi": "Multiply length × width for square feet. Divide that area by 9 to get square yards.",
     "h.ball_double": "Volume of a sphere scales with r³, so 2³ = 8 times the volume.",
     "h.ball_half": "Volume scales with r³, so (1/2)³ = 1/8 of the volume.",

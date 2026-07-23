@@ -101,23 +101,30 @@ html[dir="rtl"] .lang-wrap {
 .site-footer {
   margin: 0 auto;
   padding: 0.85rem 1.75rem 1.5rem;
-  max-width: 1400px;
+  max-width: 1280px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+body.course-page .site-footer {
+  max-width: 1120px;
 }
 
 .scripture-quote {
-  margin: 0 0 0.85rem;
-  padding: 0.85rem 1rem;
-  border-left: 3px solid var(--accent);
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-left: 2px solid var(--accent);
   background: rgba(15, 110, 86, 0.06);
-  border-radius: 0 10px 10px 0;
-  max-width: 52rem;
+  border-radius: 0 8px 8px 0;
+  width: 100%;
+  max-width: none;
 }
 
 .scripture-quote p {
   margin: 0;
   font-family: var(--display);
-  font-size: 0.98rem;
-  line-height: 1.5;
+  font-size: 0.78rem;
+  line-height: 1.4;
   color: var(--ink);
   font-style: italic;
   max-width: none;
@@ -125,10 +132,10 @@ html[dir="rtl"] .lang-wrap {
 
 .scripture-quote cite {
   display: block;
-  margin-top: 0.45rem;
+  margin-top: 0.3rem;
   font-family: var(--font);
   font-style: normal;
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   color: var(--muted);
   letter-spacing: 0.02em;
 }
@@ -138,7 +145,8 @@ html[dir="rtl"] .lang-wrap {
   font-size: 0.78rem;
   line-height: 1.45;
   color: var(--muted);
-  max-width: 52rem;
+  max-width: none;
+  width: 100%;
 }
 
 .site-footer a {
@@ -146,8 +154,23 @@ html[dir="rtl"] .lang-wrap {
   text-underline-offset: 2px;
 }
 
-.site-footer .footer-links {
+.site-footer .footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.25rem;
   margin-top: 0.55rem;
+}
+
+.site-footer .footer-updated {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.site-footer .footer-links {
+  margin: 0;
   font-size: 0.85rem;
   font-weight: 600;
 }
