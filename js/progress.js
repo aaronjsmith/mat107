@@ -368,6 +368,7 @@
         mastery: topicMastery(unaided),
         mastered: mastered,
         teach_scaffold: getTeachScaffold(key),
+        teach_learned: isTeachLearned(key),
         label: Q.TOPICS[key] || info.label,
       };
     });
@@ -521,6 +522,15 @@
     }
     if ((Number(rec.unaided_correct) || 0) >= MASTER) return 0;
     return TEACH_MAX;
+  }
+
+  /** True only after Teach Me was completed for this topic (scaffold explicitly at 0). */
+  function isTeachLearned(topic) {
+    if (!topic || !Q.TOPICS[topic] || topic === "flashcards") return false;
+    const p = load();
+    const rec = p.topics[topic];
+    if (!rec || rec.teach_scaffold == null) return false;
+    return Number(rec.teach_scaffold) === 0;
   }
 
   function teachTopicsRemaining() {
@@ -843,6 +853,7 @@
     pickAllTopic: pickAllTopic,
     pickTeachTopic: pickTeachTopic,
     getTeachScaffold: getTeachScaffold,
+    isTeachLearned: isTeachLearned,
     teachTopicsRemaining: teachTopicsRemaining,
     allTeachGraduated: allTeachGraduated,
     recordTeachCorrect: recordTeachCorrect,

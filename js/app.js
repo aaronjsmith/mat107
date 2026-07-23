@@ -793,16 +793,32 @@
     els.streak.textContent = p.streak;
     els.total.textContent = p.total_attempted;
 
+    function topicButtonHtml(info) {
+      const mark = info.mastered ? "✓ " : "";
+      const learned = info.teach_learned
+        ? '<span class="learned-badge">' + escapeHtml(t("badge_learned")) + "</span>"
+        : "";
+      return (
+        mark +
+        escapeHtml(info.label) +
+        learned +
+        '<span class="m">' +
+        info.unaided_correct +
+        "/" +
+        info.unaided_needed +
+        "</span>"
+      );
+    }
+
     const existing = els.topicList.querySelectorAll(".topic[data-key]");
     if (existing.length === 0) {
       Object.entries(p.topics).forEach(([key, info]) => {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "topic";
+        btn.className = "topic" + (info.teach_learned ? " topic-learned" : "");
         btn.dataset.topic = key;
         btn.dataset.key = key;
-        const mark = info.mastered ? "✓ " : "";
-        btn.innerHTML = `${mark}${info.label}<span class="m">${info.unaided_correct}/${info.unaided_needed}</span>`;
+        btn.innerHTML = topicButtonHtml(info);
         btn.addEventListener("click", () => {
           state.mode = key;
           setModeButtons();
@@ -814,8 +830,8 @@
       existing.forEach((btn) => {
         const info = p.topics[btn.dataset.key];
         if (info) {
-          const mark = info.mastered ? "✓ " : "";
-          btn.innerHTML = `${mark}${info.label}<span class="m">${info.unaided_correct}/${info.unaided_needed}</span>`;
+          btn.classList.toggle("topic-learned", Boolean(info.teach_learned));
+          btn.innerHTML = topicButtonHtml(info);
         }
       });
     }

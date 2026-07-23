@@ -7,6 +7,7 @@
     "assessment.1.page_title": "Ensign College MAT 107 · Assessment 1 practice",
     "assessment.1.summary": "Geometry, conversions, and statistics — Weeks 1–2 / Assessment 1 with hints and the Gadianton Robber boss fight (Zarahemla theme).",
     "assessment.1.title": "Assessment 1",
+    "badge_learned": "Learned",
     "boss_drill_blocked": "Remaster {topic} to 10/10 before facing the Gadianton Robber again. Keep practicing that topic.",
     "boss_fail": "Zarahemla is in danger. The Gadianton Robber slips away on {topic} — that topic drops to {progress}. Rebuild it to 10/10, then face him again.",
     "boss_fail_practice": "Practice run abandoned on {topic}. No full lock-out — master all topics at 10/10 when you’re ready for the real fight.",

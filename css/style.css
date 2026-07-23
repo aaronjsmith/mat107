@@ -314,6 +314,24 @@ body.course-page .site-footer {
   color: var(--muted);
 }
 
+.topic .learned-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.08rem 0.38rem;
+  border-radius: 999px;
+  background: rgba(15, 110, 86, 0.16);
+  color: var(--accent-deep);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.topic.topic-learned {
+  border-color: rgba(15, 110, 86, 0.22);
+}
+
 .linkish {
   background: none;
   border: none;
