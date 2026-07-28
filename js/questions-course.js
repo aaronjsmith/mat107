@@ -340,7 +340,7 @@
       "prob_counting",
       0,
       t("c.h.perm"),
-      "P(n,r) = n!/(n−r)! = " + n + "! / " + (n - r) + "!",
+      "P(n,r) = n!/(n−r)!",
       "",
       calcHelp("nPr with n=" + n + ", r=" + r, "nPr with n=" + n + ", r=" + r)
     );
@@ -356,7 +356,7 @@
       "prob_counting",
       0,
       t("c.h.comb"),
-      "C(n,r) = n!/(r!(n−r)!) = " + n + " choose " + r,
+      "C(n,r) = n!/(r!(n−r)!)",
       "",
       calcHelp("nCr with n=" + n + ", r=" + r, "nCr with n=" + n + ", r=" + r)
     );

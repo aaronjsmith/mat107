@@ -49,19 +49,40 @@
     s = s.replace(/\b([A-Za-z])_([0-9]+|[nN])\b/g, "$1_{$2}");
     s = s.replace(/\b([A-Za-z])\^([0-9]+|[nN])\b/g, "$1^{$2}");
 
-    // (num)/(den) → display-sized fraction (dfrac stays readable inline)
+    // Counting formulas: upright C/P like textbook notation
     s = s.replace(
-      /\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g,
+      /\bC\(\s*([A-Za-z0-9]+)\s*,\s*([A-Za-z0-9]+)\s*\)/g,
+      "\\mathrm{C}($1, $2)"
+    );
+    s = s.replace(
+      /\bP\(\s*([nN0-9]+)\s*,\s*([rRkK0-9]+)\s*\)/g,
+      "\\mathrm{P}($1, $2)"
+    );
+
+    // Slash fractions — handle factorials and one level of nesting first.
+    // n!/(n-r)!  or  n! / (n-r)!
+    s = s.replace(
+      /([0-9A-Za-z]+!)\s*\/\s*(\([^()]+\)!)/g,
+      "\\dfrac{$1}{$2}"
+    );
+    // n!/(r!(n-r)!)  — outer parens around a factorial product
+    s = s.replace(
+      /([0-9A-Za-z]+!)\s*\/\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g,
+      "\\dfrac{$1}{$2}"
+    );
+    // (num)/(den) with one nesting level → display-sized fraction
+    s = s.replace(
+      /\(([^()]*(?:\([^()]*\)[^()]*)*)\)\s*\/\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g,
       "\\dfrac{$1}{$2}"
     );
     // simple token / token → fraction (after subscripts are normalized)
     s = s.replace(
-      /(^|[=+\-]\s*|,\s*)([A-Za-z0-9\\_{}]+)\s*\/\s*([A-Za-z0-9\\_{}]+)(?=\s*$|\s*[.,;])/g,
+      /(^|[=+\-]\s*|,\s*)([A-Za-z0-9\\_{}]+!?)\s*\/\s*([A-Za-z0-9\\_{}]+!?)(?=\s*$|\s*[.,;])/g,
       "$1\\dfrac{$2}{$3}"
     );
 
-    // n! for permutations display
-    s = s.replace(/\b([0-9A-Za-z]+)\!/g, "$1!");
+    // Keep factorial bang for KaTeX (n!, (n-r)!)
+    s = s.replace(/\b([0-9A-Za-z]+)!/g, "$1!");
 
     // Collapse excess spaces around TeX commands
     s = s.replace(/ {2,}/g, " ").trim();
@@ -143,7 +164,7 @@
     "\\\\[a-zA-Z]+" +
     "|[A-Za-z](?:_[0-9nN]+|\\([A-Za-z0-9]+\\))?[0-9]*" +
     "|[0-9]+(?:\\.[0-9]+)?" +
-    "|\\s*[+\\-−–—*/^=≈≠()_{}]" +
+    "|\\s*[+\\-−–—*/^=≈≠!()_{}]" +
     "|[·⋅×÷π]" +
     // Space before a number, paren, TeX command, or single-letter math token —
     // not before English words like "when" / "with".

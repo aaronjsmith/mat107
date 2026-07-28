@@ -656,20 +656,24 @@ a.linkish {
 
 .math-block {
   margin: 0;
-  padding: 0.65rem 0.85rem;
-  background: rgba(255, 252, 246, 0.9);
+  padding: 1rem 1.15rem;
+  background: rgba(26, 35, 50, 0.04);
   border: 1px solid rgba(201, 187, 163, 0.55);
-  border-radius: 10px;
+  border-radius: 12px;
   overflow-x: auto;
   text-align: center;
 }
 
 .math-block .katex-display {
-  margin: 0.2rem 0;
+  margin: 0.35rem 0;
 }
 
 .math-block .katex {
-  font-size: 1.55em;
+  font-size: 1.7em;
+}
+
+.math-block .katex .mfrac {
+  font-size: 1.05em;
 }
 
 .math-inline .katex {
@@ -677,7 +681,7 @@ a.linkish {
 }
 
 .math-inline .katex .mfrac {
-  font-size: 1.05em;
+  font-size: 1.12em;
 }
 
 .math-fallback {
