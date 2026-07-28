@@ -113,18 +113,25 @@
     };
   }
 
-  function _numeric(prompt, answer, topic, tolerance, hint, setup, unit, calc) {
+  function _numeric(prompt, answer, topic, tolerance, hint, setup, unit, calc, solution) {
+    const ans = num(answer, 4);
+    let sol = solution || "";
+    if (!sol && calc && typeof calc === "object" && calc.ti) {
+      const ti = String(calc.ti).trim();
+      if (/=$/.test(ti) && ti.length < 100) sol = ti + " " + ans;
+    }
     return {
       id: id(),
       topic: topic,
       type: "numeric",
       prompt: prompt,
-      answer: num(answer, 4),
+      answer: ans,
       tolerance: tolerance !== undefined ? tolerance : 0.05,
       hint: hint || "",
       setup: setup || "",
       calc: calc || "",
       unit: unit || "",
+      solution: sol,
     };
   }
 
@@ -309,6 +316,25 @@
     const d = choice([2, 3, 4, 5, 6, 8]);
     const n = choice([6, 8, 10, 12, 15]);
     const ans = arithTerm(a1, d, n);
+    const steps = n - 1;
+    const product = steps * d;
+    const solution =
+      "a_" +
+      n +
+      " = a_1 + (" +
+      n +
+      " − 1)d = " +
+      a1 +
+      " + (" +
+      steps +
+      ")(" +
+      d +
+      ") = " +
+      a1 +
+      " + (" +
+      product +
+      ") = " +
+      ans;
     return _numeric(
       tVar("fn.q.arith_nth", { a1: a1, d: d, n: n }),
       ans,
@@ -331,7 +357,8 @@
       calcHelp(
         a1 + " + (" + n + " − 1)(" + d + ") =",
         a1 + " + (" + n + " − 1)(" + d + ") ="
-      )
+      ),
+      solution
     );
   }
 
@@ -606,6 +633,27 @@
     const d = choice([-12, -8, -6, 5, 9]);
     const n = choice([8, 9, 11, 12, 14]);
     const ans = arithTerm(a1, d, n);
+    const steps = n - 1;
+    const product = steps * d;
+    const solution =
+      "a_" +
+      n +
+      " = a_1 + (" +
+      n +
+      " − 1)(" +
+      d +
+      ") = " +
+      a1 +
+      " + (" +
+      steps +
+      ")(" +
+      d +
+      ") = " +
+      a1 +
+      " + (" +
+      product +
+      ") = " +
+      ans;
     return _numeric(
       tVar("fn.q.arith_recursive_nth", { rule: recursiveRuleLabel(a1, d), n: n }),
       ans,
@@ -617,7 +665,8 @@
       calcHelp(
         a1 + " + (" + n + " − 1)(" + d + ") =",
         a1 + " + (" + n + " − 1)(" + d + ") ="
-      )
+      ),
+      solution
     );
   }
 
@@ -629,6 +678,25 @@
       return a1 + i * d;
     }, 5);
     const ans = arithTerm(a1, d, n);
+    const steps = n - 1;
+    const product = steps * d;
+    const solution =
+      "a_" +
+      n +
+      " = a_1 + (" +
+      n +
+      " − 1)d = " +
+      a1 +
+      " + (" +
+      steps +
+      ")(" +
+      d +
+      ") = " +
+      a1 +
+      " + (" +
+      product +
+      ") = " +
+      ans;
     return _numeric(
       tVar("fn.q.arith_nth_seq", { seq: seqLabel(terms), n: n }),
       ans,
@@ -637,7 +705,8 @@
       t("fn.h.arith_nth_seq"),
       "Find d from two consecutive terms, then a_" + n + " = a_1 + (" + n + " − 1)d.",
       "",
-      calcHelp(a1 + " + (" + n + " − 1)(" + d + ") =", a1 + " + (" + n + " − 1)(" + d + ") =")
+      calcHelp(a1 + " + (" + n + " − 1)(" + d + ") =", a1 + " + (" + n + " − 1)(" + d + ") ="),
+      solution
     );
   }
 

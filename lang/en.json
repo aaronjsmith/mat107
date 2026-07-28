@@ -494,6 +494,7 @@
     "feedback_note_unaided": "Unaided · mastery progress {progress}.",
     "feedback_retry_fail": "Still not quite. Expected: {expected}",
     "feedback_retry_ok": "Correct on retry · 5% credit. (Not counted toward mastery.)",
+    "feedback_solution": "Working: {solution}",
     "feedback_teach_all_done": "Teach me complete for every topic. Switching you to Smart pick — unaided mastery from here.",
     "feedback_teach_correct": "Got it. Training wheels peeling off — {layers} hint layer(s) left on {topic}.",
     "feedback_teach_graduated": "Nice — {topic} no longer needs Teach me hints. Keep going on other topics.",

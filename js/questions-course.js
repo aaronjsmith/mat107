@@ -123,18 +123,40 @@
     };
   }
 
-  function _numeric(prompt, answer, topic, tolerance, hint, setup, unit, calc) {
+  function _numeric(prompt, answer, topic, tolerance, hint, setup, unit, calc, solution) {
+    const ans = num(answer, 4);
+    let sol = solution || "";
+    if (!sol && calc && typeof calc === "object" && calc.ti) {
+      const ti = String(calc.ti).trim();
+      if (/=$/.test(ti) && ti.length < 100) sol = ti + " " + ans;
+      else {
+        const lines = String(calc.ti)
+          .split(/\n/)
+          .map(function (s) {
+            return s.trim();
+          });
+        for (let i = lines.length - 1; i >= 0; i--) {
+          const line = lines[i];
+          if (!line || !/=$/.test(line)) continue;
+          if (/enter this|finish and round|do not use/i.test(line)) continue;
+          if (line.length > 100) continue;
+          sol = line + " " + ans;
+          break;
+        }
+      }
+    }
     return {
       id: id(),
       topic: topic,
       type: "numeric",
       prompt: prompt,
-      answer: num(answer, 4),
+      answer: ans,
       tolerance: tolerance !== undefined ? tolerance : 0.05,
       hint: hint || "",
       setup: setup || "",
       calc: calc || "",
       unit: unit || "",
+      solution: sol,
     };
   }
 

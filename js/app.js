@@ -968,6 +968,7 @@
     els.feedback.hidden = true;
     els.feedback.textContent = "";
     els.feedback.className = "feedback";
+    els.feedback.classList.remove("math-text", "math-rich", "calc-keys-hint");
     els.check.hidden = true;
     els.check.textContent = t("btn_check");
     els.next.hidden = true;
@@ -1671,14 +1672,48 @@
     }
   }
 
-  function lockInputs() {
-    els.check.hidden = true;
-    setInputsDisabled(true);
-    if (state.publicQ && state.publicQ.type === "mc") {
-      [...els.choices.children].forEach((btn) => {
-        btn.disabled = true;
-      });
+  function deriveSolution(q, expected) {
+    if (!q) return "";
+    if (q.solution) return String(q.solution).trim();
+    const exp =
+      expected != null && String(expected) !== ""
+        ? String(expected)
+        : q.answer != null
+          ? String(q.answer)
+          : "";
+    if (!exp) return "";
+    const calc = q.calc;
+    if (!calc || typeof calc !== "object") return "";
+    const raw = String(calc.ti || calc.casio || "").trim();
+    if (!raw) return "";
+    const lines = raw.split(/\n/).map(function (s) {
+      return s.trim();
+    });
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i];
+      if (!line || !/=$/.test(line)) continue;
+      if (/enter this|finish and round|do not use/i.test(line)) continue;
+      if (line.length > 100) continue;
+      return line + " " + exp;
     }
+    return "";
+  }
+
+  function setFeedbackText(text, rich) {
+    if (!els.feedback) return;
+    if (rich) setMathText(els.feedback, text, true);
+    else {
+      els.feedback.textContent = text;
+      els.feedback.classList.remove("math-text", "math-rich", "calc-keys-hint");
+    }
+  }
+
+  function setWrongExpectedFeedback(expected) {
+    const exp = expected || state.lastExpected || "";
+    const sol = deriveSolution(state.fullQuestion, exp);
+    let msg = t("feedback_retry_fail", { expected: exp });
+    if (sol) msg += "\n" + t("feedback_solution", { solution: sol });
+    setFeedbackText(msg, Boolean(sol));
   }
 
   function beginRetry(result) {
@@ -1782,9 +1817,7 @@
     }
 
     els.feedback.className = "feedback no";
-    els.feedback.textContent = t("feedback_retry_fail", {
-      expected: expected || state.lastExpected,
-    });
+    setWrongExpectedFeedback(expected || state.lastExpected);
     if (state.publicQ.type === "mc") {
       [...els.choices.children].forEach((btn) => {
         btn.disabled = true;
