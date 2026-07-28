@@ -52,6 +52,73 @@ html, body {
   background: rgba(243, 239, 230, 0.75);
 }
 
+.site-transfer-banner {
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(
+    120deg,
+    rgba(15, 110, 86, 0.14),
+    rgba(255, 252, 246, 0.95) 55%
+  );
+  padding: 0.9rem 1.75rem;
+}
+
+.site-transfer-banner.is-success {
+  background: var(--good-bg);
+}
+
+.site-transfer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1.25rem;
+}
+
+.site-transfer-copy {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.site-transfer-title {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.site-transfer-body {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+  max-width: 62ch;
+}
+
+.site-transfer-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.site-transfer-status {
+  margin: 0;
+  max-width: 28ch;
+  font-size: 0.9rem;
+}
+
+.site-transfer-status.is-ok {
+  color: var(--good);
+}
+
+.site-transfer-status.is-err {
+  color: var(--bad);
+}
+
+.site-transfer-status.is-busy {
+  color: var(--muted);
+}
+
 .top-right {
   display: flex;
   flex-wrap: wrap;
