@@ -4,6 +4,7 @@
 
   var CANONICAL_HOST = "mat107.ensign.quest";
   var CANONICAL_ORIGIN = "https://" + CANONICAL_HOST;
+  var BADGE_URL = "https://ensign.quest";
   var FORMAT = "mat107-site-transfer";
   var MSG_READY = "mat107-transfer-ready";
   var MSG_PAYLOAD = "mat107-transfer-payload";
@@ -160,27 +161,22 @@
     }
   }
 
-  function ensureTopRight() {
-    var header = document.querySelector("header.top");
-    if (!header) return null;
-    var topRight = header.querySelector(".top-right");
-    if (!topRight) {
-      topRight = document.createElement("div");
-      topRight.className = "top-right";
-      header.appendChild(topRight);
-    }
-    return topRight;
-  }
-
   function mountSiteBadge() {
     if (document.getElementById("site-canonical-badge")) return;
-    var topRight = ensureTopRight();
-    if (!topRight) return;
+
+    var bar = document.getElementById("site-canonical-bar");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "site-canonical-bar";
+      bar.className = "site-canonical-bar";
+      var anchor = document.body.firstChild;
+      document.body.insertBefore(bar, anchor);
+    }
 
     var badge = document.createElement("a");
     badge.id = "site-canonical-badge";
     badge.className = "site-canonical-badge";
-    badge.href = CANONICAL_ORIGIN + "/";
+    badge.href = BADGE_URL;
     badge.target = "_blank";
     badge.rel = "noopener noreferrer";
     badge.setAttribute("data-i18n-aria", "transfer.badge_aria");
@@ -189,8 +185,7 @@
       '<span class="site-canonical-badge-label" data-i18n="transfer.badge_label"></span>' +
       '<span class="site-canonical-badge-host">ensign.quest</span>';
 
-    // Keep the badge at the far right of the header cluster.
-    topRight.appendChild(badge);
+    bar.appendChild(badge);
     applyI18n();
     if (!badge.querySelector(".site-canonical-badge-label").textContent) {
       badge.querySelector(".site-canonical-badge-label").textContent = t(

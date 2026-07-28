@@ -1330,7 +1330,7 @@
     "topics_blurb": "Mastery = <strong>10 correct with no hints</strong> per topic. Wrong answers never lower mastery. Hinted corrects (or skip after a hint) lower the counter by 1 — including after you’ve mastered a topic. Hints never reveal the answer — only how to work. Grade credit if correct: Hint 1 −25%, Hint 2 −50%, Hint 3 −75%. After a miss you can still enter the right answer once for <strong>5%</strong> credit (not mastery).",
     "topics_heading": "Topics",
     "transfer.aria": "Site move notice",
-    "transfer.badge_aria": "Open the new practice site on ensign.quest",
+    "transfer.badge_aria": "Open ensign.quest",
     "transfer.badge_label": "New site",
     "transfer.body": "This practice site moved to <strong>mat107.ensign.quest</strong>. Transfer <strong>all quiz progress</strong> from this browser — every assessment, notes, and settings — in one step.",
     "transfer.btn": "Transfer all progress",
