@@ -124,6 +124,13 @@ THEMES = {
         verb_hit="breaks",
         verb_win="calmed",
     ),
+    "deseret": boss_pack(
+        "Debt Bondage",
+        "Bondage",
+        "Deseret self-reliance",
+        verb_hit="loosens",
+        verb_win="broken",
+    ),
 }
 
 # Winter already exists — refine place wording only if missing keys.
@@ -139,8 +146,15 @@ META = {
     "assessment.2.page_title": "Ensign College MAT 107 · Assessment 2 practice",
     "assessment.2.brand_sub": "Ensign College MAT 107 · Assessment 2 practice",
     "assessment.2.summary": "Probability, sequences, and linear/exponential models — Weeks 3–4 / Assessment 2 with the Tempest boss fight (Bountiful theme).",
+    "assessment.3.title": "Assessment 3",
+    "assessment.3.badge": "Weeks 5–7 · Deseret",
+    "assessment.3.page_title": "Ensign College MAT 107 · Assessment 3 practice",
+    "assessment.3.brand_sub": "Ensign College MAT 107 · Assessment 3 practice",
+    "assessment.3.summary": "Personal finance, savings & credit, and insurance — Weeks 5–7 / Assessment 3 with the Debt Bondage boss fight (Deseret theme).",
     "week.34.title": "Weeks 3–4 · Probability & Functions",
     "week.34.blurb": "Probability, sequences, and linear/exponential models — Assessment 2 content.",
+    "week.57.title": "Weeks 5–7 · Finance, Savings & Insurance",
+    "week.57.blurb": "Budgets, compound growth, loans, and insurance — Assessment 3 content.",
     "hw.geo.badge": "Weeks 1–2 · Meetinghouse",
     "hw.geo.summary": "Meetinghouse geometry homework — conversions, formulas, perimeter & area, volume, Pythagorean, scale, and scaling (ward culture theming).",
     "hw.geo.brand_sub": "Ensign College MAT 107 · Meetinghouse geometry HW",

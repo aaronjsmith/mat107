@@ -983,6 +983,511 @@
     );
   }
 
+  // --- Assessment 3 Review extras (take-home, debt, PMT, PV, insurance) --------
+
+  function loanPayment(principal, annualRate, years) {
+    const r = annualRate / 12;
+    const n = years * 12;
+    if (r === 0) return principal / n;
+    return (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  }
+
+  function monthsToPayOff(principal, monthlyPayment, monthlyRate) {
+    if (monthlyRate === 0) return principal / monthlyPayment;
+    return Math.log(monthlyPayment / (monthlyPayment - principal * monthlyRate)) / Math.log(1 + monthlyRate);
+  }
+
+  function genAffordableCarPayment() {
+    const gross = choice([3500, 4000, 4500, 5000]);
+    const taxPct = choice([20, 22, 25, 28]);
+    const debtPct = 15;
+    const existing = choice([150, 200, 250, 300]);
+    const takeHome = num(gross * (1 - taxPct / 100), 2);
+    const affordable = num(takeHome * (debtPct / 100), 2);
+    const payment = num(affordable - existing, 2);
+    return _numeric(
+      tVar("c.q.afford_car", {
+        gross: gross,
+        tax: taxPct,
+        debt: debtPct,
+        existing: existing,
+      }),
+      payment,
+      "fin_budget",
+      0.5,
+      t("c.h.afford_car"),
+      "Take-home = gross×(1−tax%); affordable debt = take-home×15%; car payment = affordable − existing debt",
+      "dollars",
+      calcHelp(
+        gross + "×(1−" + taxPct + "/100)×0.15 − " + existing + " =",
+        gross + "×(1−" + taxPct + "/100)×0.15 − " + existing + " ="
+      )
+    );
+  }
+
+  function genTakeHomeMaxDebt() {
+    const gross = choice([5000, 5500, 6250, 7000]);
+    const k401 = choice([5, 6, 6.5, 8]);
+    const fed = choice([10, 12, 15]);
+    const ss = 6.2;
+    const med = 1.45;
+    const state = choice([0, 4, 5]);
+    const contrib = num(gross * (k401 / 100), 2);
+    const taxes = num(gross * ((fed + ss + med + state) / 100), 2);
+    const takeHome = num(gross - contrib - taxes, 2);
+    const maxDebt = num(takeHome * 0.15, 2);
+    return _multi(
+      tVar("c.q.takehome_debt", {
+        gross: gross,
+        k401: k401,
+        fed: fed,
+        ss: ss,
+        med: med,
+        state: state,
+      }),
+      [
+        { id: "contrib", label: t("c.field.k401_contrib"), answer: contrib, tolerance: 0.5, unit: "dollars" },
+        { id: "taxes", label: t("c.field.taxes_total"), answer: taxes, tolerance: 0.5, unit: "dollars" },
+        { id: "takehome", label: t("c.field.takehome"), answer: takeHome, tolerance: 0.5, unit: "dollars" },
+        { id: "maxdebt", label: t("c.field.max_consumer"), answer: maxDebt, tolerance: 0.5, unit: "dollars" },
+      ],
+      "fin_budget",
+      t("c.h.takehome_debt"),
+      "401(k) and taxes are % of gross; take-home = gross − 401(k) − taxes; max consumer debt ≈ 15% of take-home"
+    );
+  }
+
+  function genDebtGuidelineMC() {
+    return _choice(
+      tVar("c.q.debt_guideline"),
+      [
+        t("c.c.debt_10"),
+        t("c.c.debt_15"),
+        t("c.c.debt_20"),
+        t("c.c.debt_28"),
+      ],
+      t("c.c.debt_15"),
+      "fin_percent",
+      t("c.h.debt_guideline"),
+      "Lending guideline: about 15% of take-home pay for consumer debt"
+    );
+  }
+
+  function genMonthsToSaveCash() {
+    const pmt = choice([250, 300, 350, 400]);
+    const goal = choice([12000, 15000, 18495, 20000]);
+    const apr = choice([0.06, 0.08, 0.09]);
+    const i = apr / 12;
+    const n = Math.ceil(Math.log(1 + (goal * i) / pmt) / Math.log(1 + i));
+    return _numeric(
+      tVar("c.q.months_to_save", {
+        pmt: pmt,
+        goal: goal,
+        apr: num(apr * 100, 2),
+      }),
+      n,
+      "save_annuity",
+      0,
+      t("c.h.months_to_save"),
+      "Solve ordinary annuity FV for n; round up to a whole number of months",
+      "months",
+      calcHelp(
+        "n = log(1 + FV·i/PMT) / log(1+i), i=APR/12",
+        "n = log(1 + FV·i/PMT) / log(1+i), i=APR/12"
+      )
+    );
+  }
+
+  function genMortgageCostOfCredit() {
+    const price = choice([165000, 173271, 185000, 210000]);
+    const down = choice([10000, 13660, 15000, 20000]);
+    const feePct = choice([2, 3]);
+    const apr = choice([0.06, 0.065, 0.07]);
+    const years = 30;
+    const afterDown = price - down;
+    const fee = num(afterDown * (feePct / 100), 2);
+    const financed = num(afterDown + fee, 2);
+    const monthly = num(loanPayment(financed, apr, years), 2);
+    const totalPaid = num(monthly * years * 12, 2);
+    const costCredit = num(totalPaid - financed, 2);
+    return _multi(
+      tVar("c.q.mortgage_credit", {
+        price: price,
+        down: down,
+        feePct: feePct,
+        apr: num(apr * 100, 2),
+        years: years,
+      }),
+      [
+        { id: "financed", label: t("c.field.total_financed"), answer: financed, tolerance: 1, unit: "dollars" },
+        { id: "pmt", label: t("c.field.monthly_payment"), answer: monthly, tolerance: 1, unit: "dollars" },
+        { id: "total", label: t("c.field.total_paid_bank"), answer: totalPaid, tolerance: 5, unit: "dollars" },
+        { id: "cost", label: t("c.field.cost_of_credit"), answer: costCredit, tolerance: 5, unit: "dollars" },
+      ],
+      "credit_loan",
+      t("c.h.mortgage_credit"),
+      "Amount after down + loan fee = financed; PMT on financed; total paid = PMT×360; cost of credit = total − financed"
+    );
+  }
+
+  function genExtraPaymentMonths() {
+    const principal = choice([175000, 195856, 220000, 250000]);
+    const apr = choice([0.06, 0.065, 0.07]);
+    const years = 30;
+    const extra = choice([50, 65, 75, 100]);
+    const basePmt = loanPayment(principal, apr, years);
+    const pmt = basePmt + extra;
+    const months = Math.round(monthsToPayOff(principal, pmt, apr / 12));
+    return _numeric(
+      tVar("c.q.extra_pmt_months", {
+        principal: principal,
+        apr: num(apr * 100, 2),
+        years: years,
+        extra: extra,
+      }),
+      months,
+      "credit_loan",
+      1,
+      t("c.h.extra_pmt_months"),
+      "Find the normal PMT, add the extra, then solve n = log(PMT/(PMT−P·r))/log(1+r) with r = APR/12",
+      "months"
+    );
+  }
+
+  function genCarLoanPmt() {
+    const principal = choice([14400, 16445, 18500, 22000]);
+    const apr = choice([0.06, 0.079, 0.09]);
+    const years = choice([5, 6, 8]);
+    const monthly = num(loanPayment(principal, apr, years), 2);
+    return _numeric(
+      tVar("c.q.car_loan_pmt", {
+        principal: principal,
+        apr: num(apr * 100, 2),
+        years: years,
+      }),
+      monthly,
+      "credit_loan",
+      0.5,
+      t("c.h.car_loan_pmt"),
+      "Monthly rate = APR/12; n = years×12; use the amortizing loan payment formula",
+      "dollars",
+      calcHelp("PMT = P·r(1+r)^n / ((1+r)^n − 1)", "PMT = P·r(1+r)^n / ((1+r)^n − 1)")
+    );
+  }
+
+  function genCompoundFreqFV() {
+    const P = choice([1450, 2000, 5000, 8000]);
+    const apr = choice([0.05, 0.06, 0.07]);
+    const years = choice([15, 18, 20, 21]);
+    const freq = choice([
+      { m: 1, key: "annually" },
+      { m: 2, key: "semiannually" },
+      { m: 4, key: "quarterly" },
+      { m: 12, key: "monthly" },
+      { m: 52, key: "weekly" },
+    ]);
+    const ans = num(P * Math.pow(1 + apr / freq.m, years * freq.m), 2);
+    return _numeric(
+      tVar("c.q.compound_freq", {
+        P: P,
+        pct: num(apr * 100, 2),
+        years: years,
+        freq: t("c.c.freq_" + freq.key),
+      }),
+      ans,
+      "save_compound",
+      1,
+      t("c.h.compound_freq"),
+      "FV = P(1 + r/m)^(m·t) — divide the annual rate by compounding periods per year",
+      "dollars",
+      calcHelp(
+        P + "×(1+" + apr + "/" + freq.m + ")^(" + years + "×" + freq.m + ") =",
+        P + "×(1+" + apr + "/" + freq.m + ")^(" + years + "×" + freq.m + ") ="
+      )
+    );
+  }
+
+  function genPresentValue() {
+    const fv = choice([20000, 25000, 30130, 40000]);
+    const apr = choice([0.03, 0.04, 0.05]);
+    const years = choice([8, 10, 11, 12]);
+    const m = choice([1, 4, 12]);
+    const ans = num(fv / Math.pow(1 + apr / m, years * m), 2);
+    const freqLabel =
+      m === 1 ? t("c.c.freq_annually") : m === 4 ? t("c.c.freq_quarterly") : t("c.c.freq_monthly");
+    return _numeric(
+      tVar("c.q.present_value", {
+        fv: fv,
+        pct: num(apr * 100, 2),
+        years: years,
+        freq: freqLabel,
+      }),
+      ans,
+      "save_compound",
+      1,
+      t("c.h.present_value"),
+      "PV = FV / (1 + r/m)^(m·t)",
+      "dollars"
+    );
+  }
+
+  function genExcelRefsMC() {
+    const which = choice(["relative", "absolute"]);
+    const prompt =
+      which === "relative" ? tVar("c.q.excel_rel") : tVar("c.q.excel_abs");
+    const answer =
+      which === "relative" ? t("c.c.excel_rel_ans") : t("c.c.excel_abs_ans");
+    return _choice(
+      prompt,
+      [
+        t("c.c.excel_rel_ans"),
+        t("c.c.excel_abs_ans"),
+        t("c.c.excel_mixed_ans"),
+        t("c.c.excel_named_ans"),
+      ],
+      answer,
+      "fin_excel",
+      t("c.h.excel_refs"),
+      "Relative (A1) shifts when copied; absolute ($A$1) stays fixed"
+    );
+  }
+
+  function genRateDivisorMC() {
+    const kind = choice(["daily", "monthly", "quarterly", "annually"]);
+    const map = {
+      daily: { ans: t("c.c.div_365"), wrong: [t("c.c.div_12"), t("c.c.div_4"), t("c.c.div_1")] },
+      monthly: { ans: t("c.c.div_12"), wrong: [t("c.c.div_365"), t("c.c.div_4"), t("c.c.div_52")] },
+      quarterly: { ans: t("c.c.div_4"), wrong: [t("c.c.div_12"), t("c.c.div_365"), t("c.c.div_1")] },
+      annually: { ans: t("c.c.div_1"), wrong: [t("c.c.div_12"), t("c.c.div_4"), t("c.c.div_365")] },
+    };
+    const row = map[kind];
+    return _choice(
+      tVar("c.q.rate_divisor", { kind: t("c.c.freq_" + kind) }),
+      [row.ans].concat(row.wrong),
+      row.ans,
+      "credit_apr",
+      t("c.h.rate_divisor"),
+      "Divide APR by compounding periods per year (365, 12, 4, or 1)"
+    );
+  }
+
+  function genBondYield() {
+    const face = 1000;
+    const price = choice([850, 900, 920, 950]);
+    const couponPct = choice([4, 5, 6]);
+    const annual = num(face * (couponPct / 100), 2);
+    const yieldPct = num((annual / price) * 100, 2);
+    return _numeric(
+      tVar("c.q.bond_yield", {
+        price: price,
+        face: face,
+        coupon: couponPct,
+      }),
+      yieldPct,
+      "fin_percent",
+      0.1,
+      t("c.h.bond_yield"),
+      "Annual coupon = face × coupon rate; yield ≈ coupon ÷ purchase price × 100",
+      "%",
+      calcHelp(
+        "(" + face + "×" + couponPct + "/100) ÷ " + price + " × 100 =",
+        "(" + face + "×" + couponPct + "/100) ÷ " + price + " × 100 ="
+      )
+    );
+  }
+
+  function genLiabilityPayout() {
+    const policy = choice([
+      { perPerson: 100000, perAccident: 250000, propertyLimit: 50000 },
+      { perPerson: 100000, perAccident: 300000, propertyLimit: 50000 },
+    ]);
+    const perPerson = policy.perPerson;
+    const perAccident = policy.perAccident;
+    const propertyLimit = policy.propertyLimit;
+    const injured = choice([3, 4]);
+    const injuryCost = choice([40000, 48220, 55000, 120000]);
+    const propertyDamage = choice([25000, 40000, 60000]);
+    const perPay = Math.min(injuryCost, perPerson);
+    const injuryPay = Math.min(injured * perPay, perAccident);
+    const propPay = Math.min(propertyDamage, propertyLimit);
+    const label =
+      perPerson / 1000 + "/" + perAccident / 1000 + "/" + propertyLimit / 1000;
+    return _multi(
+      tVar("c.q.liability_payout", {
+        policy: label,
+        injured: injured,
+        injury: injuryCost,
+        property: propertyDamage,
+      }),
+      [
+        { id: "injury", label: t("c.field.injury_payout"), answer: injuryPay, tolerance: 0, unit: "dollars" },
+        { id: "property", label: t("c.field.property_payout"), answer: propPay, tolerance: 0, unit: "dollars" },
+      ],
+      "ins_premium",
+      t("c.h.liability_payout"),
+      "100/300/50 means $100k per person, $300k per accident (bodily), $50k property — pay the lesser of costs vs limits"
+    );
+  }
+
+  function genHealthCoinsurancePay() {
+    const coinsure = choice([70, 80, 81, 85]);
+    const claim1 = choice([5000, 6352, 8000]);
+    const claim2 = choice([1500, 2323, 3000]);
+    const total = claim1 + claim2;
+    const paid = Math.round(total * (coinsure / 100));
+    return _numeric(
+      tVar("c.q.health_coinsure", {
+        coinsure: coinsure,
+        claim1: claim1,
+        claim2: claim2,
+      }),
+      paid,
+      "ins_premium",
+      0,
+      t("c.h.health_coinsure"),
+      "Insurer pays coinsurance% of total covered medical costs",
+      "dollars",
+      calcHelp(
+        coinsure + "% × (" + claim1 + " + " + claim2 + ") =",
+        coinsure + "% × (" + claim1 + " + " + claim2 + ") ="
+      )
+    );
+  }
+
+  function genDinkNeed() {
+    const income = choice([120000, 150000, 180000, 200000]);
+    const yourPct = choice([60, 70, 80]);
+    const funeral = choice([7000, 8000, 9000, 10000]);
+    const debts = choice([50000, 75000, 90000]);
+    const need = num(funeral + debts + income * (yourPct / 100), 2);
+    return _numeric(
+      tVar("c.q.dink_need", {
+        income: income,
+        yourPct: yourPct,
+        spousePct: 100 - yourPct,
+        funeral: funeral,
+        debts: debts,
+      }),
+      need,
+      "ins_expected",
+      1,
+      t("c.h.dink_need"),
+      "DINK (no children): your funeral + debts + one year of your income share",
+      "dollars",
+      calcHelp(
+        funeral + " + " + debts + " + " + income + "×" + yourPct + "/100 =",
+        funeral + " + " + debts + " + " + income + "×" + yourPct + "/100 ="
+      )
+    );
+  }
+
+  function genPolicyLimitsMC() {
+    return _choice(
+      tVar("c.q.policy_limits"),
+      [
+        t("c.c.policy_100_250_50"),
+        t("c.c.policy_wrong_premium"),
+        t("c.c.policy_wrong_deductible"),
+        t("c.c.policy_wrong_life"),
+      ],
+      t("c.c.policy_100_250_50"),
+      "ins_premium",
+      t("c.h.policy_limits"),
+      "Bodily injury per person / bodily injury per accident / property damage (thousands of $)"
+    );
+  }
+
+  function genMortgagePaymentTF() {
+    return _choice(
+      tVar("c.q.mortgage_not_all_pi"),
+      [t("c.c.true"), t("c.c.false")],
+      t("c.c.true"),
+      "credit_loan",
+      t("c.h.mortgage_not_all_pi"),
+      "Typical payments also include taxes, insurance, and possibly PMI — not only principal and interest"
+    );
+  }
+
+  function genSelfInsuranceMC() {
+    return _choice(
+      tVar("c.q.self_insurance"),
+      [
+        t("c.c.self_ins_def"),
+        t("c.c.self_ins_wrong_policy"),
+        t("c.c.self_ins_wrong_gov"),
+        t("c.c.self_ins_wrong_employer"),
+      ],
+      t("c.c.self_ins_def"),
+      "ins_expected",
+      t("c.h.self_insurance"),
+      "Self-insurance means setting aside money to cover losses instead of buying a policy"
+    );
+  }
+
+  function genStockCharacteristicsMC() {
+    return _choice(
+      tVar("c.q.stock_chars"),
+      [
+        t("c.c.stock_ans"),
+        t("c.c.stock_wrong_debt"),
+        t("c.c.stock_wrong_fdic"),
+        t("c.c.stock_wrong_fixed"),
+      ],
+      t("c.c.stock_ans"),
+      "save_compound",
+      t("c.h.stock_chars"),
+      "A share is ownership; it can provide dividends and/or capital gains (and risk of loss)"
+    );
+  }
+
+  function genBondCharacteristicsMC() {
+    return _choice(
+      tVar("c.q.bond_chars"),
+      [
+        t("c.c.bond_ans"),
+        t("c.c.bond_wrong_ownership"),
+        t("c.c.bond_wrong_vote"),
+        t("c.c.bond_wrong_unlimited"),
+      ],
+      t("c.c.bond_ans"),
+      "save_compound",
+      t("c.h.bond_chars"),
+      "Bonds are loans to an issuer; they typically pay coupon interest and return face value at maturity"
+    );
+  }
+
+  function genSixKeysMC() {
+    return _choice(
+      tVar("c.q.six_keys"),
+      [
+        t("c.c.six_keys_ans"),
+        t("c.c.six_keys_wrong_debt"),
+        t("c.c.six_keys_wrong_lottery"),
+        t("c.c.six_keys_wrong_spend"),
+      ],
+      t("c.c.six_keys_ans"),
+      "fin_budget",
+      t("c.h.six_keys"),
+      "Common study-guide keys center on pay yourself first, avoid consumer debt, and long-term investing"
+    );
+  }
+
+  function genRetirementRuleMC() {
+    return _choice(
+      tVar("c.q.retire_rule"),
+      [
+        t("c.c.retire_70_80"),
+        t("c.c.retire_50"),
+        t("c.c.retire_100"),
+        t("c.c.retire_25"),
+      ],
+      t("c.c.retire_70_80"),
+      "save_annuity",
+      t("c.h.retire_rule"),
+      "Rule of thumb: plan on about 70–80% of pre-retirement income"
+    );
+  }
+
   const GENERATORS = [
     genProbSimple,
     genProbComplement,
@@ -1016,6 +1521,28 @@
     genOutOfPocket,
     genPremiumYear,
     genExpectedValueIns,
+    genAffordableCarPayment,
+    genTakeHomeMaxDebt,
+    genDebtGuidelineMC,
+    genMonthsToSaveCash,
+    genMortgageCostOfCredit,
+    genExtraPaymentMonths,
+    genCarLoanPmt,
+    genCompoundFreqFV,
+    genPresentValue,
+    genExcelRefsMC,
+    genRateDivisorMC,
+    genBondYield,
+    genLiabilityPayout,
+    genHealthCoinsurancePay,
+    genDinkNeed,
+    genPolicyLimitsMC,
+    genMortgagePaymentTF,
+    genSelfInsuranceMC,
+    genStockCharacteristicsMC,
+    genBondCharacteristicsMC,
+    genSixKeysMC,
+    genRetirementRuleMC,
   ];
 
   const topicCache = {};

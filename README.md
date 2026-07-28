@@ -16,6 +16,8 @@ MAT 107 practice: https://mat107.aaronjsmith.me/
 
 **Week 4 · Functions 2 (Handcart · Rocky Ridge):** https://mat107.aaronjsmith.me/quiz.html?a=lesson_fn2
 
+**Assessment 3 (Deseret · Debt Bondage):** https://mat107.aaronjsmith.me/quiz.html?a=assessment3
+
 **Week 5 · Finance (Singles Ward · Lifestyle Creep):** https://mat107.aaronjsmith.me/quiz.html?a=lesson_finance
 
 **Week 6 · Savings (Widow’s Mite · Empty Storehouse):** https://mat107.aaronjsmith.me/quiz.html?a=lesson_savings

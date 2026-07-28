@@ -70,6 +70,12 @@
   /** Assessment 2 skill set (Weeks 3–4): probability + sequences + linear/exp/interest. */
   const ASSESS2_TOPICS = PROB_TOPICS.concat(FN1_TOPICS, FN2_TOPICS);
 
+  /** Assessment 3 skill set (Weeks 5–7): finance + savings/credit + insurance. */
+  const ASSESS3_TOPICS = FINANCE_TOPICS.concat(
+    SAVINGS_CREDIT_TOPICS,
+    INSURANCE_TOPICS
+  );
+
   const OVERVIEW_TOPICS = GEO_STATS_TOPICS.concat(
     PROB_TOPICS,
     FN1_TOPICS,
@@ -99,19 +105,9 @@
       blurbKey: "week.34.blurb",
     },
     {
-      id: "week5",
-      titleKey: "week.5.title",
-      blurbKey: "week.5.blurb",
-    },
-    {
-      id: "week6",
-      titleKey: "week.6.title",
-      blurbKey: "week.6.blurb",
-    },
-    {
-      id: "week7",
-      titleKey: "week.7.title",
-      blurbKey: "week.7.blurb",
+      id: "weeks57",
+      titleKey: "week.57.title",
+      blurbKey: "week.57.blurb",
     },
   ];
 
@@ -290,8 +286,29 @@
       topicIds: FN2_TOPICS.slice(),
     },
     {
+      id: "assessment3",
+      weekId: "weeks57",
+      number: 3,
+      titleKey: "assessment.3.title",
+      summaryKey: "assessment.3.summary",
+      badgeKey: "assessment.3.badge",
+      brandSubKey: "assessment.3.brand_sub",
+      pageTitleKey: "assessment.3.page_title",
+      backKey: "course_back",
+      theme: "deseret",
+      bossEmoji: "⛓️",
+      bossEmojiHit: "📉",
+      bossEmojiWin: "🗝️",
+      bossEmojiDead: "🕊️",
+      available: true,
+      compose: true,
+      questionsScripts: ["js/questions-course.js"],
+      features: { flashcards: false, notecard: true, boss: true },
+      topicIds: ASSESS3_TOPICS.slice(),
+    },
+    {
       id: "lesson_finance",
-      weekId: "week5",
+      weekId: "weeks57",
       number: 5,
       titleKey: "lesson.finance.title",
       summaryKey: "lesson.finance.summary",
@@ -311,7 +328,7 @@
     },
     {
       id: "lesson_savings",
-      weekId: "week6",
+      weekId: "weeks57",
       number: 6,
       titleKey: "lesson.savings.title",
       summaryKey: "lesson.savings.summary",
@@ -331,7 +348,7 @@
     },
     {
       id: "lesson_insurance",
-      weekId: "week7",
+      weekId: "weeks57",
       number: 7,
       titleKey: "lesson.insurance.title",
       summaryKey: "lesson.insurance.summary",
