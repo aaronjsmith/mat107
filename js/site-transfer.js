@@ -9,10 +9,17 @@
   var MSG_PAYLOAD = "mat107-transfer-payload";
   var MSG_DONE = "mat107-transfer-done";
   var MSG_ERROR = "mat107-transfer-error";
+  var DISMISS_KEY = "mat107-transfer-modal-dismissed";
 
   function t(key, vars) {
     var I18n = window.QuizI18n;
     return I18n && I18n.t ? I18n.t(key, vars || {}) : key;
+  }
+
+  function applyI18n() {
+    if (window.QuizI18n && window.QuizI18n.applyStatic) {
+      window.QuizI18n.applyStatic();
+    }
   }
 
   function isCanonicalHost() {
@@ -34,6 +41,32 @@
       }
     }
     return storage;
+  }
+
+  function progressSummary(storage) {
+    var C = window.Mat107Course;
+    var quizzes = 0;
+    var keys = 0;
+    var id;
+    var key;
+    storage = storage || collectStorage();
+    keys = Object.keys(storage).length;
+    if (C && Array.isArray(C.ASSESSMENTS)) {
+      C.ASSESSMENTS.forEach(function (a) {
+        if (!a || !a.id) return;
+        key = C.progressStorageKey
+          ? C.progressStorageKey(a.id)
+          : "mat107-" + a.id + "-progress";
+        if (storage[key]) quizzes += 1;
+      });
+    } else {
+      for (id in storage) {
+        if (Object.prototype.hasOwnProperty.call(storage, id) && /-progress$/.test(id)) {
+          quizzes += 1;
+        }
+      }
+    }
+    return { quizzes: quizzes, keys: keys };
   }
 
   function storageKeyCount(storage) {
@@ -58,9 +91,8 @@
     if (!storage || typeof storage !== "object") {
       throw new Error("Invalid transfer storage");
     }
-    var keys = Object.keys(storage);
     var applied = 0;
-    keys.forEach(function (key) {
+    Object.keys(storage).forEach(function (key) {
       if (!isTransferKey(key)) return;
       var value = storage[key];
       if (value == null) return;
@@ -112,42 +144,124 @@
     if (kind) el.classList.add(kind);
   }
 
-  function mountBanner() {
-    if (document.getElementById("site-transfer-banner")) return null;
+  function wasDismissed() {
+    try {
+      return sessionStorage.getItem(DISMISS_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
 
-    var banner = document.createElement("aside");
-    banner.id = "site-transfer-banner";
-    banner.className = "site-transfer-banner";
-    banner.setAttribute("role", "region");
-    banner.setAttribute("aria-label", t("transfer.aria"));
-    banner.innerHTML =
-      '<div class="site-transfer-inner">' +
-      '<div class="site-transfer-copy">' +
-      '<p class="site-transfer-title" data-i18n="transfer.title"></p>' +
-      '<p class="site-transfer-body" data-i18n-html="transfer.body"></p>' +
-      "</div>" +
-      '<div class="site-transfer-actions">' +
-      '<button type="button" class="primary" id="btn-site-transfer" data-i18n="transfer.btn"></button>' +
+  function markDismissed() {
+    try {
+      sessionStorage.setItem(DISMISS_KEY, "1");
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function ensureTopRight() {
+    var header = document.querySelector("header.top");
+    if (!header) return null;
+    var topRight = header.querySelector(".top-right");
+    if (!topRight) {
+      topRight = document.createElement("div");
+      topRight.className = "top-right";
+      header.appendChild(topRight);
+    }
+    return topRight;
+  }
+
+  function mountSiteBadge() {
+    if (document.getElementById("site-canonical-badge")) return;
+    var topRight = ensureTopRight();
+    if (!topRight) return;
+
+    var badge = document.createElement("a");
+    badge.id = "site-canonical-badge";
+    badge.className = "site-canonical-badge";
+    badge.href = CANONICAL_ORIGIN + "/";
+    badge.target = "_blank";
+    badge.rel = "noopener noreferrer";
+    badge.setAttribute("data-i18n-aria", "transfer.badge_aria");
+    badge.setAttribute("aria-label", t("transfer.badge_aria"));
+    badge.innerHTML =
+      '<span class="site-canonical-badge-label" data-i18n="transfer.badge_label"></span>' +
+      '<span class="site-canonical-badge-host">ensign.quest</span>';
+
+    // Keep the badge at the far right of the header cluster.
+    topRight.appendChild(badge);
+    applyI18n();
+    if (!badge.querySelector(".site-canonical-badge-label").textContent) {
+      badge.querySelector(".site-canonical-badge-label").textContent = t(
+        "transfer.badge_label"
+      );
+    }
+  }
+
+  function mountTransferModal() {
+    if (document.getElementById("site-transfer-modal")) {
+      return document.getElementById("site-transfer-modal");
+    }
+
+    var summary = progressSummary();
+    var modal = document.createElement("div");
+    modal.id = "site-transfer-modal";
+    modal.className = "modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "site-transfer-title");
+    modal.hidden = true;
+    modal.innerHTML =
+      '<div class="modal-backdrop" id="site-transfer-backdrop" tabindex="-1"></div>' +
+      '<div class="modal-card site-transfer-card">' +
+      '<header class="modal-head">' +
+      '<h2 id="site-transfer-title" data-i18n="transfer.title"></h2>' +
+      '<button type="button" class="modal-close" id="site-transfer-close" data-i18n-aria="transfer.close_aria" aria-label="Close">×</button>' +
+      "</header>" +
+      '<p class="modal-body" id="site-transfer-body" data-i18n-html="transfer.body"></p>' +
+      '<p class="site-transfer-summary muted" id="site-transfer-summary"></p>' +
       '<p class="site-transfer-status muted" id="site-transfer-status" hidden></p>' +
+      '<div class="modal-actions">' +
+      '<button type="button" class="ghost" id="site-transfer-later" data-i18n="transfer.later"></button>' +
+      '<button type="button" class="primary" id="btn-site-transfer" data-i18n="transfer.btn"></button>' +
       "</div>" +
       "</div>";
 
-    var anchor = document.querySelector("header.top");
-    if (anchor && anchor.parentNode) {
-      anchor.parentNode.insertBefore(banner, anchor.nextSibling);
-    } else {
-      document.body.insertBefore(banner, document.body.firstChild);
+    document.body.appendChild(modal);
+    applyI18n();
+
+    var summaryEl = document.getElementById("site-transfer-summary");
+    if (summaryEl) {
+      summaryEl.textContent = t("transfer.summary", {
+        quizzes: summary.quizzes,
+        keys: summary.keys,
+      });
     }
 
-    if (window.QuizI18n && window.QuizI18n.applyStatic) {
-      window.QuizI18n.applyStatic();
-    } else {
-      banner.querySelector(".site-transfer-title").textContent = t("transfer.title");
-      banner.querySelector(".site-transfer-body").innerHTML = t("transfer.body");
-      banner.querySelector("#btn-site-transfer").textContent = t("transfer.btn");
-    }
+    return modal;
+  }
 
-    return banner;
+  function openTransferModal() {
+    var modal = mountTransferModal();
+    if (!modal) return;
+    modal.hidden = false;
+    var focusBtn =
+      document.getElementById("btn-site-transfer") ||
+      document.getElementById("site-transfer-later");
+    if (focusBtn) {
+      try {
+        focusBtn.focus();
+      } catch (e) {
+        /* ignore */
+      }
+    }
+  }
+
+  function closeTransferModal(persistDismiss) {
+    var modal = document.getElementById("site-transfer-modal");
+    if (modal) modal.hidden = true;
+    if (persistDismiss) markDismissed();
   }
 
   function startTransfer(statusEl, btn) {
@@ -164,7 +278,6 @@
     var transferUrl = CANONICAL_ORIGIN + "/?transfer=1";
     var child = null;
     try {
-      // about:blank first so we can stash the payload in window.name before navigation.
       child = window.open("about:blank", "mat107-site-transfer");
     } catch (e) {
       child = null;
@@ -218,6 +331,7 @@
       if (timeoutId) clearTimeout(timeoutId);
       setStatus(statusEl, message, kind);
       if (btn) btn.disabled = false;
+      if (ok) markDismissed();
     }
 
     function onMessage(ev) {
@@ -264,40 +378,52 @@
     }, 12000);
   }
 
-  function mountImportPanel() {
-    if (document.getElementById("site-transfer-import")) return null;
+  function mountImportModal() {
+    if (document.getElementById("site-transfer-import-modal")) {
+      return document.getElementById("site-transfer-import-modal");
+    }
 
-    var panel = document.createElement("aside");
-    panel.id = "site-transfer-import";
-    panel.className = "site-transfer-banner site-transfer-import";
-    panel.setAttribute("role", "region");
-    panel.innerHTML =
-      '<div class="site-transfer-inner">' +
-      '<div class="site-transfer-copy">' +
-      '<p class="site-transfer-title" data-i18n="transfer.import_title"></p>' +
-      '<p class="site-transfer-body" data-i18n="transfer.import_body"></p>' +
-      "</div>" +
-      '<div class="site-transfer-actions">' +
+    var modal = document.createElement("div");
+    modal.id = "site-transfer-import-modal";
+    modal.className = "modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "site-transfer-import-title");
+    modal.hidden = true;
+    modal.innerHTML =
+      '<div class="modal-backdrop" id="site-transfer-import-backdrop" tabindex="-1"></div>' +
+      '<div class="modal-card site-transfer-card">' +
+      '<header class="modal-head">' +
+      '<h2 id="site-transfer-import-title" data-i18n="transfer.import_title"></h2>' +
+      '<button type="button" class="modal-close" id="site-transfer-import-close" data-i18n-aria="transfer.close_aria" aria-label="Close">×</button>' +
+      "</header>" +
+      '<p class="modal-body" data-i18n="transfer.import_body"></p>' +
+      '<p class="site-transfer-status muted" id="site-transfer-import-status" hidden></p>' +
+      '<div class="modal-actions">' +
+      '<button type="button" class="ghost" id="site-transfer-import-later" data-i18n="transfer.later"></button>' +
       '<button type="button" class="primary" id="btn-site-transfer-import" data-i18n="transfer.import_btn"></button>' +
       '<input id="site-transfer-file" type="file" accept="application/json,.json" hidden />' +
-      '<p class="site-transfer-status muted" id="site-transfer-import-status" hidden></p>' +
       "</div>" +
       "</div>";
 
-    var anchor = document.querySelector("header.top");
-    if (anchor && anchor.parentNode) {
-      anchor.parentNode.insertBefore(panel, anchor.nextSibling);
-    } else {
-      document.body.insertBefore(panel, document.body.firstChild);
-    }
-
-    if (window.QuizI18n && window.QuizI18n.applyStatic) {
-      window.QuizI18n.applyStatic();
-    }
+    document.body.appendChild(modal);
+    applyI18n();
 
     var btn = document.getElementById("btn-site-transfer-import");
     var fileInput = document.getElementById("site-transfer-file");
     var statusEl = document.getElementById("site-transfer-import-status");
+    var later = document.getElementById("site-transfer-import-later");
+    var closeBtn = document.getElementById("site-transfer-import-close");
+    var backdrop = document.getElementById("site-transfer-import-backdrop");
+
+    function hide() {
+      modal.hidden = true;
+      cleanTransferParams();
+    }
+
+    if (later) later.addEventListener("click", hide);
+    if (closeBtn) closeBtn.addEventListener("click", hide);
+    if (backdrop) backdrop.addEventListener("click", hide);
 
     if (btn && fileInput) {
       btn.addEventListener("click", function () {
@@ -332,25 +458,15 @@
       });
     }
 
-    return panel;
+    return modal;
   }
 
   function showReceived(count) {
     var note = document.createElement("aside");
-    note.className = "site-transfer-banner is-success";
+    note.className = "site-transfer-toast";
     note.setAttribute("role", "status");
-    note.innerHTML =
-      '<div class="site-transfer-inner">' +
-      '<p class="site-transfer-title">' +
-      t("transfer.received", { count: count }) +
-      "</p>" +
-      "</div>";
-    var anchor = document.querySelector("header.top");
-    if (anchor && anchor.parentNode) {
-      anchor.parentNode.insertBefore(note, anchor.nextSibling);
-    } else {
-      document.body.insertBefore(note, document.body.firstChild);
-    }
+    note.textContent = t("transfer.received", { count: count });
+    document.body.appendChild(note);
   }
 
   function notifyOpener(type, extra) {
@@ -386,7 +502,11 @@
     try {
       params = new URLSearchParams(location.search);
     } catch (e) {
-      params = { get: function () { return null; } };
+      params = {
+        get: function () {
+          return null;
+        },
+      };
     }
     var expecting = params.get("transfer") === "1";
     var manual = params.get("manual") === "1";
@@ -408,10 +528,7 @@
       try {
         var count = applyPayload(data.payload);
         try {
-          ev.source.postMessage(
-            { type: MSG_DONE, count: count },
-            ev.origin
-          );
+          ev.source.postMessage({ type: MSG_DONE, count: count }, ev.origin);
         } catch (err) {
           notifyOpener(MSG_DONE, { count: count });
         }
@@ -427,7 +544,10 @@
         } catch (e2) {
           notifyOpener(MSG_ERROR);
         }
-        if (expecting) mountImportPanel();
+        if (expecting) {
+          var importModal = mountImportModal();
+          importModal.hidden = false;
+        }
       }
     }
 
@@ -435,29 +555,60 @@
 
     if (expecting) {
       notifyOpener(MSG_READY);
-      // If opener never responds (or user opened the link directly), offer file import.
-      setTimeout(function () {
-        if (document.getElementById("site-transfer-import")) return;
-        // Only show import if we still have transfer params (not already applied).
-        try {
-          var still = new URLSearchParams(location.search).get("transfer") === "1";
-          if (still) mountImportPanel();
-        } catch (e) {
-          mountImportPanel();
-        }
-      }, manual ? 0 : 2500);
+      setTimeout(
+        function () {
+          try {
+            var still =
+              new URLSearchParams(location.search).get("transfer") === "1";
+            if (!still) return;
+            var importModal = mountImportModal();
+            importModal.hidden = false;
+          } catch (e) {
+            var fallback = mountImportModal();
+            fallback.hidden = false;
+          }
+        },
+        manual ? 0 : 2500
+      );
+    }
+  }
+
+  function wireSenderModal(modal) {
+    var btn = document.getElementById("btn-site-transfer");
+    var statusEl = document.getElementById("site-transfer-status");
+    var later = document.getElementById("site-transfer-later");
+    var closeBtn = document.getElementById("site-transfer-close");
+    var backdrop = document.getElementById("site-transfer-backdrop");
+
+    if (btn) {
+      btn.addEventListener("click", function () {
+        startTransfer(statusEl, btn);
+      });
+    }
+    if (later) {
+      later.addEventListener("click", function () {
+        closeTransferModal(true);
+      });
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
+        closeTransferModal(true);
+      });
+    }
+    if (backdrop) {
+      backdrop.addEventListener("click", function () {
+        closeTransferModal(true);
+      });
     }
   }
 
   function initSender() {
-    var banner = mountBanner();
-    if (!banner) return;
-    var btn = document.getElementById("btn-site-transfer");
-    var statusEl = document.getElementById("site-transfer-status");
-    if (!btn) return;
-    btn.addEventListener("click", function () {
-      startTransfer(statusEl, btn);
-    });
+    mountSiteBadge();
+    var modal = mountTransferModal();
+    wireSenderModal(modal);
+    if (!wasDismissed()) {
+      openTransferModal();
+    }
   }
 
   function boot() {
