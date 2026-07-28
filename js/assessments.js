@@ -67,6 +67,9 @@
 
   const INSURANCE_TOPICS = ["ins_premium", "ins_expected"];
 
+  /** Assessment 2 skill set (Weeks 3–4): probability + sequences + linear/exp/interest. */
+  const ASSESS2_TOPICS = PROB_TOPICS.concat(FN1_TOPICS, FN2_TOPICS);
+
   const OVERVIEW_TOPICS = GEO_STATS_TOPICS.concat(
     PROB_TOPICS,
     FN1_TOPICS,
@@ -91,14 +94,9 @@
       blurbKey: "week.12.blurb",
     },
     {
-      id: "week3",
-      titleKey: "week.3.title",
-      blurbKey: "week.3.blurb",
-    },
-    {
-      id: "week4",
-      titleKey: "week.4.title",
-      blurbKey: "week.4.blurb",
+      id: "weeks34",
+      titleKey: "week.34.title",
+      blurbKey: "week.34.blurb",
     },
     {
       id: "week5",
@@ -142,6 +140,7 @@
       bossEmojiDead: "✨",
       available: true,
       compose: true,
+      compact: true,
       questionsScripts: [
         "js/questions.js",
         "js/questions-functions.js",
@@ -207,8 +206,32 @@
       topicIds: STATS_HW_TOPICS.slice(),
     },
     {
+      id: "assessment2",
+      weekId: "weeks34",
+      number: 2,
+      titleKey: "assessment.2.title",
+      summaryKey: "assessment.2.summary",
+      badgeKey: "assessment.2.badge",
+      brandSubKey: "assessment.2.brand_sub",
+      pageTitleKey: "assessment.2.page_title",
+      backKey: "course_back",
+      theme: "bountiful",
+      bossEmoji: "⛈️",
+      bossEmojiHit: "🌊",
+      bossEmojiWin: "⛵",
+      bossEmojiDead: "🌅",
+      available: true,
+      compose: true,
+      questionsScripts: [
+        "js/questions-functions.js",
+        "js/questions-course.js",
+      ],
+      features: { flashcards: false, notecard: true, boss: true },
+      topicIds: ASSESS2_TOPICS.slice(),
+    },
+    {
       id: "lesson_prob",
-      weekId: "week3",
+      weekId: "weeks34",
       number: 3,
       titleKey: "lesson.prob.title",
       summaryKey: "lesson.prob.summary",
@@ -228,7 +251,7 @@
     },
     {
       id: "lesson41",
-      weekId: "week4",
+      weekId: "weeks34",
       number: 41,
       titleKey: "lesson.41.title",
       summaryKey: "lesson.41.summary",
@@ -248,7 +271,7 @@
     },
     {
       id: "lesson_fn2",
-      weekId: "week4",
+      weekId: "weeks34",
       number: 44,
       titleKey: "lesson.fn2.title",
       summaryKey: "lesson.fn2.summary",

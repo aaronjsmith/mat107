@@ -8,6 +8,8 @@ MAT 107 practice: https://mat107.aaronjsmith.me/
 
 **Statistics HW (Institute · Rumors of the Adversary):** https://mat107.aaronjsmith.me/quiz.html?a=hw_stats
 
+**Assessment 2 (Bountiful · The Tempest):** https://mat107.aaronjsmith.me/quiz.html?a=assessment2
+
 **Week 3 · Probability (Casting Lots · Fear Before Battle):** https://mat107.aaronjsmith.me/quiz.html?a=lesson_prob
 
 **Lesson 4.1 · Functions (Winter Crossing):** https://mat107.aaronjsmith.me/quiz.html?a=lesson41

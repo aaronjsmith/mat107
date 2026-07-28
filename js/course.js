@@ -169,7 +169,7 @@
   }
 
   function renderCard(assessment) {
-    if (assessment.compose) return renderCompactCard(assessment);
+    if (assessment.compact) return renderCompactCard(assessment);
     const summary = C.readProgressSummary(assessment);
     return (
       '<article class="course-card assessment-card">' +
