@@ -135,9 +135,31 @@
   /**
    * RHS of an inline "var = ..." chunk: math tokens only.
    * Stops before English connectors so "x=0, then ..." keeps the prose.
+   * Allows spaces around operators (including unicode minus) so
+   * a_1(1 − r^n)/(1 − r) stays one math chunk instead of splitting at " − ".
    */
   const INLINE_MATH_RHS =
-    "(?:\\\\[a-zA-Z]+|[A-Za-z](?:_[0-9nN]+|\\([A-Za-z0-9]+\\))?[0-9]*|[0-9]+(?:\\.[0-9]+)?|[+\\-*/^()_{}]|[·⋅×÷π≈]|\\s+(?=[0-9A-Za-z+(\\\\π]))+";
+    "(?:" +
+    "\\\\[a-zA-Z]+" +
+    "|[A-Za-z](?:_[0-9nN]+|\\([A-Za-z0-9]+\\))?[0-9]*" +
+    "|[0-9]+(?:\\.[0-9]+)?" +
+    "|\\s*[+\\-−–—*/^=≈≠()_{}]" +
+    "|[·⋅×÷π]" +
+    // Space before a number, paren, TeX command, or single-letter math token —
+    // not before English words like "when" / "with".
+    "|\\s+(?=[0-9+(\\\\]|[A-Za-z](?![A-Za-z]))" +
+    ")+";
+
+  /** Apply plain-text sub/sup when a fragment never entered KaTeX. */
+  function formatPlainMathHtml(text) {
+    let s = escapeHtml(text);
+    s = s.replace(/_\{([^}]+)\}/g, "<sub>$1</sub>");
+    s = s.replace(/\^\{([^}]+)\}/g, "<sup>$1</sup>");
+    s = s.replace(/\^\(([^)]+)\)/g, "<sup>$1</sup>");
+    s = s.replace(/([A-Za-z])_([0-9nN]+)/g, "$1<sub>$2</sub>");
+    s = s.replace(/([A-Za-z0-9)])\^([0-9nN]+)/g, "$1<sup>$2</sup>");
+    return s;
+  }
 
   /** Pull inline math-ish tokens out of prose and render them. */
   function formatInlineProse(line) {
@@ -148,6 +170,7 @@
       "([A-Za-z](?:_[\\{0-9A-Za-z]+|\\([A-Za-z0-9]+\\))?(?:\\([^)]*\\))?\\s*[=≈]\\s*" +
         INLINE_MATH_RHS +
         "|[A-Za-z]_\\{?[^}\\s=]+\\}?(?:\\^[\\{(]?[^})\\s]+[})])?" +
+        "|[A-Za-z]\\^[\\{(]?[^})\\s]+[})]?" +
         "|[A-Za-z]\\([^)]*\\)\\s*[=≈]\\s*" +
         INLINE_MATH_RHS +
         ")",
@@ -172,7 +195,7 @@
 
     return parts
       .map(function (p) {
-        if (p.type === "text") return escapeHtml(p.value);
+        if (p.type === "text") return formatPlainMathHtml(p.value);
         const tex = toTex(p.value);
         return (
           '<span class="math-inline">' + renderTex(tex, false) + "</span>"
