@@ -597,38 +597,20 @@
     const card = choice(fresh.length ? fresh : cards);
     remember(recentPick.flashFronts, card.front, Math.max(6, cards.length - 2));
 
-    const direction = choice(["recall", "recognize"]);
-    if (direction === "recall") {
-      return {
-        id: id(),
-        topic: "formulas",
-        type: "flashcard",
-        prompt: tVar("flash.recall", { front: card.front }),
-        answer: card.back,
-        answers: (card.answers.concat([card.back])).map(_normFormula),
-        hint: card.hint,
-        setup: t("flash.target_form", {
-          left: card.back.split("=")[0].trim(),
-        }),
-        back: card.back,
-        unit: "",
-      };
-    }
-    const wrong = cards.filter(function (c) {
-      return c.back !== card.back;
-    }).map(function (c) {
-      return c.back;
-    });
-    const distractors = shuffle(wrong).slice(0, Math.min(3, wrong.length));
-    const choices = [card.back].concat(distractors);
-    return _choice(
-      tVar("flash.recognize", { front: card.front }),
-      choices,
-      card.back,
-      "formulas",
-      card.hint,
-      t("flash.match_hint", { left: card.back.split("=")[0].trim() })
-    );
+    return {
+      id: id(),
+      topic: "formulas",
+      type: "flashcard",
+      prompt: tVar("flash.recall", { front: card.front }),
+      answer: card.back,
+      answers: (card.answers.concat([card.back])).map(_normFormula),
+      hint: card.hint,
+      setup: t("flash.target_form", {
+        left: card.back.split("=")[0].trim(),
+      }),
+      back: card.back,
+      unit: "",
+    };
   }
 
   // --- Generators -------------------------------------------------------------
