@@ -17,10 +17,25 @@
     return I18n && I18n.t ? I18n.t(key, vars || {}) : key;
   }
 
-  function applyI18n() {
-    if (window.QuizI18n && window.QuizI18n.applyStatic) {
-      window.QuizI18n.applyStatic();
+  function applyI18n(root) {
+    var scope = root || document;
+    if (window.QuizI18n && window.QuizI18n.t) {
+      scope.querySelectorAll("[data-i18n]").forEach(function (el) {
+        var key = el.getAttribute("data-i18n");
+        var attr = el.getAttribute("data-i18n-attr");
+        var text = t(key);
+        if (attr) el.setAttribute(attr, text);
+        else el.textContent = text;
+      });
+      scope.querySelectorAll("[data-i18n-html]").forEach(function (el) {
+        el.innerHTML = t(el.getAttribute("data-i18n-html"));
+      });
+      scope.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
+        el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria")));
+      });
+      return;
     }
+    // Fallback if i18n is not ready yet — leave English HTML defaults.
   }
 
   function isCanonicalHost() {
@@ -192,7 +207,7 @@
       '<span class="site-canonical-badge-host">ensign.quest</span>';
 
     bar.appendChild(badge);
-    applyI18n();
+    applyI18n(bar);
     var labelEl = badge.querySelector(".site-canonical-badge-label");
     if (labelEl && !labelEl.textContent) {
       labelEl.textContent = t(labelKey);
@@ -229,7 +244,7 @@
       "</div>";
 
     document.body.appendChild(modal);
-    applyI18n();
+    applyI18n(modal);
 
     var summaryEl = document.getElementById("site-transfer-summary");
     if (summaryEl) {
@@ -407,7 +422,7 @@
       "</div>";
 
     document.body.appendChild(modal);
-    applyI18n();
+    applyI18n(modal);
 
     var btn = document.getElementById("btn-site-transfer-import");
     var fileInput = document.getElementById("site-transfer-file");
