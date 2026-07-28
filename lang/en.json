@@ -1331,6 +1331,8 @@
     "topics_heading": "Topics",
     "transfer.aria": "Site move notice",
     "transfer.badge_aria": "Open ensign.quest",
+    "transfer.badge_home_aria": "Back to ensign.quest",
+    "transfer.badge_home_label": "All projects",
     "transfer.badge_label": "New site",
     "transfer.body": "This practice site moved to <strong>mat107.ensign.quest</strong>. Transfer <strong>all quiz progress</strong> from this browser — every assessment, notes, and settings — in one step.",
     "transfer.btn": "Transfer all progress",

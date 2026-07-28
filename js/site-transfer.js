@@ -173,24 +173,29 @@
       document.body.insertBefore(bar, anchor);
     }
 
+    var onCanonical = isCanonicalHost();
+    var labelKey = onCanonical ? "transfer.badge_home_label" : "transfer.badge_label";
+    var ariaKey = onCanonical ? "transfer.badge_home_aria" : "transfer.badge_aria";
+
     var badge = document.createElement("a");
     badge.id = "site-canonical-badge";
     badge.className = "site-canonical-badge";
     badge.href = BADGE_URL;
     badge.target = "_blank";
     badge.rel = "noopener noreferrer";
-    badge.setAttribute("data-i18n-aria", "transfer.badge_aria");
-    badge.setAttribute("aria-label", t("transfer.badge_aria"));
+    badge.setAttribute("data-i18n-aria", ariaKey);
+    badge.setAttribute("aria-label", t(ariaKey));
     badge.innerHTML =
-      '<span class="site-canonical-badge-label" data-i18n="transfer.badge_label"></span>' +
+      '<span class="site-canonical-badge-label" data-i18n="' +
+      labelKey +
+      '"></span>' +
       '<span class="site-canonical-badge-host">ensign.quest</span>';
 
     bar.appendChild(badge);
     applyI18n();
-    if (!badge.querySelector(".site-canonical-badge-label").textContent) {
-      badge.querySelector(".site-canonical-badge-label").textContent = t(
-        "transfer.badge_label"
-      );
+    var labelEl = badge.querySelector(".site-canonical-badge-label");
+    if (labelEl && !labelEl.textContent) {
+      labelEl.textContent = t(labelKey);
     }
   }
 
@@ -493,6 +498,8 @@
   }
 
   function initReceiver() {
+    mountSiteBadge();
+
     var params;
     try {
       params = new URLSearchParams(location.search);
