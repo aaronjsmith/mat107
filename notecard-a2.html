@@ -629,22 +629,31 @@
               </tr>
               <tr>
                 <td class="math">A = P(1 + r)<sup>t</sup>
-                  <span class="tip">compound once/year</span>
+                  <span class="tip">compound annually (m = 1)</span>
                 </td>
                 <td class="xl-cell">=P*POWER(1+r,t)
                   <span class="tip">or =FV(r,t,0,−P)</span>
                 </td>
               </tr>
+              <tr>
+                <td class="math">A = P(1 + r/m)<sup>m·t</sup>
+                  <span class="tip">compound m times/year</span>
+                </td>
+                <td class="xl-cell">=P*POWER(1+r/m,m*t)
+                  <span class="tip">or =FV(r/m,m*t,0,−P)</span>
+                </td>
+              </tr>
             </tbody>
           </table>
+          <p class="note">m: annual=1 · semiannual=2 · quarterly=4 · monthly=12 · weekly=52 · daily=365</p>
 
           <div class="z-box" style="margin-top:0.08rem;">
             <p class="z-title">WHICH MODEL?</p>
             <ul>
               <li><strong>Constant add</strong> each step → linear / arithmetic</li>
               <li><strong>Constant multiply</strong> each step → exp / geometric</li>
-              <li><strong>Simple interest</strong> → A = P(1+rt)</li>
-              <li><strong>Compound interest</strong> → A = P(1+r)<sup>t</sup></li>
+              <li><strong>Simple</strong> → A = P(1+rt)</li>
+              <li><strong>Compound</strong> → A = P(1+r/m)<sup>m·t</sup> (m=1 if annual)</li>
             </ul>
           </div>
 
@@ -673,7 +682,7 @@
             <p><strong>Perm:</strong> P(8,3) → <code>=PERMUT(8,3)</code> = 336</p>
             <p><strong>Comb:</strong> C(8,3) → <code>=COMBIN(8,3)</code> = 56</p>
             <p><strong>Geom term:</strong> a₁=5, r=2, n=6 → <code>=5*POWER(2,5)</code> = 160</p>
-            <p><strong>Compound:</strong> P=1000, r=0.05, t=4 → <code>=1000*POWER(1.05,4)</code></p>
+            <p><strong>Compound monthly:</strong> P=1000, r=0.05, m=12, t=4 → <code>=1000*POWER(1+0.05/12,12*4)</code></p>
             <p><strong>Slope:</strong> (0,7)&amp;(4,4) → m=(4−7)/(4−0)=−0.75</p>
           </div>
 

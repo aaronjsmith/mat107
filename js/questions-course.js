@@ -1197,7 +1197,7 @@
     );
   }
 
-  function genCompoundFreqFV() {
+  function genCompoundFreqFV(topic) {
     const P = choice([1450, 2000, 5000, 8000]);
     const apr = choice([0.05, 0.06, 0.07]);
     const years = choice([15, 18, 20, 21]);
@@ -1217,16 +1217,21 @@
         freq: t("c.c.freq_" + freq.key),
       }),
       ans,
-      "save_compound",
+      topic || "save_compound",
       1,
       t("c.h.compound_freq"),
-      "FV = P(1 + r/m)^(m·t) — divide the annual rate by compounding periods per year",
+      "A = P(1 + r/m)^(m·t) — divide the annual rate by compounding periods per year",
       "dollars",
       calcHelp(
         P + "×(1+" + apr + "/" + freq.m + ")^(" + years + "×" + freq.m + ") =",
         P + "×(1+" + apr + "/" + freq.m + ")^(" + years + "×" + freq.m + ") ="
       )
     );
+  }
+
+  /** Assessment 2 interest models: same multi-period compound formula. */
+  function genCompoundInterestFreq() {
+    return genCompoundFreqFV("fn_interest");
   }
 
   function genPresentValue() {
@@ -1531,6 +1536,7 @@
     genExpWord,
     genSimpleInterest,
     genCompoundInterestBasic,
+    genCompoundInterestFreq,
     genBudgetSurplus,
     genPercentOfIncome,
     genDiscountTax,
