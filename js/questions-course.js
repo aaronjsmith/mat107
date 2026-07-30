@@ -259,7 +259,7 @@
   function genProbSimple() {
     const total = choice([20, 24, 36, 40, 52]);
     const fav = randInt(3, Math.floor(total / 2));
-    const ans = num(fav / total, 4);
+    const ans = num(fav / total, 2);
     const pct = num((fav / total) * 100, 2);
     return _numeric(
       tVar("c.q.prob_simple", { fav: fav, total: total }),
@@ -285,7 +285,7 @@
 
   function genProbComplement() {
     const p = choice([0.15, 0.22, 0.3, 0.35, 0.4, 0.65]);
-    const ans = num(1 - p, 4);
+    const ans = num(1 - p, 2);
     return _numeric(
       tVar("c.q.prob_complement", { p: p }),
       ans,
@@ -301,7 +301,7 @@
   function genProbIndependent() {
     const p1 = choice([0.2, 0.25, 0.3, 0.4, 0.5]);
     const p2 = choice([0.1, 0.2, 0.25, 0.5]);
-    const ans = num(p1 * p2, 4);
+    const ans = num(p1 * p2, 2);
     return _numeric(
       tVar("c.q.prob_and_indep", { p1: p1, p2: p2 }),
       ans,
@@ -317,7 +317,7 @@
   function genProbOrExclusive() {
     const p1 = choice([0.12, 0.18, 0.2, 0.25, 0.3]);
     const p2 = choice([0.1, 0.15, 0.22, 0.28]);
-    const ans = num(p1 + p2, 4);
+    const ans = num(p1 + p2, 2);
     return _numeric(
       tVar("c.q.prob_or_exclusive", { p1: p1, p2: p2 }),
       ans,
@@ -380,7 +380,7 @@
       fav = 2;
       label = t("c.q.dice_leq2_label");
     }
-    const ans = num(fav / 6, 4);
+    const ans = num(fav / 6, 2);
     return _numeric(
       tVar("c.q.prob_dice", { event: label }),
       ans,
@@ -411,7 +411,7 @@
       fav = 26;
       label = t("c.q.card_red_label");
     }
-    const ans = num(fav / 52, 4);
+    const ans = num(fav / 52, 2);
     return _numeric(
       tVar("c.q.prob_card", { event: label }),
       ans,
@@ -429,14 +429,24 @@
     const red = choice([4, 5, 6, 7]);
     const blue = choice([3, 4, 5, 6]);
     const total = red + blue;
-    const ans = num((red / total) * ((red - 1) / (total - 1)), 4);
+    const ans = num((red / total) * ((red - 1) / (total - 1)), 2);
     return _numeric(
       tVar("c.q.prob_wo_replace", { red: red, blue: blue, total: total }),
       ans,
       "prob_compound",
       0.01,
       t("c.h.prob_wo_replace"),
-      "P(both red) = (" + red + "/" + total + ") × (" + (red - 1) + "/" + (total - 1) + ")",
+      "P(both red) = (" +
+        red +
+        "/" +
+        total +
+        ") × (" +
+        (red - 1) +
+        "/" +
+        (total - 1) +
+        ") = " +
+        ans +
+        " (nearest hundredth)",
       "",
       calcHelp(
         "(" + red + " ÷ " + total + ") × (" + (red - 1) + " ÷ " + (total - 1) + ") =",
@@ -450,7 +460,7 @@
     const pA = choice([0.3, 0.35, 0.4, 0.45]);
     const pB = choice([0.2, 0.25, 0.3, 0.35]);
     const pBoth = choice([0.05, 0.1, 0.12, 0.15]);
-    const ans = num(pA + pB - pBoth, 4);
+    const ans = num(pA + pB - pBoth, 2);
     return _numeric(
       tVar("c.q.prob_or_inclusive", { pA: pA, pB: pB, pBoth: pBoth }),
       ans,
