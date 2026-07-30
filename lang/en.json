@@ -546,6 +546,7 @@
     "flock.mode_finalboss_ready": "Face The Wolf at the Fold · defend the flock",
     "fn.c.arith_seq": "Arithmetic",
     "fn.c.both_seq": "Both arithmetic and geometric",
+    "fn.c.choose_type": "Choose…",
     "fn.c.geom_seq": "Geometric",
     "fn.c.neither_seq": "Neither",
     "fn.field.term1": "1st term",

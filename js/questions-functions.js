@@ -587,6 +587,7 @@
       { seq: neitherSeq, answer: "neither" },
     ]);
     const opts = seqTypeOptions();
+    const choose = t("fn.c.choose_type");
     return _multi(
       tVar("fn.q.seq_classify"),
       sets.map(function (s, i) {
@@ -594,6 +595,8 @@
           id: "s" + (i + 1),
           label: seqLabel(s.seq),
           type: "select",
+          presentation: "sequence-choice",
+          placeholder: choose,
           options: opts,
           answer: s.answer,
         };
@@ -1003,6 +1006,8 @@
           pubField.options = (f.options || []).map(function (o) {
             return { value: o.value, label: o.label };
           });
+          if (f.placeholder) pubField.placeholder = f.placeholder;
+          if (f.presentation) pubField.presentation = f.presentation;
         }
         return pubField;
       });

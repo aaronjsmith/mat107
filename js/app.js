@@ -1014,6 +1014,7 @@
     if (!els.multiFields) return;
     els.multiFields.innerHTML = "";
     els.multiFields.hidden = true;
+    els.multiFields.classList.remove("multi-fields--classify");
   }
 
   function getMultiInputs() {
@@ -1037,6 +1038,16 @@
       const select = document.createElement("select");
       select.id = inputId;
       select.dataset.fieldId = f.id;
+      select.className = "field-select";
+      if (f.placeholder) {
+        const blank = document.createElement("option");
+        blank.value = "";
+        blank.textContent = f.placeholder;
+        blank.disabled = true;
+        blank.selected = true;
+        blank.hidden = true;
+        select.appendChild(blank);
+      }
       (f.options || []).forEach((opt) => {
         const option = document.createElement("option");
         option.value = opt.value;
@@ -1062,7 +1073,11 @@
 
   function appendStandardField(f, focus) {
     const row = document.createElement("div");
-    row.className = "multi-field";
+    const presentation = f.presentation || "";
+    row.className =
+      "multi-field" +
+      (presentation === "sequence-choice" ? " multi-field--sequence-choice" : "") +
+      (f.type === "select" ? " multi-field--select" : "");
 
     const label = document.createElement("label");
     const inputId = "mf-" + f.id;
@@ -1092,9 +1107,16 @@
     clearMultiFields();
     els.singleField.hidden = true;
     els.multiFields.hidden = false;
-    const fieldById = Object.fromEntries((pub.fields || []).map((f) => [f.id, f]));
+    const fields = pub.fields || [];
+    const allSequenceChoice =
+      fields.length > 0 &&
+      fields.every(function (f) {
+        return f.presentation === "sequence-choice";
+      });
+    els.multiFields.classList.toggle("multi-fields--classify", allSequenceChoice);
+    const fieldById = Object.fromEntries(fields.map((f) => [f.id, f]));
     const layout =
-      pub.layout || (pub.fields || []).map((f) => ({ widget: "field", id: f.id }));
+      pub.layout || fields.map((f) => ({ widget: "field", id: f.id }));
     let focusSet = false;
 
     layout.forEach((item) => {

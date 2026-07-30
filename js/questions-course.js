@@ -1759,6 +1759,8 @@
           pubField.options = (f.options || []).map(function (o) {
             return { value: o.value, label: o.label };
           });
+          if (f.placeholder) pubField.placeholder = f.placeholder;
+          if (f.presentation) pubField.presentation = f.presentation;
         }
         return pubField;
       });
