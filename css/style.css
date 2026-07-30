@@ -1966,9 +1966,46 @@ a.linkish {
 .week-group-head {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.35rem;
   padding-bottom: 0.35rem;
   border-bottom: 1px solid var(--line);
+}
+
+.week-group-head--overview {
+  gap: 0.35rem;
+}
+
+.week-group-notecard {
+  align-self: flex-start;
+  margin: 0 0 0 1.1rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.week-group-head--overview .week-group-notecard {
+  margin-left: 0;
+}
+
+.week-group-notecard:hover {
+  color: var(--accent-deep);
+  text-decoration: underline;
+}
+
+.week-group-notecard:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.week-group.is-collapsed .week-group-notecard {
+  margin-bottom: 0.15rem;
 }
 
 .week-group-toggle {

@@ -207,6 +207,37 @@
     });
   }
 
+  /** Prefer a dedicated notecardHref from the week's main assessment. */
+  function weekNotecardHref(weekId, quizzes) {
+    const list = quizzes || assessmentsForWeek(weekId);
+    let fallback = null;
+    for (let i = 0; i < list.length; i++) {
+      const a = list[i];
+      const f = a.features || {};
+      if (!f.notecard) continue;
+      if (f.notecardHref) return f.notecardHref;
+      if (
+        !fallback &&
+        (a.number === 0 || a.number === 1 || a.number === 2 || a.number === 3)
+      ) {
+        fallback = a;
+      }
+    }
+    if (fallback) return (fallback.features && fallback.features.notecardHref) || "notecard.html";
+    return null;
+  }
+
+  function renderNotecardLink(href) {
+    if (!href) return "";
+    return (
+      '<a class="week-group-notecard" href="' +
+      escapeHtml(href) +
+      '" target="_blank" rel="noopener">' +
+      escapeHtml(t("btn_notecard")) +
+      "</a>"
+    );
+  }
+
   function renderWeekGroup(week, collapsedMap) {
     const quizzes = assessmentsForWeek(week.id);
     if (!quizzes.length) return "";
@@ -214,12 +245,27 @@
     const isOverview = week.id === "overview";
     const title = t(week.titleKey);
     const collapsed = isWeekCollapsed(week.id, collapsedMap);
+    const notecardHref = weekNotecardHref(week.id, quizzes);
+    const notecardHtml = renderNotecardLink(notecardHref);
 
     if (isOverview) {
       return (
         '<section class="week-group week-group--overview" data-week="' +
         escapeHtml(week.id) +
         '">' +
+        '<header class="week-group-head week-group-head--overview">' +
+        '<div class="week-group-toggle-text">' +
+        '<span class="week-group-title">' +
+        escapeHtml(title) +
+        "</span>" +
+        (week.blurbKey
+          ? '<span class="muted week-group-blurb">' +
+            escapeHtml(t(week.blurbKey)) +
+            "</span>"
+          : "") +
+        "</div>" +
+        notecardHtml +
+        "</header>" +
         '<div class="card-grid card-grid--compact">' +
         quizzes.map(renderCard).join("") +
         "</div>" +
@@ -262,6 +308,7 @@
       ) +
       "</span>" +
       "</button>" +
+      notecardHtml +
       "</header>" +
       '<div class="week-group-body" id="week-body-' +
       escapeHtml(week.id) +

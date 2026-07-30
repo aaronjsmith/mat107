@@ -308,7 +308,7 @@
       available: true,
       compose: true,
       questionsScripts: ["js/questions-course.js"],
-      features: { flashcards: false, notecard: true, boss: true },
+      features: { flashcards: false, notecard: false, boss: true },
       topicIds: ASSESS3_TOPICS.slice(),
     },
     {
