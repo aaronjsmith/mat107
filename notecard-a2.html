@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MAT 107 · Assessment 2 · 5×7 Formula + Excel Notecard</title>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a2332;
+      --muted: #5c6b7a;
+      --line: #c9bba3;
+      --accent: #0f6e56;
+      --accent-deep: #0a4f3d;
+      --paper: #fffcf6;
+      --wash: #f3efe6;
+      --z: #1e3a5f;
+      --xl: #1d4e89;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--wash);
+      line-height: 1.28;
+    }
+
+    .toolbar {
+      max-width: 48rem;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toolbar h1 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .toolbar p {
+      margin: 0.2rem 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .disclaimer-banner {
+      max-width: 48rem;
+      margin: 0 auto 0.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid #b45309;
+      border-radius: 10px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .disclaimer-banner strong {
+      display: block;
+      margin-bottom: 0.2rem;
+      font-size: 0.95rem;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      padding: 0.5rem 0.9rem;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .deck {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 0.75rem 1rem 2rem;
+    }
+
+    .side {
+      width: 7in;
+      height: 5in;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: 0 12px 28px rgba(26, 35, 50, 0.08);
+      padding: 0.16in 0.18in 0.12in;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .side-label {
+      position: absolute;
+      top: 0.06in;
+      right: 0.12in;
+      font-size: 0.5rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .side h2 {
+      margin: 0 0 0.04rem;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      padding-right: 1.6in;
+    }
+
+    .side h3 {
+      margin: 0.08rem 0 0.04rem;
+      font-size: 0.54rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(201, 187, 163, 0.7);
+      padding-bottom: 0.02rem;
+    }
+
+    .front-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.05fr;
+      gap: 0.1in;
+      height: calc(100% - 0.38in);
+    }
+
+    .back-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr 0.95fr;
+      gap: 0.1in;
+      height: calc(100% - 0.38in);
+    }
+
+    .pair {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.48rem;
+      margin: 0.04rem 0 0.06rem;
+    }
+
+    .pair th,
+    .pair td {
+      border: 1px solid rgba(201, 187, 163, 0.75);
+      padding: 0.08rem 0.12rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .pair th {
+      background: rgba(15, 110, 86, 0.1);
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      font-size: 0.44rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-weight: 600;
+    }
+
+    .pair th.xl {
+      background: rgba(29, 78, 137, 0.12);
+      color: var(--xl);
+    }
+
+    .pair .math {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.48rem;
+    }
+
+    .pair .xl-cell {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.46rem;
+      color: var(--xl);
+      font-weight: 500;
+    }
+
+    .pair .tip {
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      font-size: 0.44rem;
+      color: var(--muted);
+      display: block;
+      margin-top: 0.02rem;
+    }
+
+    .note {
+      margin: 0.02rem 0 0.04rem;
+      font-size: 0.48rem;
+      color: var(--muted);
+    }
+
+    .z-box {
+      margin-top: 0.06rem;
+      padding: 0.12rem 0.2rem;
+      border: 1.5px solid var(--z);
+      border-radius: 5px;
+      background: rgba(30, 58, 95, 0.06);
+    }
+
+    .z-box.xl-box {
+      border-color: var(--xl);
+      background: rgba(29, 78, 137, 0.06);
+    }
+
+    .z-box .z-title {
+      margin: 0 0 0.04rem;
+      font-size: 0.54rem;
+      font-weight: 700;
+      color: var(--z);
+      letter-spacing: 0.02em;
+    }
+
+    .z-box.xl-box .z-title { color: var(--xl); }
+
+    .z-box .z-formula {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.58rem;
+      font-weight: 600;
+      margin: 0 0 0.04rem;
+    }
+
+    .z-box p,
+    .z-box ul {
+      margin: 0;
+      font-size: 0.46rem;
+    }
+
+    .z-box ul {
+      padding-left: 0.8rem;
+      margin-top: 0.04rem;
+    }
+
+    .z-box li { margin: 0.02rem 0; }
+
+    .steps {
+      margin: 0;
+      padding-left: 0.85rem;
+      font-size: 0.5rem;
+    }
+
+    .steps li { margin: 0.03rem 0; }
+
+    .footer-tiny {
+      margin-top: 0.04rem;
+      font-size: 0.42rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.12rem;
+      margin: 0.04rem 0;
+    }
+
+    .chip {
+      font-size: 0.44rem;
+      padding: 0.06rem 0.16rem;
+      border-radius: 3px;
+      background: rgba(15, 110, 86, 0.08);
+      border: 1px solid rgba(15, 110, 86, 0.2);
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    .chip.xl {
+      background: rgba(29, 78, 137, 0.08);
+      border-color: rgba(29, 78, 137, 0.25);
+      color: var(--xl);
+    }
+
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none !important; }
+      .disclaimer-banner { display: none !important; }
+      .deck { padding: 0; gap: 0; }
+      .side {
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        page-break-after: always;
+        break-after: page;
+        margin: 0;
+      }
+      .side:last-child { page-break-after: auto; }
+      @page {
+        size: 7in 5in landscape;
+        margin: 0;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .side {
+        width: min(100%, 7in);
+        height: auto;
+        min-height: 5in;
+      }
+      .front-grid,
+      .back-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <h1>MAT 107 · Assessment 2 notecard (formulas + Excel)</h1>
+      <p>Weeks 3–4 · Probability, sequences, linear/exp/interest. Print 5×7 landscape (7″×5″).</p>
+    </div>
+    <div class="toolbar-actions">
+      <a class="btn" href="quiz.html?a=assessment2">← Assessment 2 practice</a>
+      <a class="btn" href="notecard.html">Assessment 1 card</a>
+      <button class="btn primary" type="button" onclick="window.print()">Print study template</button>
+    </div>
+  </div>
+
+  <aside class="disclaimer-banner" role="note">
+    <strong>Testing-center disclaimer</strong>
+    Ensign College / testing-center rules typically require a <strong>handwritten</strong> notecard.
+    This page is an unofficial <strong>study template only</strong> — copy it by hand onto your approved
+    5×7 card. Do not bring a printed copy unless your instructor explicitly allows it. Always follow
+    your course and testing-center instructions.
+  </aside>
+
+  <div class="deck">
+    <!-- FRONT -->
+    <article class="side" aria-label="Notecard front">
+      <span class="side-label">Front · Prob + sequences</span>
+      <h2>Assessment 2 · Math formula ↔ Excel</h2>
+      <p class="note">Rates as decimals (5% → 0.05). Excel: use cell refs like <code>A1</code>; <code>^</code> and <code>POWER</code> both raise to a power.</p>
+
+      <div class="front-grid">
+        <div>
+          <h3>Probability</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">P = fav ÷ total
+                  <span class="tip">basic · equally likely</span>
+                </td>
+                <td class="xl-cell">=fav/total</td>
+              </tr>
+              <tr>
+                <td class="math">P(not A) = 1 − P(A)
+                  <span class="tip">complement</span>
+                </td>
+                <td class="xl-cell">=1−pA</td>
+              </tr>
+              <tr>
+                <td class="math">P(A and B) = P(A)·P(B)
+                  <span class="tip">independent</span>
+                </td>
+                <td class="xl-cell">=pA*pB</td>
+              </tr>
+              <tr>
+                <td class="math">P(A or B) = P(A)+P(B)
+                  <span class="tip">mutually exclusive</span>
+                </td>
+                <td class="xl-cell">=pA+pB</td>
+              </tr>
+              <tr>
+                <td class="math">P(A or B) = P(A)+P(B)−P(A and B)
+                  <span class="tip">inclusive OR</span>
+                </td>
+                <td class="xl-cell">=pA+pB−pBoth</td>
+              </tr>
+              <tr>
+                <td class="math">without replacement
+                  <span class="tip">2nd draw: one fewer</span>
+                </td>
+                <td class="xl-cell">=(r/t)*((r−1)/(t−1))</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Counting</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">n! = n·(n−1)···1
+                  <span class="tip">factorial</span>
+                </td>
+                <td class="xl-cell">=FACT(n)</td>
+              </tr>
+              <tr>
+                <td class="math">P(n,r) = n!/(n−r)!
+                  <span class="tip">order matters · perm</span>
+                </td>
+                <td class="xl-cell">=PERMUT(n,r)</td>
+              </tr>
+              <tr>
+                <td class="math">C(n,r) = n!/(r!(n−r)!)
+                  <span class="tip">order doesn’t · comb</span>
+                </td>
+                <td class="xl-cell">=COMBIN(n,r)</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="note">Calc keys: <strong>nPr</strong> / <strong>nCr</strong> · Excel same idea as PERMUT / COMBIN.</p>
+        </div>
+
+        <div>
+          <h3>Arithmetic sequences</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">d = a<sub>n</sub> − a<sub>n−1</sub>
+                  <span class="tip">common difference</span>
+                </td>
+                <td class="xl-cell">=B2−B1</td>
+              </tr>
+              <tr>
+                <td class="math">a<sub>n</sub> = a<sub>1</sub> + (n−1)d
+                  <span class="tip">explicit</span>
+                </td>
+                <td class="xl-cell">=a1+(n−1)*d</td>
+              </tr>
+              <tr>
+                <td class="math">a<sub>1</sub>; a<sub>n</sub> = a<sub>n−1</sub> + d
+                  <span class="tip">recursive</span>
+                </td>
+                <td class="xl-cell">=B1+d &nbsp;(fill down)</td>
+              </tr>
+              <tr>
+                <td class="math">S<sub>n</sub> = n(a<sub>1</sub> + a<sub>n</sub>)/2
+                  <span class="tip">finite series sum</span>
+                </td>
+                <td class="xl-cell">=n*(a1+an)/2</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Geometric sequences</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">r = a<sub>n</sub> ÷ a<sub>n−1</sub>
+                  <span class="tip">common ratio</span>
+                </td>
+                <td class="xl-cell">=B2/B1</td>
+              </tr>
+              <tr>
+                <td class="math">a<sub>n</sub> = a<sub>1</sub> · r<sup>n−1</sup>
+                  <span class="tip">explicit</span>
+                </td>
+                <td class="xl-cell">=a1*POWER(r,n−1)</td>
+              </tr>
+              <tr>
+                <td class="math">a<sub>1</sub>; a<sub>n</sub> = a<sub>n−1</sub> · r
+                  <span class="tip">recursive</span>
+                </td>
+                <td class="xl-cell">=B1*r &nbsp;(fill down)</td>
+              </tr>
+              <tr>
+                <td class="math">S<sub>n</sub> = a<sub>1</sub>(1−r<sup>n</sup>)/(1−r)
+                  <span class="tip">r ≠ 1</span>
+                </td>
+                <td class="xl-cell">=a1*(1−POWER(r,n))/(1−r)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h3>Classify a sequence</h3>
+          <ol class="steps">
+            <li><strong>Subtract</strong> consecutive terms → constant? → <em>arithmetic</em> (d).</li>
+            <li><strong>Divide</strong> consecutive terms → constant? → <em>geometric</em> (r).</li>
+            <li>Neither pattern → neither.</li>
+          </ol>
+
+          <div class="z-box">
+            <p class="z-title">QUICK CHECK</p>
+            <p class="z-formula">{3, 7, 11, 15…} → d = 4</p>
+            <p class="z-formula">{2, 6, 18, 54…} → r = 3</p>
+            <ul>
+              <li>Arithmetic ↔ add/subtract same amount</li>
+              <li>Geometric ↔ multiply/divide by same factor</li>
+              <li>Negative r → alternating signs</li>
+            </ul>
+          </div>
+
+          <div class="z-box xl-box" style="margin-top:0.06rem;">
+            <p class="z-title">EXCEL POWER TIPS</p>
+            <ul>
+              <li><code>POWER(base, exp)</code> or <code>base^exp</code></li>
+              <li><code>FACT(5)</code> → 120</li>
+              <li><code>PERMUT(10,3)</code> → 720</li>
+              <li><code>COMBIN(10,3)</code> → 120</li>
+              <li>Lock a rate: <code>$B$1</code> when filling</li>
+            </ul>
+          </div>
+
+          <p class="footer-tiny">Unofficial MAT 107 study aid · Assessment 2</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- BACK -->
+    <article class="side" aria-label="Notecard back">
+      <span class="side-label">Back · Models + interest</span>
+      <h2>Linear · exponential · interest · Excel twins</h2>
+      <p class="note">Linear adds a constant; exponential multiplies by a constant. Interest: simple = linear-ish; compound = exponential.</p>
+
+      <div class="back-grid">
+        <div>
+          <h3>Linear &amp; slope</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">m = (y<sub>2</sub>−y<sub>1</sub>)/(x<sub>2</sub>−x<sub>1</sub>)
+                  <span class="tip">slope · rise/run</span>
+                </td>
+                <td class="xl-cell">=(y2−y1)/(x2−x1)
+                  <span class="tip">or =SLOPE(ys,xs)</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="math">f(x) = mx + b
+                  <span class="tip">slope-intercept</span>
+                </td>
+                <td class="xl-cell">=m*x+b</td>
+              </tr>
+              <tr>
+                <td class="math">d(t) = rate·t + start
+                  <span class="tip">word-problem linear</span>
+                </td>
+                <td class="xl-cell">=rate*t+start</td>
+              </tr>
+              <tr>
+                <td class="math">from table: b at x=0;
+                  m = Δy/Δx
+                </td>
+                <td class="xl-cell">=SLOPE(y-range,x-range)
+                  <span class="tip">=INTERCEPT(y,x)</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Exponential</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">f(n) = a · r<sup>n</sup>
+                  <span class="tip">a = start; r = factor</span>
+                </td>
+                <td class="xl-cell">=a*POWER(r,n)</td>
+              </tr>
+              <tr>
+                <td class="math">growth: r = 1 + pct
+                  <span class="tip">8% → r = 1.08</span>
+                </td>
+                <td class="xl-cell">=1+pct</td>
+              </tr>
+              <tr>
+                <td class="math">decay: r = 1 − pct
+                  <span class="tip">12% → r = 0.88</span>
+                </td>
+                <td class="xl-cell">=1−pct</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h3>Interest</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">A = P(1 + rt)
+                  <span class="tip">simple interest</span>
+                </td>
+                <td class="xl-cell">=P*(1+r*t)</td>
+              </tr>
+              <tr>
+                <td class="math">A = P(1 + r)<sup>t</sup>
+                  <span class="tip">compound once/year</span>
+                </td>
+                <td class="xl-cell">=P*POWER(1+r,t)
+                  <span class="tip">or =FV(r,t,0,−P)</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="z-box" style="margin-top:0.08rem;">
+            <p class="z-title">WHICH MODEL?</p>
+            <ul>
+              <li><strong>Constant add</strong> each step → linear / arithmetic</li>
+              <li><strong>Constant multiply</strong> each step → exp / geometric</li>
+              <li><strong>Simple interest</strong> → A = P(1+rt)</li>
+              <li><strong>Compound interest</strong> → A = P(1+r)<sup>t</sup></li>
+            </ul>
+          </div>
+
+          <div class="chip-row">
+            <span class="chip">a₁ first term</span>
+            <span class="chip">d difference</span>
+            <span class="chip">r ratio/rate</span>
+            <span class="chip">n index / years</span>
+            <span class="chip">P principal</span>
+            <span class="chip xl">POWER · FACT · PERMUT · COMBIN · FV · SLOPE</span>
+          </div>
+        </div>
+
+        <div>
+          <h3>Solve steps</h3>
+          <ol class="steps">
+            <li><strong>Read</strong> — asked for? knowns?</li>
+            <li><strong>Pick</strong> — prob / seq / linear / exp / interest.</li>
+            <li><strong>Write</strong> — formula, then Excel twin if allowed.</li>
+            <li><strong>Plug</strong> — decimals for %; watch n vs n−1.</li>
+            <li><strong>Check</strong> — units; round only at end.</li>
+          </ol>
+
+          <div class="z-box xl-box" style="margin-top:0.08rem;">
+            <p class="z-title">MINI EXAMPLES</p>
+            <p><strong>Perm:</strong> P(8,3) → <code>=PERMUT(8,3)</code> = 336</p>
+            <p><strong>Comb:</strong> C(8,3) → <code>=COMBIN(8,3)</code> = 56</p>
+            <p><strong>Geom term:</strong> a₁=5, r=2, n=6 → <code>=5*POWER(2,5)</code> = 160</p>
+            <p><strong>Compound:</strong> P=1000, r=0.05, t=4 → <code>=1000*POWER(1.05,4)</code></p>
+            <p><strong>Slope:</strong> (0,7)&amp;(4,4) → m=(4−7)/(4−0)=−0.75</p>
+          </div>
+
+          <p class="footer-tiny">Print double-sided · landscape 7″×5″ · mat107.ensign.quest</p>
+        </div>
+      </div>
+    </article>
+  </div>
+</body>
+</html>

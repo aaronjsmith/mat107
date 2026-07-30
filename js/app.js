@@ -2749,9 +2749,16 @@
     };
     const flashBtn = document.querySelector('[data-topic="flashcards"]');
     if (flashBtn) flashBtn.hidden = !features.flashcards;
-    const notecardLink = document.querySelector('a[href="notecard.html"]');
+    const notecardLink =
+      document.getElementById("notecard-link") ||
+      document.querySelector('a[href="notecard.html"]');
     const notecardNote = document.querySelector(".notecard-note");
-    if (notecardLink) notecardLink.hidden = !features.notecard;
+    if (notecardLink) {
+      notecardLink.hidden = !features.notecard;
+      if (features.notecard && features.notecardHref) {
+        notecardLink.setAttribute("href", features.notecardHref);
+      }
+    }
     if (notecardNote) notecardNote.hidden = !features.notecard;
     if (els.finalBossBtn) els.finalBossBtn.hidden = features.boss === false;
   }

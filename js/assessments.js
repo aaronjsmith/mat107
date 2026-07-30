@@ -222,7 +222,12 @@
         "js/questions-functions.js",
         "js/questions-course.js",
       ],
-      features: { flashcards: false, notecard: true, boss: true },
+      features: {
+        flashcards: false,
+        notecard: true,
+        notecardHref: "notecard-a2.html",
+        boss: true,
+      },
       topicIds: ASSESS2_TOPICS.slice(),
     },
     {

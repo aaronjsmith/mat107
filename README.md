@@ -24,4 +24,7 @@ MAT 107 practice: https://mat107.ensign.quest/
 
 **Week 7 · Insurance (Kimball · The Gila Flood):** https://mat107.ensign.quest/quiz.html?a=lesson_insurance
 
-Printable 5×7 landscape (7″×5″) double-sided formula notecard (study template — usually must be handwritten for the testing center): https://mat107.ensign.quest/notecard.html
+Printable 5×7 landscape (7″×5″) double-sided formula notecards (study templates — usually must be handwritten for the testing center):
+
+- Assessment 1 (geo/stats): https://mat107.ensign.quest/notecard.html
+- Assessment 2 (prob/sequences/models + Excel): https://mat107.ensign.quest/notecard-a2.html
