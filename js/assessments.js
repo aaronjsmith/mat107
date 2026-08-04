@@ -142,7 +142,7 @@
         "js/questions-functions.js",
         "js/questions-course.js",
       ],
-      features: { flashcards: false, notecard: true, boss: true },
+      features: { flashcards: false, notecard: true, boss: true, nourish: true },
       topicIds: OVERVIEW_TOPICS.slice(),
     },
     {
@@ -417,6 +417,44 @@
     return null;
   }
 
+  /** Week groups students pick for Nourish and Strengthen (excludes Full course). */
+  function practiceWeekGroups() {
+    return WEEK_GROUPS.filter(function (w) {
+      return w.id && w.id !== "overview";
+    });
+  }
+
+  /**
+   * Topic ids for a Canvas week group (weeks12 / weeks34 / weeks57).
+   * Prefers the main assessment for that block; falls back to a union of week quizzes.
+   */
+  function topicsForWeek(weekId) {
+    if (!weekId || weekId === "overview") return [];
+    const mainIds = {
+      weeks12: "assessment1",
+      weeks34: "assessment2",
+      weeks57: "assessment3",
+    };
+    const mainId = mainIds[weekId];
+    if (mainId) {
+      const main = getAssessment(mainId);
+      if (main && main.topicIds && main.topicIds.length) {
+        return main.topicIds.slice();
+      }
+    }
+    const seen = {};
+    const out = [];
+    ASSESSMENTS.forEach(function (a) {
+      if (a.weekId !== weekId) return;
+      (a.topicIds || []).forEach(function (tid) {
+        if (seen[tid]) return;
+        seen[tid] = true;
+        out.push(tid);
+      });
+    });
+    return out;
+  }
+
   /**
    * Assessments that should receive topic-level progress sync from `fromAssessmentId`.
    * Overview (compose) → week owner(s); week quiz → compose overview(s) that include the topic.
@@ -506,6 +544,8 @@
     resolveAssessmentId: resolveAssessmentId,
     assessmentOwnsTopic: assessmentOwnsTopic,
     weekAssessmentForTopic: weekAssessmentForTopic,
+    practiceWeekGroups: practiceWeekGroups,
+    topicsForWeek: topicsForWeek,
     relatedAssessmentIdsForTopic: relatedAssessmentIdsForTopic,
     readProgressSummary: readProgressSummary,
   };

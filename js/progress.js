@@ -490,6 +490,51 @@
     return keys[keys.length - 1];
   }
 
+  /**
+   * Nourish and Strengthen: mastery-aware like Smart pick, but heavily biased
+   * toward the selected course week's topics while still reviewing everything.
+   */
+  function pickNourishTopic(weekId, avoidTopic) {
+    const p = load();
+    const keys = Object.keys(Q.TOPICS).filter(function (k) {
+      return k !== "flashcards";
+    });
+    if (!keys.length) return null;
+
+    const course = window.Mat107Course;
+    const weekTopics =
+      course && typeof course.topicsForWeek === "function"
+        ? course.topicsForWeek(weekId)
+        : [];
+    const weekSet = {};
+    weekTopics.forEach(function (tid) {
+      if (Q.TOPICS[tid]) weekSet[tid] = true;
+    });
+    const hasWeekFocus = Object.keys(weekSet).length > 0;
+
+    const weights = keys.map(function (t) {
+      const info = p.topics[t] || { unaided_correct: 0, attempted: 0 };
+      const remaining = Math.max(MASTER - effectiveUnaided(p, t), 0);
+      let w = remaining * 8 + (info.attempted < 3 ? 12 : 0) + Math.random() * 6;
+      if (remaining === 0) w = 2 + Math.random() * 2;
+      if (hasWeekFocus) {
+        if (weekSet[t]) w *= 3.5;
+        else w *= 0.75;
+      }
+      if (avoidTopic && t === avoidTopic) w *= 0.08;
+      return Math.max(w, 0.5);
+    });
+    const total = weights.reduce(function (a, b) {
+      return a + b;
+    }, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < keys.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return keys[i];
+    }
+    return keys[keys.length - 1];
+  }
+
   function pickAllTopic(avoidTopic) {
     const p = load();
     const keys = Object.keys(Q.TOPICS);
@@ -852,6 +897,7 @@
   window.QuizProgress = {
     getProgressView: getProgressView,
     pickSmartTopic: pickSmartTopic,
+    pickNourishTopic: pickNourishTopic,
     pickAllTopic: pickAllTopic,
     pickTeachTopic: pickTeachTopic,
     getTeachScaffold: getTeachScaffold,

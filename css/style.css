@@ -1749,6 +1749,55 @@ a.linkish {
   justify-content: center;
 }
 
+.nourish-week-card {
+  max-width: 28rem;
+}
+
+.nourish-week-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0.35rem 0 1rem;
+}
+
+.nourish-week-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.nourish-week-btn:hover {
+  border-color: rgba(15, 110, 86, 0.45);
+  background: rgba(15, 110, 86, 0.06);
+}
+
+.nourish-week-btn.selected,
+.nourish-week-btn:focus-visible {
+  outline: 2px solid rgba(15, 110, 86, 0.35);
+  border-color: var(--accent);
+  background: rgba(15, 110, 86, 0.1);
+}
+
+.nourish-week-btn-title {
+  font-weight: 600;
+}
+
+.nourish-week-btn-blurb {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .calc-display {
   width: 100%;
   box-sizing: border-box;

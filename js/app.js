@@ -99,6 +99,8 @@
     pendingBossRemix: null,
     /** After a miss modal, stay in the fight and remix. */
     bossContinueAfterMiss: false,
+    /** Course week focus for Nourish and Strengthen (weeks12 | weeks34 | weeks57). */
+    nourishWeekId: null,
     boss: {
       active: false,
       queue: [],
@@ -163,6 +165,12 @@
     bossRetreatOk: document.getElementById("boss-retreat-ok"),
     bossRetreatClose: document.getElementById("boss-retreat-close"),
     bossRetreatBackdrop: document.getElementById("boss-retreat-backdrop"),
+    nourishBtn: document.getElementById("btn-nourish"),
+    nourishWeekModal: document.getElementById("nourish-week-modal"),
+    nourishWeekChoices: document.getElementById("nourish-week-choices"),
+    nourishWeekCancel: document.getElementById("nourish-week-cancel"),
+    nourishWeekClose: document.getElementById("nourish-week-close"),
+    nourishWeekBackdrop: document.getElementById("nourish-week-backdrop"),
     notes: document.getElementById("notes-area"),
     notesStatus: document.getElementById("notes-status"),
     notesSortAsc: document.getElementById("notes-sort-asc"),
@@ -395,11 +403,13 @@
         (state.mode === "all" && topic === "all") ||
         (state.mode === "smart" && topic === "smart") ||
         (state.mode === "teachme" && topic === "teachme") ||
+        (state.mode === "nourish" && topic === "nourish") ||
         (state.mode === "flashcards" && topic === "flashcards") ||
         (state.mode === "finalboss" && topic === "finalboss") ||
         state.mode === topic;
       btn.classList.toggle("active", active);
     });
+    updateNourishButton();
   }
 
   function updateFinalBossButton(p) {
@@ -842,7 +852,135 @@
   }
 
   const BOSS_INVITE_KEY = "mat107-boss-invite-dismissed";
+  const NOURISH_WEEK_KEY = "mat107-nourish-week";
   let bossInviteOpen = false;
+  let nourishWeekOpen = false;
+  let nourishModeBeforePrompt = "smart";
+
+  function nourishWeekLabel(weekId) {
+    const course = window.Mat107Course;
+    const groups =
+      course && course.practiceWeekGroups
+        ? course.practiceWeekGroups()
+        : (course && course.WEEK_GROUPS) || [];
+    for (let i = 0; i < groups.length; i++) {
+      if (groups[i].id === weekId) {
+        return t(groups[i].titleKey);
+      }
+    }
+    return weekId || "";
+  }
+
+  function updateNourishButton() {
+    const btn = els.nourishBtn;
+    if (!btn) return;
+    if (state.mode === "nourish" && state.nourishWeekId) {
+      btn.textContent = t("mode_nourish_active", {
+        week: nourishWeekLabel(state.nourishWeekId),
+      });
+    } else {
+      btn.textContent = t("mode_nourish");
+    }
+  }
+
+  function readStoredNourishWeek() {
+    try {
+      const id = sessionStorage.getItem(NOURISH_WEEK_KEY);
+      if (!id) return null;
+      const course = window.Mat107Course;
+      const topics =
+        course && course.topicsForWeek ? course.topicsForWeek(id) : [];
+      return topics.length ? id : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function persistNourishWeek(weekId) {
+    try {
+      if (weekId) sessionStorage.setItem(NOURISH_WEEK_KEY, weekId);
+      else sessionStorage.removeItem(NOURISH_WEEK_KEY);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function closeNourishWeekModal(restoreMode) {
+    if (!nourishWeekOpen) return;
+    nourishWeekOpen = false;
+    if (els.nourishWeekModal) els.nourishWeekModal.hidden = true;
+    if (!restoreMode) return;
+    if (!state.nourishWeekId) {
+      state.mode = nourishModeBeforePrompt || "smart";
+    }
+    setModeButtons();
+    loadQuestion();
+  }
+
+  function selectNourishWeek(weekId) {
+    if (!weekId) return;
+    state.nourishWeekId = weekId;
+    persistNourishWeek(weekId);
+    state.mode = "nourish";
+    nourishWeekOpen = false;
+    if (els.nourishWeekModal) els.nourishWeekModal.hidden = true;
+    setModeButtons();
+    els.feedback.hidden = false;
+    els.feedback.className = "feedback ok";
+    els.feedback.textContent = t("nourish_started", {
+      week: nourishWeekLabel(weekId),
+    });
+    loadQuestion();
+  }
+
+  function openNourishWeekModal() {
+    if (!els.nourishWeekModal || !els.nourishWeekChoices) return;
+    const course = window.Mat107Course;
+    const weeks =
+      course && course.practiceWeekGroups
+        ? course.practiceWeekGroups()
+        : ((course && course.WEEK_GROUPS) || []).filter(function (w) {
+            return w.id !== "overview";
+          });
+    els.nourishWeekChoices.innerHTML = "";
+    weeks.forEach(function (week) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "nourish-week-btn";
+      if (week.id === state.nourishWeekId) btn.classList.add("selected");
+      btn.dataset.weekId = week.id;
+      const title = document.createElement("span");
+      title.className = "nourish-week-btn-title";
+      title.textContent = t(week.titleKey);
+      btn.appendChild(title);
+      if (week.blurbKey) {
+        const blurb = document.createElement("span");
+        blurb.className = "nourish-week-btn-blurb";
+        blurb.textContent = t(week.blurbKey);
+        btn.appendChild(blurb);
+      }
+      btn.addEventListener("click", function () {
+        selectNourishWeek(week.id);
+      });
+      els.nourishWeekChoices.appendChild(btn);
+    });
+    nourishWeekOpen = true;
+    els.nourishWeekModal.hidden = false;
+    const first = els.nourishWeekChoices.querySelector("button");
+    if (first) {
+      setTimeout(function () {
+        first.focus();
+      }, 0);
+    }
+  }
+
+  function promptNourishWeek() {
+    nourishModeBeforePrompt =
+      state.mode && state.mode !== "nourish" ? state.mode : "smart";
+    state.mode = "nourish";
+    setModeButtons();
+    openNourishWeekModal();
+  }
 
   function dismissBossInvite() {
     if (!bossInviteOpen) return;
@@ -1473,6 +1611,20 @@
       topic = state.boss.queue[state.boss.index];
     } else if (state.mode === "smart") {
       topic = P.pickSmartTopic(state.lastTopic);
+    } else if (state.mode === "nourish") {
+      if (!state.nourishWeekId) {
+        openNourishWeekModal();
+        els.prompt.textContent = t("nourish_pick_week_prompt");
+        els.topic.textContent = t("mode_nourish");
+        els.check.hidden = true;
+        els.skip.hidden = true;
+        if (els.remix) els.remix.hidden = true;
+        hideHintControls();
+        return;
+      }
+      topic = P.pickNourishTopic
+        ? P.pickNourishTopic(state.nourishWeekId, state.lastTopic)
+        : P.pickSmartTopic(state.lastTopic);
     } else if (state.mode === "teachme") {
       if (P.allTeachGraduated && P.allTeachGraduated()) {
         state.mode = "smart";
@@ -2159,6 +2311,10 @@
 
       // Leaving an active fight pauses it (progress is persisted).
       if (bossFightActive() && nextMode !== "finalboss") {
+        if (nextMode === "nourish") {
+          promptNourishWeek();
+          return;
+        }
         state.mode = nextMode;
         setModeButtons();
         loadQuestion();
@@ -2183,6 +2339,16 @@
           state.boss = { active: false, queue: [], index: 0, status: null, real: false };
         }
         state.mode = "finalboss";
+      } else if (nextMode === "nourish") {
+        const drill = P.syncBossDrillTopic && P.syncBossDrillTopic();
+        if (drill) {
+          state.mode = drill;
+          setModeButtons();
+          loadQuestion();
+          return;
+        }
+        promptNourishWeek();
+        return;
       } else {
         const drill = P.syncBossDrillTopic && P.syncBossDrillTopic();
         // While rebuilding after a defeat, stay on the missed topic only.
@@ -2238,6 +2404,19 @@
   }
   if (els.bossInviteBackdrop) {
     els.bossInviteBackdrop.addEventListener("click", dismissBossInvite);
+  }
+
+  function cancelNourishWeekPrompt() {
+    closeNourishWeekModal(true);
+  }
+  if (els.nourishWeekCancel) {
+    els.nourishWeekCancel.addEventListener("click", cancelNourishWeekPrompt);
+  }
+  if (els.nourishWeekClose) {
+    els.nourishWeekClose.addEventListener("click", cancelNourishWeekPrompt);
+  }
+  if (els.nourishWeekBackdrop) {
+    els.nourishWeekBackdrop.addEventListener("click", cancelNourishWeekPrompt);
   }
   if (els.bossRetreatOk) {
     els.bossRetreatOk.addEventListener("click", finishBossRetreat);
@@ -2672,6 +2851,10 @@
   }
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
+    if (els.nourishWeekModal && !els.nourishWeekModal.hidden) {
+      cancelNourishWeekPrompt();
+      return;
+    }
     if (els.bossRetreatModal && !els.bossRetreatModal.hidden) {
       finishBossRetreat();
       return;
@@ -2812,6 +2995,7 @@
     };
     const flashBtn = document.querySelector('[data-topic="flashcards"]');
     if (flashBtn) flashBtn.hidden = !features.flashcards;
+    if (els.nourishBtn) els.nourishBtn.hidden = features.nourish !== true;
     const notecardLink =
       document.getElementById("notecard-link") ||
       document.querySelector('a[href="notecard.html"]');
@@ -2831,8 +3015,37 @@
     applyAssessmentBranding();
     applyAssessmentFeatures();
     hideBossFace();
+    state.nourishWeekId = readStoredNourishWeek();
     if (restoreBossRunFromStorage()) {
       state.mode = "finalboss";
+    } else {
+      try {
+        const params = new URLSearchParams(location.search);
+        if (
+          params.get("mode") === "nourish" &&
+          els.nourishBtn &&
+          !els.nourishBtn.hidden
+        ) {
+          if (state.nourishWeekId) {
+            state.mode = "nourish";
+            refreshProgress();
+            setModeButtons();
+            loadQuestion();
+            els.feedback.hidden = false;
+            els.feedback.className = "feedback ok";
+            els.feedback.textContent = t("nourish_started", {
+              week: nourishWeekLabel(state.nourishWeekId),
+            });
+            return;
+          }
+          promptNourishWeek();
+          refreshProgress();
+          setModeButtons();
+          return;
+        }
+      } catch (e) {
+        /* ignore */
+      }
     }
     refreshProgress();
     setModeButtons();

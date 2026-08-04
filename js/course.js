@@ -144,6 +144,14 @@
 
   function renderCompactCard(assessment) {
     const summary = C.readProgressSummary(assessment);
+    const nourish =
+      assessment.features && assessment.features.nourish
+        ? '<a class="ghost card-btn card-btn--compact" href="' +
+          escapeHtml(C.quizHref(assessment.id) + "&mode=nourish") +
+          '">' +
+          escapeHtml(t("course_nourish_short")) +
+          "</a>"
+        : "";
     return (
       '<article class="course-card assessment-card assessment-card--compact">' +
       '<div class="compact-row">' +
@@ -163,6 +171,7 @@
       '">' +
       escapeHtml(t("course_open_short")) +
       "</a>" +
+      nourish +
       "</div>" +
       "</article>"
     );

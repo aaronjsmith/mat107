@@ -37,6 +37,7 @@
       <button class="topic" data-topic="all" type="button" data-i18n="mode_all">All topics</button>
       <button class="topic active" data-topic="smart" type="button" data-i18n="mode_smart">Smart pick</button>
       <button class="topic" data-topic="teachme" type="button" data-i18n="mode_teachme">Teach me</button>
+      <button class="topic" data-topic="nourish" type="button" id="btn-nourish" data-i18n="mode_nourish">Nourish and Strengthen</button>
       <button class="topic" data-topic="flashcards" type="button" data-i18n="mode_flashcards">Formula flashcards</button>
       <button class="topic topic-boss" data-topic="finalboss" type="button" id="btn-final-boss" data-i18n="mode_finalboss_practice">😈 Practice boss fight</button>
       <div class="topic-list" id="topic-list"></div>
@@ -206,6 +207,21 @@
       <p class="modal-body" id="boss-retreat-msg" data-i18n="boss_retreat_msg">You need to retreat and perfect this skill before facing the Gadianton Robber again.</p>
       <div class="modal-actions">
         <button type="button" class="primary" id="boss-retreat-ok" data-i18n="boss_retreat_ok">Train now</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="nourish-week-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="nourish-week-title">
+    <div class="modal-backdrop" id="nourish-week-backdrop" tabindex="-1"></div>
+    <div class="modal-card nourish-week-card">
+      <header class="modal-head">
+        <h2 id="nourish-week-title" data-i18n="nourish_week_title">Nourish and Strengthen</h2>
+        <button type="button" class="modal-close" id="nourish-week-close" aria-label="Close" data-i18n-aria="nourish_week_close_aria">×</button>
+      </header>
+      <p class="modal-body" data-i18n="nourish_week_blurb">We’ll analyze your mastery across every topic and still review the whole course — but practice will lean hard on the week you’re in now. Which course week are you working on?</p>
+      <div class="nourish-week-choices" id="nourish-week-choices" role="group" aria-label="Course week"></div>
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="nourish-week-cancel" data-i18n="nourish_week_cancel">Cancel</button>
       </div>
     </div>
   </div>
