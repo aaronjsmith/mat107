@@ -3445,6 +3445,7 @@
       generateQuestion: generateQuestion,
       remixQuestion: remixQuestion,
       checkAnswer: checkAnswer,
+      checkMultiField: checkMultiField,
       publicQuestion: publicQuestion,
     };
   }

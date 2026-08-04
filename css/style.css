@@ -1284,6 +1284,15 @@ a.linkish {
   border-color: var(--accent);
 }
 
+.multi-field--kept input,
+.multi-field--kept .field-select {
+  border-color: var(--good);
+  background: var(--good-bg);
+  color: var(--ink);
+  opacity: 1;
+  cursor: default;
+}
+
 .multi-field--sequence-choice {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(9.5rem, 11.5rem);

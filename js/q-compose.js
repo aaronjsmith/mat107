@@ -345,6 +345,7 @@
       generateQuestion: generateQuestion,
       remixQuestion: remixQuestion,
       checkAnswer: checkAnswer,
+      checkMultiField: checkMultiField,
       publicQuestion: function (q) {
         return publicQuestion(q, topics);
       },

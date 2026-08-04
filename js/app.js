@@ -1301,12 +1301,49 @@
     getMultiInputs().forEach((control) => {
       if (control.tagName === "SELECT") control.selectedIndex = 0;
       else control.value = "";
+      control.classList.remove("kept");
+      const row = control.closest(".multi-field");
+      if (row) row.classList.remove("multi-field--kept");
     });
+  }
+
+  /** On multi retry: keep correct parts, blank only the wrong ones. */
+  function clearWrongMultiInputs() {
+    const answers = collectMultiAnswers();
+    const fields = (state.fullQuestion && state.fullQuestion.fields) || [];
+    const byId = Object.fromEntries(fields.map((f) => [f.id, f]));
+    const checkField =
+      Q && typeof Q.checkMultiField === "function" ? Q.checkMultiField : null;
+
+    getMultiInputs().forEach((control) => {
+      const field = byId[control.dataset.fieldId];
+      const ok =
+        field && checkField ? checkField(field, answers[field.id]) : false;
+      const row = control.closest(".multi-field");
+      if (ok) {
+        control.disabled = true;
+        control.classList.add("kept");
+        if (row) row.classList.add("multi-field--kept");
+        return;
+      }
+      if (control.tagName === "SELECT") control.selectedIndex = 0;
+      else control.value = "";
+      control.disabled = false;
+      control.classList.remove("kept");
+      if (row) row.classList.remove("multi-field--kept");
+    });
+
+    if (els.mathInsert) {
+      els.mathInsert.querySelectorAll("button").forEach((btn) => {
+        btn.disabled = false;
+      });
+    }
   }
 
   function focusFirstAnswerInput() {
     if (state.publicQ && state.publicQ.type === "multi") {
-      const first = getMultiInputs()[0];
+      const inputs = getMultiInputs();
+      const first = inputs.find((c) => !c.disabled) || inputs[0];
       if (first) first.focus();
       return;
     }
@@ -1776,8 +1813,12 @@
     } else {
       els.form.hidden = false;
       els.check.hidden = false;
-      clearAnswerInputs();
-      setInputsDisabled(false);
+      if (state.publicQ.type === "multi") {
+        clearWrongMultiInputs();
+      } else {
+        clearAnswerInputs();
+        setInputsDisabled(false);
+      }
       focusFirstAnswerInput();
     }
   }

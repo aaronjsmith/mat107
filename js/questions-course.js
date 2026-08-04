@@ -1849,6 +1849,7 @@
       generateQuestion: generateFiltered,
       remixQuestion: remixQuestion,
       checkAnswer: checkAnswer,
+      checkMultiField: checkMultiField,
       publicQuestion: publicQuestion,
     };
   }
