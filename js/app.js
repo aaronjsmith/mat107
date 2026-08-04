@@ -1406,6 +1406,12 @@
         return;
       }
 
+      if (item.widget === "excel") {
+        appendExcelSheet(item, fieldById, !focusSet);
+        focusSet = true;
+        return;
+      }
+
       if (item.widget === "field") {
         const f = fieldById[item.id];
         if (!f) return;
@@ -1413,6 +1419,164 @@
         if (!focusSet) focusSet = true;
       }
     });
+  }
+
+  const EXCEL_FN_TIPS = {
+    sum: "SUM(number1, [number2], …)",
+    average: "AVERAGE(number1, [number2], …)",
+    min: "MIN(number1, [number2], …)",
+    max: "MAX(number1, [number2], …)",
+    round: "ROUND(number, num_digits)",
+    product: "PRODUCT(number1, [number2], …)",
+    pmt: "PMT(rate, nper, pv, [fv], [type])",
+    fv: "FV(rate, nper, pmt, [pv], [type])",
+    pv: "PV(rate, nper, pmt, [fv], [type])",
+    if: "IF(logical_test, value_if_true, [value_if_false])",
+  };
+
+  function excelTipForInput(value, fallback) {
+    const m = String(value || "").match(/^=\s*([a-zA-Z]+)/);
+    if (m) {
+      const tip = EXCEL_FN_TIPS[m[1].toLowerCase()];
+      if (tip) return tip;
+    }
+    return fallback || t("excel_formula_tip_default");
+  }
+
+  function appendExcelSheet(item, fieldById, focus) {
+    const formulaId = item.formulaField || "formula";
+    const formulaField = fieldById[formulaId];
+    if (!formulaField) return;
+
+    const cols = item.cols && item.cols.length ? item.cols : ["A", "B"];
+    const rows = item.rows || [];
+    const activeRef = String(item.active || "").toUpperCase();
+
+    const wrap = document.createElement("div");
+    wrap.className = "multi-field multi-excel";
+
+    const win = document.createElement("div");
+    win.className = "excel-window";
+    win.setAttribute("role", "group");
+    win.setAttribute("aria-label", item.title || t("excel_window_label"));
+
+    const titlebar = document.createElement("div");
+    titlebar.className = "excel-titlebar";
+    const titleText = document.createElement("span");
+    titleText.className = "excel-title";
+    titleText.textContent = item.title || "Workbook.xlsx";
+    titlebar.appendChild(titleText);
+    const traffic = document.createElement("span");
+    traffic.className = "excel-traffic";
+    traffic.setAttribute("aria-hidden", "true");
+    traffic.innerHTML = "<i></i><i></i><i></i>";
+    titlebar.appendChild(traffic);
+    win.appendChild(titlebar);
+
+    const formulaBar = document.createElement("div");
+    formulaBar.className = "excel-formula-bar";
+
+    const nameBox = document.createElement("div");
+    nameBox.className = "excel-name-box";
+    nameBox.textContent = activeRef || "A1";
+    formulaBar.appendChild(nameBox);
+
+    const fx = document.createElement("span");
+    fx.className = "excel-fx";
+    fx.textContent = "ƒx";
+    fx.setAttribute("aria-hidden", "true");
+    formulaBar.appendChild(fx);
+
+    const input = createMultiInput(formulaField, "mf-" + formulaId);
+    input.className = (input.className ? input.className + " " : "") + "excel-formula-input";
+    if (!input.placeholder) input.placeholder = "=";
+    input.setAttribute("aria-label", formulaField.label || t("c.field.excel_formula"));
+    formulaBar.appendChild(input);
+    win.appendChild(formulaBar);
+
+    const tip = document.createElement("div");
+    tip.className = "excel-tip";
+    tip.textContent = item.tip || t("excel_formula_tip_default");
+    win.appendChild(tip);
+
+    const scroller = document.createElement("div");
+    scroller.className = "excel-grid-wrap";
+    const table = document.createElement("table");
+    table.className = "excel-grid";
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    const corner = document.createElement("th");
+    corner.className = "excel-corner";
+    corner.textContent = "";
+    headRow.appendChild(corner);
+    cols.forEach(function (col) {
+      const th = document.createElement("th");
+      th.textContent = col;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    let cellMirror = null;
+
+    rows.forEach(function (row) {
+      const tr = document.createElement("tr");
+      const rowHead = document.createElement("th");
+      rowHead.className = "excel-row-head";
+      rowHead.textContent = String(row.r);
+      tr.appendChild(rowHead);
+
+      cols.forEach(function (col) {
+        const td = document.createElement("td");
+        const ref = col + String(row.r);
+        td.dataset.cell = ref;
+        const raw = row.cells ? row.cells[col] : null;
+        const isActive =
+          (raw && typeof raw === "object" && raw.field === formulaId) ||
+          ref === activeRef;
+
+        if (isActive) {
+          td.className = "excel-cell excel-cell--active";
+          const mirror = document.createElement("span");
+          mirror.className = "excel-cell-mirror";
+          mirror.textContent = "";
+          td.appendChild(mirror);
+          cellMirror = mirror;
+          td.addEventListener("click", function () {
+            input.focus();
+          });
+        } else if (raw != null && typeof raw === "object" && raw.value != null) {
+          td.className = "excel-cell excel-cell--locked";
+          td.textContent = String(raw.value);
+        } else if (raw != null && typeof raw !== "object") {
+          const isHeaderish = row.r === 1 || col === "A";
+          td.className =
+            "excel-cell" + (isHeaderish ? " excel-cell--label" : " excel-cell--locked");
+          td.textContent = String(raw);
+        } else {
+          td.className = "excel-cell";
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    scroller.appendChild(table);
+    win.appendChild(scroller);
+    wrap.appendChild(win);
+    els.multiFields.appendChild(wrap);
+
+    function syncExcelUi() {
+      if (cellMirror) cellMirror.textContent = input.value;
+      tip.textContent = excelTipForInput(input.value, item.tip);
+    }
+    input.addEventListener("input", syncExcelUi);
+    input.addEventListener("focus", syncExcelUi);
+    syncExcelUi();
+
+    if (focus) input.focus();
   }
 
   function getAnswerPayload() {

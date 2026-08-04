@@ -169,12 +169,19 @@
         unit: f.unit || "",
         tolerance: f.tolerance !== undefined ? f.tolerance : 0.05,
       };
+      if (f.placeholder) field.placeholder = f.placeholder;
       if (field.type === "numeric") field.answer = num(f.answer, 4);
       else if (field.type === "select") {
         field.answer = String(f.answer);
         field.options = (f.options || []).map(function (o) {
           return { value: String(o.value), label: o.label || String(o.value) };
         });
+        if (f.presentation) field.presentation = f.presentation;
+      } else if (field.type === "formula" || field.type === "short") {
+        field.answers = (f.answers || [f.answer]).map(function (a) {
+          return String(a);
+        });
+        field.answer = field.answers[0];
       } else field.answer = f.answer;
       return field;
     });
@@ -193,6 +200,22 @@
       setup: setup || "",
       calc: calc || "",
     };
+  }
+
+  /** Normalize spreadsheet formulas for grading (=SUM(B2:B5) ≡ =sum(b2:b5)). */
+  function normExcelFormula(raw) {
+    let s = String(raw == null ? "" : raw)
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "")
+      .replace(/×/g, "*")
+      .replace(/·/g, "*")
+      .replace(/÷/g, "/")
+      .replace(/−/g, "-")
+      .replace(/–/g, "-");
+    if (!s) return "";
+    if (s.charAt(0) !== "=") s = "=" + s;
+    return s;
   }
 
   function parseNumericInput(raw) {
@@ -854,6 +877,166 @@
       t("c.h.excel_net"),
       "Net = income − expenses (like =B2−B3)",
       "dollars"
+    );
+  }
+
+  function genExcelSumFormula() {
+    const a = randInt(120, 400);
+    const b = randInt(80, 300);
+    const c = randInt(50, 250);
+    const d = randInt(40, 200);
+    return _multi(
+      t("c.q.excel_sum_formula"),
+      [
+        {
+          id: "formula",
+          type: "formula",
+          label: t("c.field.excel_formula"),
+          placeholder: "=SUM(",
+          answers: ["=SUM(B2:B5)", "=SUM(B2,B3,B4,B5)", "=B2+B3+B4+B5"],
+        },
+      ],
+      "fin_excel",
+      t("c.h.excel_sum_formula"),
+      t("c.setup.excel_sum_formula"),
+      null,
+      [
+        {
+          widget: "excel",
+          title: "Budget.xlsx",
+          formulaField: "formula",
+          active: "B6",
+          tip: "SUM(number1, [number2], …)",
+          cols: ["A", "B"],
+          rows: [
+            { r: 1, cells: { A: "Item", B: "Amount" } },
+            { r: 2, cells: { A: t("c.excel.rent"), B: a } },
+            { r: 3, cells: { A: t("c.excel.food"), B: b } },
+            { r: 4, cells: { A: t("c.excel.transport"), B: c } },
+            { r: 5, cells: { A: t("c.excel.misc"), B: d } },
+            { r: 6, cells: { A: t("c.excel.total"), B: { field: "formula" } } },
+          ],
+        },
+      ]
+    );
+  }
+
+  function genExcelNetFormula() {
+    const income = choice([2500, 3000, 3500, 4200]);
+    const expenses = choice([1800, 2100, 2400, 2900]);
+    return _multi(
+      t("c.q.excel_net_formula"),
+      [
+        {
+          id: "formula",
+          type: "formula",
+          label: t("c.field.excel_formula"),
+          placeholder: "=B2-B3",
+          answers: ["=B2-B3", "=B2−B3"],
+        },
+      ],
+      "fin_excel",
+      t("c.h.excel_net_formula"),
+      t("c.setup.excel_net_formula"),
+      null,
+      [
+        {
+          widget: "excel",
+          title: "Cashflow.xlsx",
+          formulaField: "formula",
+          active: "B4",
+          tip: t("excel_tip_arithmetic"),
+          cols: ["A", "B"],
+          rows: [
+            { r: 1, cells: { A: "Label", B: "Amount" } },
+            { r: 2, cells: { A: t("c.excel.income"), B: income } },
+            { r: 3, cells: { A: t("c.excel.expenses"), B: expenses } },
+            { r: 4, cells: { A: t("c.excel.net"), B: { field: "formula" } } },
+          ],
+        },
+      ]
+    );
+  }
+
+  function genExcelAverageFormula() {
+    const a = randInt(70, 95);
+    const b = randInt(70, 95);
+    const c = randInt(70, 95);
+    const d = randInt(70, 95);
+    return _multi(
+      t("c.q.excel_avg_formula"),
+      [
+        {
+          id: "formula",
+          type: "formula",
+          label: t("c.field.excel_formula"),
+          placeholder: "=AVERAGE(",
+          answers: [
+            "=AVERAGE(B2:B5)",
+            "=AVERAGE(B2,B3,B4,B5)",
+            "=(B2+B3+B4+B5)/4",
+          ],
+        },
+      ],
+      "fin_excel",
+      t("c.h.excel_avg_formula"),
+      t("c.setup.excel_avg_formula"),
+      null,
+      [
+        {
+          widget: "excel",
+          title: "Scores.xlsx",
+          formulaField: "formula",
+          active: "B6",
+          tip: "AVERAGE(number1, [number2], …)",
+          cols: ["A", "B"],
+          rows: [
+            { r: 1, cells: { A: "Quiz", B: "Score" } },
+            { r: 2, cells: { A: "Q1", B: a } },
+            { r: 3, cells: { A: "Q2", B: b } },
+            { r: 4, cells: { A: "Q3", B: c } },
+            { r: 5, cells: { A: "Q4", B: d } },
+            { r: 6, cells: { A: t("c.excel.average"), B: { field: "formula" } } },
+          ],
+        },
+      ]
+    );
+  }
+
+  function genExcelProductFormula() {
+    const price = choice([40, 55, 80, 120, 200]);
+    const qty = choice([2, 3, 4, 5, 6]);
+    return _multi(
+      t("c.q.excel_product_formula"),
+      [
+        {
+          id: "formula",
+          type: "formula",
+          label: t("c.field.excel_formula"),
+          placeholder: "=B2*B3",
+          answers: ["=B2*B3", "=B3*B2", "=PRODUCT(B2,B3)"],
+        },
+      ],
+      "fin_excel",
+      t("c.h.excel_product_formula"),
+      t("c.setup.excel_product_formula"),
+      null,
+      [
+        {
+          widget: "excel",
+          title: "Invoice.xlsx",
+          formulaField: "formula",
+          active: "B4",
+          tip: "PRODUCT(number1, [number2], …)",
+          cols: ["A", "B"],
+          rows: [
+            { r: 1, cells: { A: "Label", B: "Value" } },
+            { r: 2, cells: { A: t("c.excel.price"), B: price } },
+            { r: 3, cells: { A: t("c.excel.qty"), B: qty } },
+            { r: 4, cells: { A: t("c.excel.line_total"), B: { field: "formula" } } },
+          ],
+        },
+      ]
     );
   }
 
@@ -1552,6 +1735,10 @@
     genDiscountTax,
     genExcelSum,
     genExcelNet,
+    genExcelSumFormula,
+    genExcelNetFormula,
+    genExcelAverageFormula,
+    genExcelProductFormula,
     genFVCompound,
     genAnnuityFV,
     genLoanInterestCost,
@@ -1594,6 +1781,7 @@
     if (q.type === "multi" && q.fields) {
       ans = q.fields
         .map(function (f) {
+          if (f.answers && f.answers.length) return f.id + "=" + f.answers[0];
           return f.id + "=" + f.answer;
         })
         .join("|");
@@ -1669,6 +1857,11 @@
   function formatFieldExpected(field) {
     const lbl = field.label || field.id;
     if (field.type === "select") return lbl + ": " + selectOptionLabel(field, field.answer);
+    if (field.type === "formula" || field.type === "short") {
+      const a =
+        field.answers && field.answers.length ? field.answers[0] : field.answer;
+      return lbl + ": " + a;
+    }
     const u = field.unit ? " " + field.unit : "";
     return lbl + ": " + field.answer + u;
   }
@@ -1680,6 +1873,17 @@
   function checkMultiField(field, userVal) {
     if (field.type === "select") {
       return String(userVal).trim() === String(field.answer).trim();
+    }
+    if (field.type === "formula" || field.type === "short") {
+      const got = normExcelFormula(userVal);
+      if (!got || got === "=") return false;
+      const answers =
+        field.answers ||
+        (field.answer !== undefined ? [String(field.answer)] : []);
+      for (let i = 0; i < answers.length; i++) {
+        if (normExcelFormula(answers[i]) === got) return true;
+      }
+      return false;
     }
     const val = parseNumericInput(userVal);
     if (isNaN(val)) return false;
@@ -1765,11 +1969,11 @@
           type: f.type || "numeric",
           unit: f.unit || "",
         };
+        if (f.placeholder) pubField.placeholder = f.placeholder;
         if (f.type === "select") {
           pubField.options = (f.options || []).map(function (o) {
             return { value: o.value, label: o.label };
           });
-          if (f.placeholder) pubField.placeholder = f.placeholder;
           if (f.presentation) pubField.presentation = f.presentation;
         }
         return pubField;

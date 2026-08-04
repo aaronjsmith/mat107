@@ -59,6 +59,21 @@
     return Number(s);
   }
 
+  function normExcelFormula(raw) {
+    let s = String(raw == null ? "" : raw)
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "")
+      .replace(/×/g, "*")
+      .replace(/·/g, "*")
+      .replace(/÷/g, "/")
+      .replace(/−/g, "-")
+      .replace(/–/g, "-");
+    if (!s) return "";
+    if (s.charAt(0) !== "=") s = "=" + s;
+    return s;
+  }
+
   function collect(filterIds) {
     const banks = window.Mat107Banks || {};
     const allow =
@@ -147,6 +162,17 @@
   function checkMultiField(field, userVal) {
     if (field.type === "select") {
       return String(userVal).trim() === String(field.answer).trim();
+    }
+    if (field.type === "formula" || field.type === "short") {
+      const got = normExcelFormula(userVal);
+      if (!got || got === "=") return false;
+      const answers =
+        field.answers ||
+        (field.answer !== undefined ? [String(field.answer)] : []);
+      for (let i = 0; i < answers.length; i++) {
+        if (normExcelFormula(answers[i]) === got) return true;
+      }
+      return false;
     }
     const val = parseNumericInput(userVal);
     if (isNaN(val)) return false;
@@ -238,6 +264,7 @@
           type: f.type || "numeric",
           unit: f.unit || "",
         };
+        if (f.placeholder) pubField.placeholder = f.placeholder;
         if (f.type === "select") {
           pubField.options = (f.options || []).map(function (o) {
             return { value: o.value, label: o.label };
