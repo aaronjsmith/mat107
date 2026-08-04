@@ -385,6 +385,30 @@
       rows +
       "</ul>";
 
+    const struggleTop =
+      (p.struggle && p.struggle.top) ||
+      (P.getTopStruggleTopics ? P.getTopStruggleTopics(3) : []);
+    if (struggleTop && struggleTop.length) {
+      const labels = struggleTop
+        .slice(0, 3)
+        .map(function (row) {
+          return escapeHtml(row.label);
+        })
+        .join(" · ");
+      els.masteryPie.innerHTML +=
+        '<div class="struggle-panel" aria-live="polite">' +
+        '<p class="struggle-panel-title">' +
+        escapeHtml(t("struggle_needs_work")) +
+        "</p>" +
+        '<p class="struggle-panel-topics">' +
+        labels +
+        "</p>" +
+        '<p class="struggle-panel-note">' +
+        escapeHtml(t("struggle_needs_work_note")) +
+        "</p>" +
+        "</div>";
+    }
+
     els.masteryPie.querySelectorAll(".mastery-topic").forEach((item) => {
       item.addEventListener("click", () => {
         const key = item.getAttribute("data-topic");
@@ -927,9 +951,26 @@
     setModeButtons();
     els.feedback.hidden = false;
     els.feedback.className = "feedback ok";
-    els.feedback.textContent = t("nourish_started", {
+    let msg = t("nourish_started", {
       week: nourishWeekLabel(weekId),
     });
+    const struggles = P.getTopStruggleTopics
+      ? P.getTopStruggleTopics(2, weekId)
+      : [];
+    if (struggles.length) {
+      msg +=
+        " " +
+        t("nourish_struggle_focus", {
+          topics: struggles
+            .map(function (row) {
+              return row.label;
+            })
+            .join(", "),
+        });
+    } else {
+      msg += " " + t("nourish_struggle_learning");
+    }
+    els.feedback.textContent = msg;
     loadQuestion();
   }
 
@@ -958,6 +999,21 @@
         blurb.className = "nourish-week-btn-blurb";
         blurb.textContent = t(week.blurbKey);
         btn.appendChild(blurb);
+      }
+      const struggles = P.getTopStruggleTopics
+        ? P.getTopStruggleTopics(2, week.id)
+        : [];
+      if (struggles.length) {
+        const focus = document.createElement("span");
+        focus.className = "nourish-week-btn-struggle";
+        focus.textContent = t("nourish_week_struggle", {
+          topics: struggles
+            .map(function (row) {
+              return row.label;
+            })
+            .join(", "),
+        });
+        btn.appendChild(focus);
       }
       btn.addEventListener("click", function () {
         selectNourishWeek(week.id);

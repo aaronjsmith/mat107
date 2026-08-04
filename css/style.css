@@ -1973,6 +1973,13 @@ a.linkish {
   line-height: 1.35;
 }
 
+.nourish-week-btn-struggle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #9a3412;
+  line-height: 1.35;
+}
+
 .calc-display {
   width: 100%;
   box-sizing: border-box;
@@ -2089,6 +2096,38 @@ a.linkish {
   font-size: 0.78rem;
   color: var(--muted);
   text-align: center;
+}
+
+.struggle-panel {
+  margin: 0.85rem 0 0.35rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid rgba(180, 83, 9, 0.28);
+  border-radius: 10px;
+  background: rgba(180, 83, 9, 0.07);
+}
+
+.struggle-panel-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9a3412;
+}
+
+.struggle-panel-topics {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.struggle-panel-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.35;
 }
 
 .mastery-topic-list {

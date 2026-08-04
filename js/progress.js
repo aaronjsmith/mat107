@@ -30,6 +30,21 @@
     };
   }
 
+  function emptyStruggleTopic() {
+    return {
+      wrong: 0,
+      hinted: 0,
+      recentWrong: 0,
+      attempts: 0,
+      lastWrongAt: null,
+      lastPrompt: "",
+    };
+  }
+
+  function emptyStruggle() {
+    return { byTopic: {}, byGen: {} };
+  }
+
   function emptyProgress() {
     const topics = {};
     Object.keys(Q.TOPICS).forEach((key) => {
@@ -44,11 +59,210 @@
       best_streak: 0,
       topics: topics,
       history: [],
+      struggle: emptyStruggle(),
       final_boss_cleared: false,
       final_boss_cleared_at: null,
       boss_run: null,
       boss_drill_topic: null,
       updated_at: null,
+    };
+  }
+
+  function ensureStruggle(p) {
+    if (!p.struggle || typeof p.struggle !== "object") {
+      p.struggle = emptyStruggle();
+    }
+    if (!p.struggle.byTopic || typeof p.struggle.byTopic !== "object") {
+      p.struggle.byTopic = {};
+    }
+    if (!p.struggle.byGen || typeof p.struggle.byGen !== "object") {
+      p.struggle.byGen = {};
+    }
+    return p.struggle;
+  }
+
+  /** Stable-ish key for a question pattern (generator name when available). */
+  function questionGenKey(question) {
+    if (!question) return "";
+    if (question._genKey) return String(question._genKey);
+    const gen = question._gen;
+    if (typeof gen === "function" && gen.name) return gen.name;
+    const topic = question.topic || "topic";
+    const type = question.type || "q";
+    return topic + ":" + type;
+  }
+
+  function topicAccuracy(info) {
+    const attempted = Number(info && info.attempted) || 0;
+    const correct = Number(info && info.correct) || 0;
+    if (attempted <= 0) return 1;
+    return correct / attempted;
+  }
+
+  /** Extra weight for topics the learner is struggling with. */
+  function struggleWeight(p, topic) {
+    const s = ensureStruggle(p);
+    const st = s.byTopic[topic] || emptyStruggleTopic();
+    const info = (p.topics && p.topics[topic]) || {};
+    let boost = 0;
+    boost += (Number(st.recentWrong) || 0) * 5;
+    boost += Math.min(24, Number(st.wrong) || 0) * 1.5;
+    boost += Math.min(16, Number(st.hinted) || 0) * 1.2;
+    const attempted = Number(info.attempted) || 0;
+    if (attempted >= 3) {
+      const acc = topicAccuracy(info);
+      if (acc < 0.55) boost += 12;
+      else if (acc < 0.7) boost += 6;
+    }
+    return boost;
+  }
+
+  /**
+   * Seed struggle stats from existing topic tallies + recent history when
+   * the map is still empty (first load after this feature ships).
+   */
+  function seedStruggleIfEmpty(p) {
+    const s = ensureStruggle(p);
+    if (Object.keys(s.byTopic).length) return;
+    Object.keys(p.topics || {}).forEach(function (topic) {
+      if (!Q.TOPICS[topic] || topic === "flashcards") return;
+      const info = p.topics[topic] || {};
+      const attempted = Number(info.attempted) || 0;
+      const correct = Number(info.correct) || 0;
+      const wrong = Math.max(0, attempted - correct);
+      if (wrong <= 0 && attempted < 3) return;
+      const st = emptyStruggleTopic();
+      st.attempts = attempted;
+      st.wrong = wrong;
+      st.recentWrong = Math.min(8, wrong);
+      s.byTopic[topic] = st;
+    });
+    (p.history || []).forEach(function (entry) {
+      if (!entry || !entry.topic || !Q.TOPICS[entry.topic]) return;
+      const st = s.byTopic[entry.topic] || emptyStruggleTopic();
+      st.attempts = (Number(st.attempts) || 0) + 1;
+      if (entry.correct) {
+        if ((Number(entry.hints_used) || 0) > 0) {
+          st.hinted = (Number(st.hinted) || 0) + 1;
+        } else {
+          st.recentWrong = Math.max(0, (Number(st.recentWrong) || 0) - 1);
+        }
+      } else {
+        st.wrong = (Number(st.wrong) || 0) + 1;
+        st.recentWrong = Math.min(20, (Number(st.recentWrong) || 0) + 1);
+        st.lastWrongAt = entry.at || st.lastWrongAt;
+        if (entry.prompt) st.lastPrompt = String(entry.prompt).slice(0, 120);
+      }
+      s.byTopic[entry.topic] = st;
+    });
+  }
+
+  function recordStruggleEvent(p, question, opts) {
+    opts = opts || {};
+    const topic = question && question.topic;
+    if (!topic || !Q.TOPICS[topic] || topic === "flashcards") return;
+    const s = ensureStruggle(p);
+    const st = s.byTopic[topic] || emptyStruggleTopic();
+    st.attempts = (Number(st.attempts) || 0) + 1;
+
+    const genKey = questionGenKey(question);
+    let genRec = null;
+    if (genKey) {
+      genRec = s.byGen[genKey] || {
+        topic: topic,
+        wrong: 0,
+        attempts: 0,
+        hinted: 0,
+        lastWrongAt: null,
+      };
+      genRec.topic = topic;
+      genRec.attempts = (Number(genRec.attempts) || 0) + 1;
+    }
+
+    if (opts.correct) {
+      if ((Number(opts.hintsUsed) || 0) > 0) {
+        st.hinted = (Number(st.hinted) || 0) + 1;
+        if (genRec) genRec.hinted = (Number(genRec.hinted) || 0) + 1;
+      } else {
+        st.recentWrong = Math.max(0, (Number(st.recentWrong) || 0) - 1);
+      }
+    } else {
+      st.wrong = (Number(st.wrong) || 0) + 1;
+      st.recentWrong = Math.min(20, (Number(st.recentWrong) || 0) + 1);
+      st.lastWrongAt = new Date().toISOString();
+      st.lastPrompt = String((question && question.prompt) || "").slice(0, 120);
+      if (genRec) {
+        genRec.wrong = (Number(genRec.wrong) || 0) + 1;
+        genRec.lastWrongAt = st.lastWrongAt;
+      }
+    }
+
+    s.byTopic[topic] = st;
+    if (genKey && genRec) s.byGen[genKey] = genRec;
+  }
+
+  /**
+   * Rank topics by struggle score for Nourish analysis / UI.
+   * Optional weekId limits ranking to that course week's topics.
+   */
+  function getTopStruggleTopics(limit, weekId) {
+    const p = load();
+    seedStruggleIfEmpty(p);
+    ensureStruggle(p);
+    let keys = Object.keys(Q.TOPICS).filter(function (k) {
+      return k !== "flashcards";
+    });
+    if (weekId) {
+      const course = window.Mat107Course;
+      const weekTopics =
+        course && typeof course.topicsForWeek === "function"
+          ? course.topicsForWeek(weekId)
+          : [];
+      const weekSet = {};
+      weekTopics.forEach(function (tid) {
+        weekSet[tid] = true;
+      });
+      const focused = keys.filter(function (k) {
+        return weekSet[k];
+      });
+      if (focused.length) keys = focused;
+    }
+
+    const ranked = keys
+      .map(function (topic) {
+        const st = p.struggle.byTopic[topic] || emptyStruggleTopic();
+        const info = p.topics[topic] || emptyTopic(Q.TOPICS[topic]);
+        const score = struggleWeight(p, topic);
+        const attempted = Number(info.attempted) || 0;
+        return {
+          topic: topic,
+          label: Q.TOPICS[topic] || topic,
+          score: score,
+          wrong: Number(st.wrong) || 0,
+          recentWrong: Number(st.recentWrong) || 0,
+          hinted: Number(st.hinted) || 0,
+          attempts: Math.max(Number(st.attempts) || 0, attempted),
+          accuracy: topicAccuracy(info),
+          lastPrompt: st.lastPrompt || "",
+        };
+      })
+      .filter(function (row) {
+        return row.score > 0.5 || row.wrong > 0 || row.recentWrong > 0;
+      })
+      .sort(function (a, b) {
+        return b.score - a.score;
+      });
+    return ranked.slice(0, Math.max(1, limit || 3));
+  }
+
+  function getStruggleView(weekId) {
+    const p = load();
+    seedStruggleIfEmpty(p);
+    const top = getTopStruggleTopics(5, weekId);
+    return {
+      top: top,
+      byTopic: (p.struggle && p.struggle.byTopic) || {},
+      byGen: (p.struggle && p.struggle.byGen) || {},
     };
   }
 
@@ -90,6 +304,12 @@
         syncMasteredFlag(t);
         data.topics[key] = t;
       });
+      const hadStruggle = Object.keys(ensureStruggle(data).byTopic).length > 0;
+      seedStruggleIfEmpty(data);
+      if (!hadStruggle && Object.keys(data.struggle.byTopic).length > 0) {
+        data.updated_at = new Date().toISOString();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
       return data;
     } catch (e) {
       return emptyProgress();
@@ -395,6 +615,7 @@
       final_boss_cleared: Boolean(p.final_boss_cleared),
       final_boss_cleared_at: p.final_boss_cleared_at || null,
       topics: topics,
+      struggle: getStruggleView(),
       history: (p.history || []).slice(-20),
       updated_at: p.updated_at,
     };
@@ -471,13 +692,18 @@
 
   function pickSmartTopic(avoidTopic) {
     const p = load();
+    seedStruggleIfEmpty(p);
     const keys = Object.keys(Q.TOPICS);
     if (!keys.length) return null;
     const weights = keys.map((t) => {
       const info = p.topics[t] || { unaided_correct: 0, attempted: 0 };
       const remaining = Math.max(MASTER - effectiveUnaided(p, t), 0);
-      let w = remaining * 8 + (info.attempted < 3 ? 12 : 0) + Math.random() * 6;
-      if (remaining === 0) w = 2 + Math.random() * 2;
+      let w =
+        remaining * 8 +
+        (info.attempted < 3 ? 12 : 0) +
+        struggleWeight(p, t) * 0.65 +
+        Math.random() * 6;
+      if (remaining === 0) w = 2 + Math.random() * 2 + struggleWeight(p, t) * 0.25;
       if (avoidTopic && t === avoidTopic) w *= 0.08;
       return Math.max(w, 0.5);
     });
@@ -492,10 +718,11 @@
 
   /**
    * Nourish and Strengthen: mastery-aware like Smart pick, but heavily biased
-   * toward the selected course week's topics while still reviewing everything.
+   * toward the selected course week's topics and topics the learner struggles with.
    */
   function pickNourishTopic(weekId, avoidTopic) {
     const p = load();
+    seedStruggleIfEmpty(p);
     const keys = Object.keys(Q.TOPICS).filter(function (k) {
       return k !== "flashcards";
     });
@@ -515,8 +742,12 @@
     const weights = keys.map(function (t) {
       const info = p.topics[t] || { unaided_correct: 0, attempted: 0 };
       const remaining = Math.max(MASTER - effectiveUnaided(p, t), 0);
-      let w = remaining * 8 + (info.attempted < 3 ? 12 : 0) + Math.random() * 6;
-      if (remaining === 0) w = 2 + Math.random() * 2;
+      let w =
+        remaining * 8 +
+        (info.attempted < 3 ? 12 : 0) +
+        struggleWeight(p, t) +
+        Math.random() * 6;
+      if (remaining === 0) w = 2 + Math.random() * 2 + struggleWeight(p, t) * 0.35;
       if (hasWeekFocus) {
         if (weekSet[t]) w *= 3.5;
         else w *= 0.75;
@@ -696,8 +927,11 @@
       p.streak = 0;
     }
 
+    recordStruggleEvent(p, question, { correct: ok, hintsUsed: hintsUsed });
+
     const unaided = Number(p.topics[topic].unaided_correct) || 0;
     const mastered = isMastered(unaided);
+    const genKey = questionGenKey(question);
 
     p.history = p.history || [];
     p.history.push({
@@ -708,6 +942,7 @@
       credit: credit,
       mastery_delta: masteryDelta,
       prompt: String(question.prompt).slice(0, 120),
+      gen: genKey || undefined,
     });
     p.history = p.history.slice(-100);
     save(p);
@@ -747,6 +982,8 @@
     if (!p.topics[topic]) p.topics[topic] = emptyTopic(Q.TOPICS[topic] || topic);
     const masteryDelta = applyHintPenalty(p, topic);
     p.streak = 0;
+    recordStruggleEvent(p, question, { correct: false, hintsUsed: hintsUsed });
+    const genKey = questionGenKey(question);
     p.history = p.history || [];
     p.history.push({
       at: new Date().toISOString(),
@@ -757,6 +994,7 @@
       skipped: true,
       mastery_delta: masteryDelta,
       prompt: String(question.prompt).slice(0, 120),
+      gen: genKey || undefined,
     });
     p.history = p.history.slice(-100);
     save(p);
@@ -852,6 +1090,21 @@
         ? p.boss_drill_topic
         : null;
     next.history = Array.isArray(p.history) ? p.history.slice(-100) : [];
+    if (p.struggle && typeof p.struggle === "object") {
+      next.struggle = {
+        byTopic:
+          p.struggle.byTopic && typeof p.struggle.byTopic === "object"
+            ? p.struggle.byTopic
+            : {},
+        byGen:
+          p.struggle.byGen && typeof p.struggle.byGen === "object"
+            ? p.struggle.byGen
+            : {},
+      };
+    } else {
+      next.struggle = emptyStruggle();
+      seedStruggleIfEmpty(next);
+    }
     Object.keys(Q.TOPICS).forEach((key) => {
       const src = (p.topics && p.topics[key]) || {};
       let unaided = Number(src.unaided_correct) || 0;
@@ -898,6 +1151,8 @@
     getProgressView: getProgressView,
     pickSmartTopic: pickSmartTopic,
     pickNourishTopic: pickNourishTopic,
+    getTopStruggleTopics: getTopStruggleTopics,
+    getStruggleView: getStruggleView,
     pickAllTopic: pickAllTopic,
     pickTeachTopic: pickTeachTopic,
     getTeachScaffold: getTeachScaffold,
