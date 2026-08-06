@@ -1487,8 +1487,14 @@ a.linkish {
 .excel-cell--active {
   outline: 2px solid #217346;
   outline-offset: -2px;
-  background: #f3fbf6;
+  background: #fff3b0;
   cursor: text;
+}
+
+.excel-cell--active.excel-cell--ok,
+.multi-field--kept .excel-cell--active {
+  background: #c6efce;
+  outline-color: #548235;
 }
 
 .excel-cell-mirror {

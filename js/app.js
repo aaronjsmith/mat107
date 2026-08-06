@@ -1487,6 +1487,8 @@
     pmt: "PMT(rate, nper, pv, [fv], [type])",
     fv: "FV(rate, nper, pmt, [pv], [type])",
     pv: "PV(rate, nper, pmt, [fv], [type])",
+    nper: "NPER(rate, pmt, pv, [fv], [type])",
+    rate: "RATE(nper, pmt, pv, [fv], [type], [guess])",
     if: "IF(logical_test, value_if_true, [value_if_false])",
   };
 
@@ -1654,6 +1656,10 @@
     }
   }
 
+  function lockInputs() {
+    setInputsDisabled(true);
+  }
+
   function clearAnswerInputs() {
     els.input.value = "";
     getMultiInputs().forEach((control) => {
@@ -1689,6 +1695,8 @@
       control.disabled = false;
       control.classList.remove("kept");
       if (row) row.classList.remove("multi-field--kept");
+      // Excel formula bar mirrors into the active cell — force a refresh.
+      control.dispatchEvent(new Event("input", { bubbles: true }));
     });
 
     if (els.mathInsert) {

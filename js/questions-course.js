@@ -847,39 +847,6 @@
     );
   }
 
-  function genExcelSum() {
-    const a = randInt(120, 400);
-    const b = randInt(80, 300);
-    const c = randInt(50, 250);
-    const d = randInt(40, 200);
-    const ans = a + b + c + d;
-    return _numeric(
-      tVar("c.q.excel_sum", { a: a, b: b, c: c, d: d }),
-      ans,
-      "fin_excel",
-      0,
-      t("c.h.excel_sum"),
-      "Like =SUM(B2:B5): add " + a + "+" + b + "+" + c + "+" + d,
-      "dollars",
-      calcHelp(a + " + " + b + " + " + c + " + " + d + " =", a + " + " + b + " + " + c + " + " + d + " =")
-    );
-  }
-
-  function genExcelNet() {
-    const income = choice([2500, 3000, 3500, 4200]);
-    const expenses = choice([1800, 2100, 2400, 2900]);
-    const ans = income - expenses;
-    return _numeric(
-      tVar("c.q.excel_net", { income: income, expenses: expenses }),
-      ans,
-      "fin_excel",
-      0,
-      t("c.h.excel_net"),
-      "Net = income − expenses (like =B2−B3)",
-      "dollars"
-    );
-  }
-
   function genExcelSumFormula() {
     const a = randInt(120, 400);
     const b = randInt(80, 300);
@@ -1034,6 +1001,153 @@
             { r: 2, cells: { A: t("c.excel.price"), B: price } },
             { r: 3, cells: { A: t("c.excel.qty"), B: qty } },
             { r: 4, cells: { A: t("c.excel.line_total"), B: { field: "formula" } } },
+          ],
+        },
+      ]
+    );
+  }
+
+  /** Week 6 RWA-style: FV of a present amount (inflation / growth), pmt=0. */
+  function genExcelFvFormula() {
+    const pv = choice([30000, 37500, 40000, 48000, 50000]);
+    const rate = choice([0.02, 0.025, 0.03]);
+    const nper = choice([20, 30, 40]);
+    return _multi(
+      tVar("c.q.excel_fv_formula", {
+        pv: pv,
+        pct: num(rate * 100, 2),
+        nper: nper,
+      }),
+      [
+        {
+          id: "formula",
+          type: "formula",
+          label: t("c.field.excel_formula"),
+          placeholder: "=FV(",
+          answers: [
+            "=FV(B3,B4,0,-B2)",
+            "=FV(B3,B4,0,-1*B2)",
+            "=FV(B3,B4,0,B2*-1)",
+            "=-FV(B3,B4,0,B2)",
+          ],
+        },
+      ],
+      "fin_excel",
+      t("c.h.excel_fv_formula"),
+      t("c.setup.excel_fv_formula"),
+      null,
+      [
+        {
+          widget: "excel",
+          title: "Retirement.xlsx",
+          formulaField: "formula",
+          active: "B5",
+          tip: "FV(rate, nper, pmt, [pv], [type])",
+          cols: ["A", "B"],
+          rows: [
+            { r: 1, cells: { A: "Label", B: "Value" } },
+            { r: 2, cells: { A: t("c.excel.pv"), B: pv } },
+            { r: 3, cells: { A: t("c.excel.rate"), B: rate } },
+            { r: 4, cells: { A: t("c.excel.nper"), B: nper } },
+            { r: 5, cells: { A: t("c.excel.fv"), B: { field: "formula" } } },
+          ],
+        },
+      ]
+    );
+  }
+
+  /** Week 6 RWA-style: monthly PMT to reach a future savings goal. */
+  function genExcelPmtFormula() {
+    const fv = choice([500000, 800000, 1000000, 1500000, 2000000]);
+    const years = choice([20, 30, 40]);
+    const rate = choice([0.08, 0.1, 0.12]);
+    return _multi(
+      tVar("c.q.excel_pmt_formula", {
+        fv: fv,
+        years: years,
+        pct: num(rate * 100, 2),
+      }),
+      [
+        {
+          id: "formula",
+          type: "formula",
+          label: t("c.field.excel_formula"),
+          placeholder: "=PMT(",
+          answers: [
+            "=PMT(B4/12,B3*12,0,-B2)",
+            "=PMT(B4/12,B3*12,0,-1*B2)",
+            "=PMT(B4/12,B3*12,0,B2*-1)",
+            "=-PMT(B4/12,B3*12,0,B2)",
+          ],
+        },
+      ],
+      "fin_excel",
+      t("c.h.excel_pmt_formula"),
+      t("c.setup.excel_pmt_formula"),
+      null,
+      [
+        {
+          widget: "excel",
+          title: "Savings.xlsx",
+          formulaField: "formula",
+          active: "B5",
+          tip: "PMT(rate, nper, pv, [fv], [type])",
+          cols: ["A", "B"],
+          rows: [
+            { r: 1, cells: { A: "Label", B: "Value" } },
+            { r: 2, cells: { A: t("c.excel.fv"), B: fv } },
+            { r: 3, cells: { A: t("c.excel.nper"), B: years } },
+            { r: 4, cells: { A: t("c.excel.rate"), B: rate } },
+            { r: 5, cells: { A: t("c.excel.pmt"), B: { field: "formula" } } },
+          ],
+        },
+      ]
+    );
+  }
+
+  /** Week 6 RWA-style: car loan monthly payment from PV. */
+  function genExcelLoanPmtFormula() {
+    const pv = choice([18000, 21000, 22638, 25000]);
+    const rate = choice([0.055, 0.065, 0.079]);
+    const months = choice([48, 60, 72]);
+    return _multi(
+      tVar("c.q.excel_loan_pmt_formula", {
+        pv: pv,
+        pct: num(rate * 100, 2),
+        months: months,
+      }),
+      [
+        {
+          id: "formula",
+          type: "formula",
+          label: t("c.field.excel_formula"),
+          placeholder: "=PMT(",
+          answers: [
+            "=PMT(B2/12,B4,-B3)",
+            "=PMT(B2/12,B4,-1*B3)",
+            "=PMT(B2/12,B4,B3*-1)",
+            "=-PMT(B2/12,B4,B3)",
+          ],
+        },
+      ],
+      "fin_excel",
+      t("c.h.excel_loan_pmt_formula"),
+      t("c.setup.excel_loan_pmt_formula"),
+      null,
+      [
+        {
+          widget: "excel",
+          title: "CarLoan.xlsx",
+          formulaField: "formula",
+          active: "B5",
+          tip: "PMT(rate, nper, pv, [fv], [type])",
+          cols: ["A", "B"],
+          rows: [
+            { r: 1, cells: { A: "Label", B: "Value" } },
+            { r: 2, cells: { A: t("c.excel.rate"), B: rate } },
+            { r: 3, cells: { A: t("c.excel.pv"), B: pv } },
+            { r: 4, cells: { A: t("c.excel.nper"), B: months } },
+            { r: 5, cells: { A: t("c.excel.pmt"), B: { field: "formula" } } },
           ],
         },
       ]
@@ -1733,12 +1847,13 @@
     genBudgetSurplus,
     genPercentOfIncome,
     genDiscountTax,
-    genExcelSum,
-    genExcelNet,
     genExcelSumFormula,
     genExcelNetFormula,
     genExcelAverageFormula,
     genExcelProductFormula,
+    genExcelFvFormula,
+    genExcelPmtFormula,
+    genExcelLoanPmtFormula,
     genFVCompound,
     genAnnuityFV,
     genLoanInterestCost,

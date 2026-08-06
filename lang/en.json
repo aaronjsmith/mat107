@@ -751,7 +751,7 @@
     "hint_overview.credit_loan": "Overview: total paid = payment × number of payments; interest cost = total − principal.",
     "hint_overview.distributions": "Overview: name the shape from the long tail (skew) or use the empirical rule (68% / 95% / 99.7%) for roughly normal data.",
     "hint_overview.fin_budget": "Overview: total expenses, then surplus/deficit = income − expenses.",
-    "hint_overview.fin_excel": "Overview: think in cell formulas — type = in the formula bar; SUM adds a range; net = income − expenses.",
+    "hint_overview.fin_excel": "Overview: type = in the formula bar of the spreadsheet window. SUM/AVERAGE/PRODUCT for ranges; FV and PMT for savings and loans (use a negative PV or FV so the result is positive).",
     "hint_overview.fin_percent": "Overview: part ÷ whole × 100; apply discounts then tax in the order given.",
     "hint_overview.fn_arith_seq": "Overview: subtract consecutive terms. If the difference is constant, the sequence is arithmetic and that value is d.",
     "hint_overview.fn_arith_series": "Overview: S_n = n(a_1 + a_n)/2. Find a_n first if you only know a_1 and d.",
@@ -1475,6 +1475,20 @@
     "zarahemla.mode_finalboss_fighting": "Facing Gadianton Robber…",
     "zarahemla.mode_finalboss_practice": "Practice: Gadianton Robber",
     "zarahemla.mode_finalboss_practice_active": "Practice fight in progress",
-    "zarahemla.mode_finalboss_ready": "Face Gadianton Robber · defend Zarahemla"
+    "zarahemla.mode_finalboss_ready": "Face Gadianton Robber · defend Zarahemla",
+    "c.excel.fv": "FV",
+    "c.excel.nper": "NPER",
+    "c.excel.pmt": "PMT",
+    "c.excel.pv": "PV",
+    "c.excel.rate": "Rate",
+    "c.h.excel_fv_formula": "FV grows a present amount; use rate, nper, pmt=0, and a negative PV so the result is positive.",
+    "c.h.excel_pmt_formula": "PMT finds the monthly deposit: divide the annual rate by 12 and multiply years by 12; use a negative FV for a positive payment.",
+    "c.h.excel_loan_pmt_formula": "Loan PMT uses monthly rate = APR/12, nper in months, and a negative PV so the payment is positive.",
+    "c.q.excel_fv_formula": "Enter a formula in B5 that finds the future value of PV ${pv} after {nper} periods at {pct}% per period (pmt = 0). Use FV so the answer is positive.",
+    "c.q.excel_pmt_formula": "Enter a formula in B5 for the monthly deposit needed to reach FV ${fv} in {years} years at {pct}% annual interest with monthly compounding. Use PMT so the answer is positive.",
+    "c.q.excel_loan_pmt_formula": "Enter a formula in B5 for the monthly loan payment on PV ${pv} at {pct}% APR for {months} months. Use PMT so the answer is positive.",
+    "c.setup.excel_fv_formula": "Active cell B5. Type =FV(B3,B4,0,-B2) — negative PV makes FV positive.",
+    "c.setup.excel_pmt_formula": "Active cell B5. Type =PMT(B4/12,B3*12,0,-B2) — monthly rate and periods; negative FV makes PMT positive.",
+    "c.setup.excel_loan_pmt_formula": "Active cell B5. Type =PMT(B2/12,B4,-B3) — monthly rate, months, negative PV."
   }
 }
