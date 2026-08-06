@@ -3375,6 +3375,51 @@
     }
   }
 
+  function excelMatchCall(s, start) {
+    const open = s.indexOf("(", start);
+    if (open < 0) return null;
+    let depth = 0;
+    for (let i = open; i < s.length; i++) {
+      const ch = s.charAt(i);
+      if (ch === "(") depth++;
+      else if (ch === ")") {
+        depth--;
+        if (depth === 0) {
+          return { open: open, close: i, args: s.slice(open + 1, i) };
+        }
+      }
+    }
+    return null;
+  }
+
+  function excelEvalFnName(name, vals) {
+    const n = String(name || "").toUpperCase();
+    const nums = (vals || []).filter(function (v) {
+      return isFinite(v);
+    });
+    if (n === "SUM") {
+      return nums.reduce(function (a, b) {
+        return a + b;
+      }, 0);
+    }
+    if (n === "AVERAGE" || n === "AVG") {
+      return nums.length
+        ? nums.reduce(function (a, b) {
+            return a + b;
+          }, 0) / nums.length
+        : NaN;
+    }
+    if (n === "PRODUCT") {
+      return nums.reduce(function (a, b) {
+        return a * b;
+      }, 1);
+    }
+    if (n === "MIN") return nums.length ? Math.min.apply(null, nums) : NaN;
+    if (n === "MAX") return nums.length ? Math.max.apply(null, nums) : NaN;
+    if (n === "ABS") return nums.length ? Math.abs(nums[0]) : NaN;
+    return NaN;
+  }
+
   function excelEvalRef(ref, stack) {
     const key = String(ref || "").toUpperCase();
     if (!key) return 0;
@@ -3420,39 +3465,33 @@
     return vals;
   }
 
+  /** Replace embedded SUM(...)/AVERAGE(...)/… calls with numeric literals. */
+  function excelReplaceFunctions(expr, stack) {
+    let s = String(expr || "");
+    const fnRe = /(SUM|AVERAGE|AVG|PRODUCT|MIN|MAX|ABS)\s*\(/gi;
+    let guard = 0;
+    while (guard++ < 40) {
+      fnRe.lastIndex = 0;
+      const m = fnRe.exec(s);
+      if (!m) break;
+      const nameStart = m.index;
+      const call = excelMatchCall(s, nameStart);
+      if (!call) break;
+      const name = m[1];
+      const vals = excelEvalArgs(call.args, stack);
+      const n = excelEvalFnName(name, vals);
+      const lit = isFinite(n) ? String(n) : "NaN";
+      s = s.slice(0, nameStart) + lit + s.slice(call.close + 1);
+    }
+    return s;
+  }
+
   function excelEvalFormula(expr, stack) {
     let s = String(expr || "").trim();
     if (!s) return 0;
 
-    const fn = s.match(
-      /^(SUM|AVERAGE|AVG|PRODUCT|MIN|MAX|ABS)\s*\((.*)\)\s*$/i
-    );
-    if (fn) {
-      const name = fn[1].toUpperCase();
-      const vals = excelEvalArgs(fn[2], stack).filter(function (n) {
-        return isFinite(n);
-      });
-      if (name === "SUM") {
-        return vals.reduce(function (a, b) {
-          return a + b;
-        }, 0);
-      }
-      if (name === "AVERAGE" || name === "AVG") {
-        return vals.length
-          ? vals.reduce(function (a, b) {
-              return a + b;
-            }, 0) / vals.length
-          : NaN;
-      }
-      if (name === "PRODUCT") {
-        return vals.reduce(function (a, b) {
-          return a * b;
-        }, 1);
-      }
-      if (name === "MIN") return vals.length ? Math.min.apply(null, vals) : NaN;
-      if (name === "MAX") return vals.length ? Math.max.apply(null, vals) : NaN;
-      if (name === "ABS") return vals.length ? Math.abs(vals[0]) : NaN;
-    }
+    s = excelReplaceFunctions(s, stack);
+    if (/\bNaN\b/.test(s)) return NaN;
 
     s = s.replace(/\$([A-Za-z]+)\$?(\d+)/g, "$1$2");
     s = s.replace(/([A-Za-z]+\d+)/g, function (m) {
