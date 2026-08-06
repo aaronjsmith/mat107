@@ -1054,6 +1054,39 @@
     save(emptyProgress());
   }
 
+  function recomputeTotalUnaided(p) {
+    let total = 0;
+    Object.keys(Q.TOPICS || {}).forEach(function (key) {
+      const rec = p.topics[key];
+      total += Number(rec && rec.unaided_correct) || 0;
+    });
+    p.total_unaided_correct = total;
+  }
+
+  /** Wipe one topic’s mastery milestone (and related struggle / drill flags). */
+  function resetTopic(topicId) {
+    if (!topicId || !Q.TOPICS || !Q.TOPICS[topicId]) return false;
+    const p = load();
+    const label = Q.TOPICS[topicId];
+    p.topics[topicId] = emptyTopic(label);
+
+    if (p.struggle && p.struggle.byTopic && p.struggle.byTopic[topicId]) {
+      delete p.struggle.byTopic[topicId];
+    }
+
+    if (p.boss_drill_topic === topicId) {
+      p.boss_drill_topic = null;
+    }
+
+    recomputeTotalUnaided(p);
+    save(p);
+    syncTopicToRelated(topicId, {
+      unaided_correct: 0,
+      label: label,
+    });
+    return true;
+  }
+
   function exportProgress() {
     const p = load();
     return {
@@ -1177,6 +1210,7 @@
     recordHintSkip: recordHintSkip,
     awardRetryCredit: awardRetryCredit,
     reset: reset,
+    resetTopic: resetTopic,
     exportProgress: exportProgress,
     importProgress: importProgress,
     downloadProgressFile: downloadProgressFile,

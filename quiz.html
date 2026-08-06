@@ -110,6 +110,7 @@
         </button>
         <button class="primary" id="btn-next" type="button" hidden data-i18n="btn_next">Next question</button>
         <button class="ghost" id="btn-calc-open" type="button" data-i18n="btn_calc_open">Calculator</button>
+        <button class="ghost" id="btn-excel-open" type="button" data-i18n="btn_excel_open">Excel</button>
       </div>
       <div id="feedback" class="feedback" hidden></div>
       <div class="scratch-pad">
@@ -180,6 +181,33 @@
     </div>
   </div>
 
+  <div id="excel-modal" class="excel-panel" hidden role="dialog" aria-modal="false" aria-labelledby="excel-modal-title">
+    <header class="calc-head" id="excel-drag-handle">
+      <h2 id="excel-modal-title" data-i18n="excel_modal_title">Excel</h2>
+      <button type="button" class="modal-close" id="btn-excel-close" aria-label="Close" data-i18n-aria="btn_excel_close_aria">×</button>
+    </header>
+    <div class="excel-window excel-window--panel" role="group" data-i18n-aria="excel_scratch_label" aria-label="Scratch spreadsheet">
+      <div class="excel-formula-bar">
+        <div class="excel-name-box" id="excel-name-box">A1</div>
+        <span class="excel-fx" aria-hidden="true">ƒx</span>
+        <input
+          id="excel-formula-input"
+          class="excel-formula-input"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="="
+          data-i18n-aria="excel_formula_aria"
+          aria-label="Formula bar"
+        />
+      </div>
+      <div class="excel-tip" id="excel-tip"></div>
+      <div class="excel-grid-wrap">
+        <table class="excel-grid" id="excel-scratch-grid"></table>
+      </div>
+    </div>
+  </div>
+
   <div id="boss-invite-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="boss-invite-title">
     <div class="modal-backdrop" id="boss-invite-backdrop" tabindex="-1"></div>
     <div class="modal-card boss-invite-card">
@@ -222,6 +250,23 @@
       <div class="nourish-week-choices" id="nourish-week-choices" role="group" aria-label="Course week"></div>
       <div class="modal-actions">
         <button type="button" class="ghost" id="nourish-week-cancel" data-i18n="nourish_week_cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reset-progress-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="reset-progress-title">
+    <div class="modal-backdrop" id="reset-progress-backdrop" tabindex="-1"></div>
+    <div class="modal-card reset-progress-card">
+      <header class="modal-head">
+        <h2 id="reset-progress-title" data-i18n="reset_modal_title">Reset progress</h2>
+        <button type="button" class="modal-close" id="reset-progress-close" aria-label="Close" data-i18n-aria="reset_modal_close_aria">×</button>
+      </header>
+      <p class="modal-body" data-i18n="reset_modal_blurb">Choose one mastery topic to clear, or wipe everything stored for this quiz in this browser.</p>
+      <div class="reset-topic-list" id="reset-topic-list" role="listbox" aria-label="Topics" data-i18n-aria="reset_topic_list_aria"></div>
+      <div class="modal-actions reset-progress-actions">
+        <button type="button" class="ghost" id="reset-progress-cancel" data-i18n="reset_cancel">Cancel</button>
+        <button type="button" class="ghost danger" id="reset-progress-all" data-i18n="reset_all_btn">Reset everything</button>
+        <button type="button" class="primary" id="reset-progress-topic" data-i18n="reset_topic_btn" disabled>Reset topic</button>
       </div>
     </div>
   </div>

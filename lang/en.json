@@ -71,6 +71,8 @@
     "btn_clarify": "Need more clarification?",
     "btn_clarify_ai_done": "AI help suggested",
     "btn_clarify_more": "Still stuck? Ask AI…",
+    "btn_excel_close_aria": "Close spreadsheet",
+    "btn_excel_open": "Excel",
     "btn_hint1": "Hint 1 · approach (−25%)",
     "btn_hint1_used": "Hint 1 used (−25%)",
     "btn_hint2": "Hint 2 · setup (−50%)",
@@ -513,7 +515,10 @@
     "emp_chart_axis": "Standard Deviations",
     "emp_chart_caption": "Normal distribution — percentage of data in each standard-deviation band",
     "emp_chart_show": "Show normal curve / empirical rule chart",
+    "excel_formula_aria": "Formula bar",
     "excel_formula_tip_default": "Start with = then a function or cell reference (for example =SUM(B2:B5)).",
+    "excel_modal_title": "Excel",
+    "excel_scratch_label": "Scratch spreadsheet",
     "excel_tip_arithmetic": "Use +, −, *, / with cell references (for example =B2-B3).",
     "excel_window_label": "Spreadsheet formula practice",
     "feedback_correct": "Correct · {credit}% credit. {note}Unaided streak: {streak}. Mastery: {progress}{mastered}",
@@ -1489,6 +1494,13 @@
     "c.q.excel_loan_pmt_formula": "Enter a formula in B5 for the monthly loan payment on PV ${pv} at {pct}% APR for {months} months. Use PMT so the answer is positive.",
     "c.setup.excel_fv_formula": "Active cell B5. Type =FV(B3,B4,0,-B2) — negative PV makes FV positive.",
     "c.setup.excel_pmt_formula": "Active cell B5. Type =PMT(B4/12,B3*12,0,-B2) — monthly rate and periods; negative FV makes PMT positive.",
-    "c.setup.excel_loan_pmt_formula": "Active cell B5. Type =PMT(B2/12,B4,-B3) — monthly rate, months, negative PV."
+    "c.setup.excel_loan_pmt_formula": "Active cell B5. Type =PMT(B2/12,B4,-B3) — monthly rate, months, negative PV.",
+    "reset_modal_title": "Reset progress",
+    "reset_modal_blurb": "Choose one mastery topic to clear, or wipe everything stored for this quiz in this browser.",
+    "reset_modal_close_aria": "Close",
+    "reset_topic_list_aria": "Topics",
+    "reset_topic_btn": "Reset topic",
+    "reset_all_btn": "Reset everything",
+    "reset_cancel": "Cancel"
   }
 }

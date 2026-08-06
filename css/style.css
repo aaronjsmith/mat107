@@ -1779,7 +1779,8 @@ a.linkish {
 }
 
 .modal[hidden],
-.calc-panel[hidden] {
+.calc-panel[hidden],
+.excel-panel[hidden] {
   display: none !important;
 }
 
@@ -1824,6 +1825,69 @@ a.linkish {
   padding: 0.85rem 0.9rem 1rem;
   pointer-events: auto;
   user-select: none;
+}
+
+.excel-panel {
+  position: fixed;
+  z-index: 90;
+  width: min(calc(100vw - 1.5rem), 28rem);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(26, 35, 50, 0.18);
+  padding: 0.85rem 0.9rem 1rem;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.excel-panel .excel-formula-input,
+.excel-panel .excel-cell,
+.excel-panel .excel-tip,
+.excel-panel .excel-name-box {
+  user-select: text;
+}
+
+.excel-window--panel {
+  width: 100%;
+  box-shadow: none;
+  border-radius: 10px;
+}
+
+.excel-panel .excel-cell {
+  cursor: cell;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.excel-panel .excel-cell--has-value {
+  color: #1f2933;
+}
+
+.excel-panel.is-docked-left {
+  border-radius: 0 16px 16px 0;
+  border-left: none;
+}
+
+.excel-panel.is-docked-right {
+  border-radius: 16px 0 0 16px;
+  border-right: none;
+}
+
+.excel-panel.is-dragging {
+  opacity: 0.96;
+  box-shadow: 0 22px 48px rgba(26, 35, 50, 0.28);
+}
+
+.excel-panel .calc-head {
+  margin-bottom: 0.65rem;
+}
+
+@media (max-width: 640px) {
+  .excel-panel {
+    width: min(calc(100vw - 1rem), 28rem);
+  }
 }
 
 .calc-panel.is-docked-left {
@@ -1984,6 +2048,73 @@ a.linkish {
   font-weight: 600;
   color: #9a3412;
   line-height: 1.35;
+}
+
+.reset-progress-card {
+  max-width: 28rem;
+}
+
+.reset-topic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: min(40vh, 18rem);
+  overflow: auto;
+  margin: 0.35rem 0 1rem;
+  padding-right: 0.15rem;
+}
+
+.reset-topic-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.reset-topic-btn:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.reset-topic-btn.selected,
+.reset-topic-btn:focus-visible {
+  border-color: var(--accent, #166534);
+  outline: 2px solid color-mix(in srgb, var(--accent, #166534) 35%, transparent);
+  outline-offset: 1px;
+  background: #f0fdf4;
+}
+
+.reset-topic-btn-label {
+  font-weight: 600;
+}
+
+.reset-topic-btn-progress {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.reset-progress-actions {
+  flex-wrap: wrap;
+}
+
+.reset-progress-actions .danger {
+  color: #b91c1c;
+}
+
+.reset-progress-actions .primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .calc-display {

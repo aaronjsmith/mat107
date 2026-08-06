@@ -138,6 +138,13 @@
     skip: document.getElementById("btn-skip"),
     remix: document.getElementById("btn-remix"),
     reset: document.getElementById("btn-reset"),
+    resetModal: document.getElementById("reset-progress-modal"),
+    resetTopicList: document.getElementById("reset-topic-list"),
+    resetTopicBtn: document.getElementById("reset-progress-topic"),
+    resetAllBtn: document.getElementById("reset-progress-all"),
+    resetCancel: document.getElementById("reset-progress-cancel"),
+    resetClose: document.getElementById("reset-progress-close"),
+    resetBackdrop: document.getElementById("reset-progress-backdrop"),
     save: document.getElementById("btn-save"),
     load: document.getElementById("btn-load"),
     progressFile: document.getElementById("progress-file"),
@@ -154,6 +161,13 @@
     calcClose: document.getElementById("btn-calc-close"),
     calcDisplay: document.getElementById("calc-display"),
     calcKeys: document.getElementById("calc-keys"),
+    excelOpen: document.getElementById("btn-excel-open"),
+    excelModal: document.getElementById("excel-modal"),
+    excelClose: document.getElementById("btn-excel-close"),
+    excelNameBox: document.getElementById("excel-name-box"),
+    excelFormula: document.getElementById("excel-formula-input"),
+    excelTip: document.getElementById("excel-tip"),
+    excelGrid: document.getElementById("excel-scratch-grid"),
     bossInviteModal: document.getElementById("boss-invite-modal"),
     bossInviteMsg: document.getElementById("boss-invite-msg"),
     bossInviteFight: document.getElementById("boss-invite-fight"),
@@ -2614,12 +2628,96 @@
   });
 
   els.reset.addEventListener("click", () => {
-    if (!confirm(t("reset_confirm"))) return;
+    openResetProgressModal();
+  });
+
+  let resetSelectedTopic = null;
+
+  function closeResetProgressModal() {
+    if (els.resetModal) els.resetModal.hidden = true;
+    resetSelectedTopic = null;
+    if (els.resetTopicBtn) els.resetTopicBtn.disabled = true;
+  }
+
+  function openResetProgressModal() {
+    if (!els.resetModal || !els.resetTopicList) return;
+    resetSelectedTopic = null;
+    if (els.resetTopicBtn) els.resetTopicBtn.disabled = true;
+
+    const p = P.getProgressView();
+    const topics = p.topics || {};
+    els.resetTopicList.innerHTML = "";
+    Object.keys(topics).forEach(function (key) {
+      const info = topics[key];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "reset-topic-btn";
+      btn.dataset.topic = key;
+      btn.setAttribute("role", "option");
+      btn.setAttribute("aria-selected", "false");
+
+      const label = document.createElement("span");
+      label.className = "reset-topic-btn-label";
+      label.textContent = info.label || (Q.TOPICS && Q.TOPICS[key]) || key;
+
+      const prog = document.createElement("span");
+      prog.className = "reset-topic-btn-progress";
+      prog.textContent =
+        (info.unaided_correct || 0) + "/" + (info.unaided_needed || 10);
+
+      btn.appendChild(label);
+      btn.appendChild(prog);
+      btn.addEventListener("click", function () {
+        resetSelectedTopic = key;
+        els.resetTopicList.querySelectorAll(".reset-topic-btn").forEach(function (el) {
+          const on = el.dataset.topic === key;
+          el.classList.toggle("selected", on);
+          el.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        if (els.resetTopicBtn) els.resetTopicBtn.disabled = false;
+      });
+      els.resetTopicList.appendChild(btn);
+    });
+
+    els.resetModal.hidden = false;
+    const first = els.resetTopicList.querySelector("button");
+    if (first) first.focus();
+  }
+
+  function applyFullReset() {
     P.reset();
-    els.topicList.innerHTML = "";
+    if (els.topicList) els.topicList.innerHTML = "";
+    closeResetProgressModal();
     refreshProgress();
     loadQuestion();
-  });
+  }
+
+  function applyTopicReset() {
+    if (!resetSelectedTopic || !P.resetTopic) return;
+    const topic = resetSelectedTopic;
+    P.resetTopic(topic);
+    closeResetProgressModal();
+    refreshProgress();
+    if (state.mode === topic) {
+      loadQuestion();
+    }
+  }
+
+  if (els.resetCancel) {
+    els.resetCancel.addEventListener("click", closeResetProgressModal);
+  }
+  if (els.resetClose) {
+    els.resetClose.addEventListener("click", closeResetProgressModal);
+  }
+  if (els.resetBackdrop) {
+    els.resetBackdrop.addEventListener("click", closeResetProgressModal);
+  }
+  if (els.resetAllBtn) {
+    els.resetAllBtn.addEventListener("click", applyFullReset);
+  }
+  if (els.resetTopicBtn) {
+    els.resetTopicBtn.addEventListener("click", applyTopicReset);
+  }
 
   if (els.bossInviteFight) {
     els.bossInviteFight.addEventListener("click", acceptBossInvite);
@@ -3059,6 +3157,10 @@
   function openCalcModal() {
     if (!els.calcModal) return;
     els.calcModal.hidden = false;
+    els.calcModal.style.zIndex = "91";
+    if (els.excelModal && !els.excelModal.hidden) {
+      els.excelModal.style.zIndex = "90";
+    }
     if (calcUi.x == null || calcUi.y == null) defaultCalcPosition();
     applyCalcPosition();
     calcRender();
@@ -3079,6 +3181,10 @@
   }
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
+    if (els.resetModal && !els.resetModal.hidden) {
+      closeResetProgressModal();
+      return;
+    }
     if (els.nourishWeekModal && !els.nourishWeekModal.hidden) {
       cancelNourishWeekPrompt();
       return;
@@ -3091,12 +3197,17 @@
       dismissBossInvite();
       return;
     }
+    if (els.excelModal && !els.excelModal.hidden) {
+      closeExcelModal();
+      return;
+    }
     if (els.calcModal && !els.calcModal.hidden) {
       closeCalcModal();
     }
   });
   window.addEventListener("resize", () => {
     if (els.calcModal && !els.calcModal.hidden) applyCalcPosition();
+    if (els.excelModal && !els.excelModal.hidden) applyExcelPosition();
   });
 
   const calcHandle = document.getElementById("calc-drag-handle");
@@ -3183,6 +3294,456 @@
         calcRender();
       }
     });
+  }
+
+  // --- Floating Excel scratch sheet (draggable / dockable) -------------------
+  const EXCEL_COLS = ["A", "B", "C", "D"];
+  const EXCEL_ROWS = 8;
+  const EXCEL_SNAP = 36;
+
+  const excelScratch = {
+    ready: false,
+    active: "A1",
+    cells: {}, // ref -> { raw: string }
+  };
+
+  const excelUi = {
+    x: null,
+    y: null,
+    dock: null,
+    dragging: false,
+    grabX: 0,
+    grabY: 0,
+  };
+
+  function excelFormatNumber(n) {
+    if (!isFinite(n)) return "#VALUE!";
+    const rounded = Math.round(n * 1e10) / 1e10;
+    let s = String(rounded);
+    if (s.indexOf("e") >= 0) s = rounded.toPrecision(10);
+    if (s.length > 14) s = String(Number(rounded.toPrecision(12)));
+    return s;
+  }
+
+  function excelParseRef(ref) {
+    const m = String(ref || "")
+      .toUpperCase()
+      .match(/^([A-Z]+)(\d+)$/);
+    if (!m) return null;
+    return { col: m[1], row: parseInt(m[2], 10) };
+  }
+
+  function excelColIndex(col) {
+    return EXCEL_COLS.indexOf(String(col || "").toUpperCase());
+  }
+
+  function excelExpandRange(a, b) {
+    const ra = excelParseRef(a);
+    const rb = excelParseRef(b);
+    if (!ra || !rb) return [];
+    const c0 = Math.min(excelColIndex(ra.col), excelColIndex(rb.col));
+    const c1 = Math.max(excelColIndex(ra.col), excelColIndex(rb.col));
+    const r0 = Math.min(ra.row, rb.row);
+    const r1 = Math.max(ra.row, rb.row);
+    if (c0 < 0 || c1 < 0) return [];
+    const out = [];
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        out.push(EXCEL_COLS[c] + r);
+      }
+    }
+    return out;
+  }
+
+  function excelRaw(ref) {
+    const cell = excelScratch.cells[String(ref || "").toUpperCase()];
+    return cell && cell.raw != null ? String(cell.raw) : "";
+  }
+
+  function excelSafeArith(expr) {
+    const cleaned = String(expr || "")
+      .replace(/\s+/g, "")
+      .replace(/−/g, "-")
+      .replace(/×/g, "*")
+      .replace(/÷/g, "/");
+    if (!cleaned || !/^[\d+\-*/().]+$/.test(cleaned)) return NaN;
+    try {
+      const n = Function('"use strict"; return (' + cleaned + ");")();
+      return typeof n === "number" ? n : NaN;
+    } catch (err) {
+      return NaN;
+    }
+  }
+
+  function excelEvalRef(ref, stack) {
+    const key = String(ref || "").toUpperCase();
+    if (!key) return 0;
+    if (stack.indexOf(key) >= 0) return NaN;
+    const raw = excelRaw(key).trim();
+    if (!raw) return 0;
+    if (raw.charAt(0) === "=") {
+      return excelEvalFormula(raw.slice(1), stack.concat([key]));
+    }
+    const n = parseFloat(raw.replace(/,/g, ""));
+    return isFinite(n) ? n : NaN;
+  }
+
+  function excelEvalArgs(argsStr, stack) {
+    const parts = [];
+    let cur = "";
+    let depth = 0;
+    for (let i = 0; i < argsStr.length; i++) {
+      const ch = argsStr.charAt(i);
+      if (ch === "(") depth++;
+      if (ch === ")") depth--;
+      if (ch === "," && depth === 0) {
+        parts.push(cur.trim());
+        cur = "";
+        continue;
+      }
+      cur += ch;
+    }
+    if (cur.trim()) parts.push(cur.trim());
+    const vals = [];
+    parts.forEach(function (part) {
+      const range = part.match(/^([A-Za-z]+\d+)\s*:\s*([A-Za-z]+\d+)$/);
+      if (range) {
+        excelExpandRange(range[1], range[2]).forEach(function (r) {
+          vals.push(excelEvalRef(r, stack));
+        });
+      } else if (/^[A-Za-z]+\d+$/.test(part)) {
+        vals.push(excelEvalRef(part, stack));
+      } else {
+        vals.push(excelEvalFormula(part, stack));
+      }
+    });
+    return vals;
+  }
+
+  function excelEvalFormula(expr, stack) {
+    let s = String(expr || "").trim();
+    if (!s) return 0;
+
+    const fn = s.match(
+      /^(SUM|AVERAGE|AVG|PRODUCT|MIN|MAX|ABS)\s*\((.*)\)\s*$/i
+    );
+    if (fn) {
+      const name = fn[1].toUpperCase();
+      const vals = excelEvalArgs(fn[2], stack).filter(function (n) {
+        return isFinite(n);
+      });
+      if (name === "SUM") {
+        return vals.reduce(function (a, b) {
+          return a + b;
+        }, 0);
+      }
+      if (name === "AVERAGE" || name === "AVG") {
+        return vals.length
+          ? vals.reduce(function (a, b) {
+              return a + b;
+            }, 0) / vals.length
+          : NaN;
+      }
+      if (name === "PRODUCT") {
+        return vals.reduce(function (a, b) {
+          return a * b;
+        }, 1);
+      }
+      if (name === "MIN") return vals.length ? Math.min.apply(null, vals) : NaN;
+      if (name === "MAX") return vals.length ? Math.max.apply(null, vals) : NaN;
+      if (name === "ABS") return vals.length ? Math.abs(vals[0]) : NaN;
+    }
+
+    s = s.replace(/\$([A-Za-z]+)\$?(\d+)/g, "$1$2");
+    s = s.replace(/([A-Za-z]+\d+)/g, function (m) {
+      const n = excelEvalRef(m, stack);
+      return isFinite(n) ? String(n) : "NaN";
+    });
+    if (/\bNaN\b/.test(s)) return NaN;
+    return excelSafeArith(s);
+  }
+
+  function excelDisplayFor(ref) {
+    const raw = excelRaw(ref).trim();
+    if (!raw) return "";
+    if (raw.charAt(0) === "=") {
+      const n = excelEvalFormula(raw.slice(1), [String(ref).toUpperCase()]);
+      return excelFormatNumber(n);
+    }
+    return raw;
+  }
+
+  function excelCellEl(ref) {
+    if (!els.excelGrid) return null;
+    return els.excelGrid.querySelector('[data-cell="' + ref + '"]');
+  }
+
+  function excelRefreshDisplays() {
+    EXCEL_COLS.forEach(function (col) {
+      for (let r = 1; r <= EXCEL_ROWS; r++) {
+        const ref = col + r;
+        const td = excelCellEl(ref);
+        if (!td) continue;
+        td.textContent = excelDisplayFor(ref);
+        td.classList.toggle("excel-cell--active", ref === excelScratch.active);
+        td.classList.toggle("excel-cell--has-value", !!excelRaw(ref));
+      }
+    });
+  }
+
+  function excelSelectCell(ref, focusFormula) {
+    const parsed = excelParseRef(ref);
+    if (!parsed || excelColIndex(parsed.col) < 0) return;
+    if (parsed.row < 1 || parsed.row > EXCEL_ROWS) return;
+    excelScratch.active = parsed.col + parsed.row;
+    if (els.excelNameBox) els.excelNameBox.textContent = excelScratch.active;
+    if (els.excelFormula) {
+      els.excelFormula.value = excelRaw(excelScratch.active);
+      if (focusFormula !== false) els.excelFormula.focus();
+    }
+    if (els.excelTip) {
+      els.excelTip.textContent = excelTipForInput(
+        els.excelFormula ? els.excelFormula.value : "",
+        t("excel_formula_tip_default")
+      );
+    }
+    excelRefreshDisplays();
+  }
+
+  function excelCommitActive() {
+    if (!els.excelFormula) return;
+    const ref = excelScratch.active;
+    const raw = els.excelFormula.value;
+    if (!String(raw).trim()) {
+      delete excelScratch.cells[ref];
+    } else {
+      excelScratch.cells[ref] = { raw: String(raw) };
+    }
+    excelRefreshDisplays();
+    if (els.excelTip) {
+      els.excelTip.textContent = excelTipForInput(
+        raw,
+        t("excel_formula_tip_default")
+      );
+    }
+  }
+
+  function excelMoveActive(dCol, dRow) {
+    const parsed = excelParseRef(excelScratch.active);
+    if (!parsed) return;
+    const ci = excelColIndex(parsed.col) + dCol;
+    const ri = parsed.row + dRow;
+    if (ci < 0 || ci >= EXCEL_COLS.length) return;
+    if (ri < 1 || ri > EXCEL_ROWS) return;
+    excelCommitActive();
+    excelSelectCell(EXCEL_COLS[ci] + ri, true);
+  }
+
+  function buildExcelScratchGrid() {
+    if (!els.excelGrid || excelScratch.ready) return;
+    els.excelGrid.innerHTML = "";
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    const corner = document.createElement("th");
+    corner.className = "excel-corner";
+    headRow.appendChild(corner);
+    EXCEL_COLS.forEach(function (col) {
+      const th = document.createElement("th");
+      th.textContent = col;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    els.excelGrid.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    for (let r = 1; r <= EXCEL_ROWS; r++) {
+      const tr = document.createElement("tr");
+      const rowHead = document.createElement("th");
+      rowHead.className = "excel-row-head";
+      rowHead.textContent = String(r);
+      tr.appendChild(rowHead);
+      EXCEL_COLS.forEach(function (col) {
+        const td = document.createElement("td");
+        const ref = col + r;
+        td.className = "excel-cell";
+        td.dataset.cell = ref;
+        td.tabIndex = -1;
+        td.addEventListener("mousedown", function (e) {
+          e.preventDefault();
+          excelCommitActive();
+          excelSelectCell(ref, true);
+        });
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+    els.excelGrid.appendChild(tbody);
+    excelScratch.ready = true;
+    excelSelectCell("A1", false);
+  }
+
+  function excelPanelSize() {
+    const el = els.excelModal;
+    if (!el) return { w: 420, h: 420 };
+    return {
+      w: el.offsetWidth || 420,
+      h: el.offsetHeight || 420,
+    };
+  }
+
+  function defaultExcelPosition() {
+    const { w, h } = excelPanelSize();
+    excelUi.x = 16;
+    excelUi.y = Math.max(12, Math.min(100, window.innerHeight - h - 16));
+    excelUi.dock = null;
+  }
+
+  function applyExcelPosition() {
+    const el = els.excelModal;
+    if (!el || el.hidden) return;
+    const { w, h } = excelPanelSize();
+    const maxX = Math.max(0, window.innerWidth - w);
+    const maxY = Math.max(0, window.innerHeight - h);
+
+    if (excelUi.x == null || excelUi.y == null) defaultExcelPosition();
+
+    if (excelUi.dock === "left") {
+      excelUi.x = 0;
+    } else if (excelUi.dock === "right") {
+      excelUi.x = maxX;
+    } else {
+      excelUi.x = Math.min(maxX, Math.max(0, excelUi.x));
+    }
+    excelUi.y = Math.min(maxY, Math.max(0, excelUi.y));
+
+    el.classList.toggle("is-docked-left", excelUi.dock === "left");
+    el.classList.toggle("is-docked-right", excelUi.dock === "right");
+    el.style.left = excelUi.x + "px";
+    el.style.top = excelUi.y + "px";
+    el.style.right = "auto";
+    el.style.bottom = "auto";
+  }
+
+  function snapExcelDock() {
+    const { w } = excelPanelSize();
+    const maxX = Math.max(0, window.innerWidth - w);
+    if (excelUi.x <= EXCEL_SNAP) {
+      excelUi.dock = "left";
+      excelUi.x = 0;
+    } else if (excelUi.x >= maxX - EXCEL_SNAP) {
+      excelUi.dock = "right";
+      excelUi.x = maxX;
+    } else {
+      excelUi.dock = null;
+    }
+  }
+
+  function openExcelModal() {
+    if (!els.excelModal) return;
+    buildExcelScratchGrid();
+    els.excelModal.hidden = false;
+    els.excelModal.style.zIndex = "91";
+    if (els.calcModal && !els.calcModal.hidden) {
+      els.calcModal.style.zIndex = "90";
+    }
+    if (excelUi.x == null || excelUi.y == null) defaultExcelPosition();
+    applyExcelPosition();
+    excelSelectCell(excelScratch.active || "A1", true);
+  }
+
+  function closeExcelModal() {
+    if (!els.excelModal) return;
+    excelCommitActive();
+    els.excelModal.hidden = true;
+    els.excelModal.classList.remove("is-dragging");
+    excelUi.dragging = false;
+  }
+
+  if (els.excelOpen) {
+    els.excelOpen.addEventListener("click", openExcelModal);
+  }
+  if (els.excelClose) {
+    els.excelClose.addEventListener("click", closeExcelModal);
+  }
+  if (els.excelFormula) {
+    els.excelFormula.addEventListener("input", function () {
+      if (els.excelTip) {
+        els.excelTip.textContent = excelTipForInput(
+          els.excelFormula.value,
+          t("excel_formula_tip_default")
+        );
+      }
+      const ref = excelScratch.active;
+      const raw = els.excelFormula.value;
+      if (!String(raw).trim()) delete excelScratch.cells[ref];
+      else excelScratch.cells[ref] = { raw: String(raw) };
+      const td = excelCellEl(ref);
+      if (td) {
+        td.textContent =
+          raw.charAt(0) === "=" ? raw : excelDisplayFor(ref) || raw;
+        td.classList.add("excel-cell--active");
+      }
+    });
+    els.excelFormula.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        excelCommitActive();
+        excelMoveActive(0, 1);
+      } else if (e.key === "Tab") {
+        e.preventDefault();
+        excelCommitActive();
+        excelMoveActive(e.shiftKey ? -1 : 1, 0);
+      } else if (e.key === "ArrowDown" && !e.altKey) {
+        e.preventDefault();
+        excelCommitActive();
+        excelMoveActive(0, 1);
+      } else if (e.key === "ArrowUp" && !e.altKey) {
+        e.preventDefault();
+        excelCommitActive();
+        excelMoveActive(0, -1);
+      }
+    });
+    els.excelFormula.addEventListener("blur", function () {
+      excelCommitActive();
+    });
+  }
+
+  const excelHandle = document.getElementById("excel-drag-handle");
+  if (excelHandle && els.excelModal) {
+    excelHandle.addEventListener("pointerdown", (e) => {
+      if (e.button != null && e.button !== 0) return;
+      if (e.target.closest && e.target.closest("button")) return;
+      const rect = els.excelModal.getBoundingClientRect();
+      excelUi.dragging = true;
+      excelUi.dock = null;
+      excelUi.grabX = e.clientX - rect.left;
+      excelUi.grabY = e.clientY - rect.top;
+      els.excelModal.classList.add("is-dragging");
+      els.excelModal.style.zIndex = "91";
+      excelHandle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    excelHandle.addEventListener("pointermove", (e) => {
+      if (!excelUi.dragging) return;
+      excelUi.x = e.clientX - excelUi.grabX;
+      excelUi.y = e.clientY - excelUi.grabY;
+      applyExcelPosition();
+    });
+    function endExcelDrag(e) {
+      if (!excelUi.dragging) return;
+      excelUi.dragging = false;
+      els.excelModal.classList.remove("is-dragging");
+      try {
+        excelHandle.releasePointerCapture(e.pointerId);
+      } catch (err) {
+        /* ignore */
+      }
+      snapExcelDock();
+      applyExcelPosition();
+    }
+    excelHandle.addEventListener("pointerup", endExcelDrag);
+    excelHandle.addEventListener("pointercancel", endExcelDrag);
   }
 
   function applyAssessmentBranding() {
