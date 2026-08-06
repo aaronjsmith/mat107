@@ -3375,6 +3375,49 @@
     }
   }
 
+  /** Excel postfix %: 7.8% → 0.078, (10+5)% → 0.15 */
+  function excelExpandPercents(expr) {
+    let s = String(expr || "").replace(/\s+/g, "");
+    let guard = 0;
+    while (s.indexOf("%") >= 0 && guard++ < 40) {
+      const withNums = s.replace(/(\d+(?:\.\d+)?)%/g, "($1/100)");
+      if (withNums !== s) {
+        s = withNums;
+        continue;
+      }
+      const idx = s.indexOf(")%");
+      if (idx < 0) return null;
+      let depth = 0;
+      let start = -1;
+      for (let i = idx; i >= 0; i--) {
+        const ch = s.charAt(i);
+        if (ch === ")") depth++;
+        else if (ch === "(") {
+          depth--;
+          if (depth === 0) {
+            start = i;
+            break;
+          }
+        }
+      }
+      if (start < 0) return null;
+      const group = s.slice(start, idx + 1);
+      s = s.slice(0, start) + "(" + group + "/100)" + s.slice(idx + 2);
+    }
+    return s;
+  }
+
+  function excelParseNumberLiteral(raw) {
+    let s = String(raw == null ? "" : raw)
+      .trim()
+      .replace(/,/g, "");
+    const pct = /%\s*$/.test(s);
+    if (pct) s = s.replace(/%\s*$/, "");
+    const n = parseFloat(s);
+    if (!isFinite(n)) return NaN;
+    return pct ? n / 100 : n;
+  }
+
   function excelMatchCall(s, start) {
     const open = s.indexOf("(", start);
     if (open < 0) return null;
@@ -3429,7 +3472,7 @@
     if (raw.charAt(0) === "=") {
       return excelEvalFormula(raw.slice(1), stack.concat([key]));
     }
-    const n = parseFloat(raw.replace(/,/g, ""));
+    const n = excelParseNumberLiteral(raw);
     return isFinite(n) ? n : NaN;
   }
 
@@ -3499,6 +3542,9 @@
       return isFinite(n) ? String(n) : "NaN";
     });
     if (/\bNaN\b/.test(s)) return NaN;
+
+    s = excelExpandPercents(s);
+    if (s == null || /\bNaN\b/.test(s)) return NaN;
     return excelSafeArith(s);
   }
 
