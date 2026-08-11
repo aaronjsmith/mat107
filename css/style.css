@@ -1441,7 +1441,8 @@ a.linkish {
 }
 
 .excel-grid {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 0.9rem;
@@ -1464,8 +1465,39 @@ a.linkish {
   width: 2.4rem;
 }
 
-.excel-grid thead th {
-  width: auto;
+.excel-col-head {
+  position: relative;
+  user-select: none;
+  overflow: visible;
+}
+
+.excel-col-label {
+  display: block;
+  pointer-events: none;
+}
+
+.excel-col-resize {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 7px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 2;
+}
+
+.excel-col-resize:hover,
+body.excel-col-resizing .excel-col-resize {
+  background: rgba(33, 115, 70, 0.35);
+}
+
+body.excel-col-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.excel-col-resizing * {
+  cursor: col-resize !important;
 }
 
 .excel-cell {
@@ -1830,7 +1862,7 @@ a.linkish {
 .excel-panel {
   position: fixed;
   z-index: 90;
-  width: min(calc(100vw - 1.5rem), 28rem);
+  width: min(calc(100vw - 1.5rem), 36rem);
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -1886,7 +1918,7 @@ a.linkish {
 
 @media (max-width: 640px) {
   .excel-panel {
-    width: min(calc(100vw - 1rem), 28rem);
+    width: min(calc(100vw - 1rem), 36rem);
   }
 }
 

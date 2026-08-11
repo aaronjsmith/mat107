@@ -3305,6 +3305,7 @@
     ready: false,
     active: "A1",
     cells: {}, // ref -> { raw: string }
+    colWidths: { A: 88, B: 88, C: 88, D: 88 },
   };
 
   const excelUi = {
@@ -3314,6 +3315,9 @@
     dragging: false,
     grabX: 0,
     grabY: 0,
+    resizingCol: null,
+    resizeStartX: 0,
+    resizeStartW: 0,
   };
 
   function excelFormatNumber(n) {
@@ -3558,6 +3562,119 @@
     return raw;
   }
 
+  function excelApplyColWidths() {
+    if (!els.excelGrid) return;
+    EXCEL_COLS.forEach(function (col) {
+      const w = excelScratch.colWidths[col] || 88;
+      els.excelGrid.querySelectorAll('[data-excel-col="' + col + '"]').forEach(
+        function (el) {
+          el.style.width = w + "px";
+          el.style.minWidth = w + "px";
+          el.style.maxWidth = w + "px";
+        }
+      );
+    });
+  }
+
+  function excelStartColResize(col, e) {
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    excelUi.resizingCol = col;
+    excelUi.resizeStartX = e.clientX;
+    excelUi.resizeStartW = excelScratch.colWidths[col] || 88;
+    document.body.classList.add("excel-col-resizing");
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  function excelMoveColResize(e) {
+    if (!excelUi.resizingCol) return;
+    const col = excelUi.resizingCol;
+    const next = Math.max(
+      48,
+      Math.min(280, excelUi.resizeStartW + (e.clientX - excelUi.resizeStartX))
+    );
+    excelScratch.colWidths[col] = next;
+    excelApplyColWidths();
+  }
+
+  function excelEndColResize(e) {
+    if (!excelUi.resizingCol) return;
+    excelUi.resizingCol = null;
+    document.body.classList.remove("excel-col-resizing");
+    if (e && e.currentTarget) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch (err) {
+        /* ignore */
+      }
+    }
+  }
+
+  function excelCopyActive(asRaw) {
+    const ref = excelScratch.active;
+    const raw = excelRaw(ref);
+    let text = "";
+    if (asRaw) text = raw;
+    else if (raw.charAt(0) === "=") text = excelDisplayFor(ref);
+    else text = raw;
+    if (text == null) text = "";
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(String(text)).catch(function () {
+        /* ignore */
+      });
+    }
+    return Promise.resolve();
+  }
+
+  function excelPasteText(text) {
+    const parsed = excelParseRef(excelScratch.active);
+    if (!parsed) return;
+    const startCi = excelColIndex(parsed.col);
+    const startRi = parsed.row;
+    const rows = String(text || "")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .split("\n");
+    // Drop a trailing empty line from spreadsheet exports
+    if (rows.length && rows[rows.length - 1] === "") rows.pop();
+    if (!rows.length) return;
+
+    let lastRef = excelScratch.active;
+    rows.forEach(function (line, rOff) {
+      const cols = line.split("\t");
+      cols.forEach(function (val, cOff) {
+        const ci = startCi + cOff;
+        const ri = startRi + rOff;
+        if (ci < 0 || ci >= EXCEL_COLS.length) return;
+        if (ri < 1 || ri > EXCEL_ROWS) return;
+        const ref = EXCEL_COLS[ci] + ri;
+        const trimmed = String(val);
+        if (!trimmed.trim()) delete excelScratch.cells[ref];
+        else excelScratch.cells[ref] = { raw: trimmed };
+        lastRef = ref;
+      });
+    });
+    excelSelectCell(lastRef, true);
+    if (els.excelFormula) els.excelFormula.value = excelRaw(lastRef);
+    excelRefreshDisplays();
+  }
+
+  function excelModalOpen() {
+    return Boolean(els.excelModal && !els.excelModal.hidden);
+  }
+
+  function excelFormulaHasSelection() {
+    if (!els.excelFormula) return false;
+    const el = els.excelFormula;
+    if (document.activeElement !== el) return false;
+    return el.selectionStart !== el.selectionEnd;
+  }
+
   function excelCellEl(ref) {
     if (!els.excelGrid) return null;
     return els.excelGrid.querySelector('[data-cell="' + ref + '"]');
@@ -3628,6 +3745,18 @@
     if (!els.excelGrid || excelScratch.ready) return;
     els.excelGrid.innerHTML = "";
 
+    const colgroup = document.createElement("colgroup");
+    const cornerCol = document.createElement("col");
+    cornerCol.className = "excel-corner-col";
+    cornerCol.style.width = "2.4rem";
+    colgroup.appendChild(cornerCol);
+    EXCEL_COLS.forEach(function (col) {
+      const c = document.createElement("col");
+      c.dataset.excelCol = col;
+      colgroup.appendChild(c);
+    });
+    els.excelGrid.appendChild(colgroup);
+
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
     const corner = document.createElement("th");
@@ -3635,7 +3764,26 @@
     headRow.appendChild(corner);
     EXCEL_COLS.forEach(function (col) {
       const th = document.createElement("th");
-      th.textContent = col;
+      th.className = "excel-col-head";
+      th.dataset.excelCol = col;
+      th.title = t("excel_resize_col_hint");
+
+      const label = document.createElement("span");
+      label.className = "excel-col-label";
+      label.textContent = col;
+      th.appendChild(label);
+
+      const handle = document.createElement("span");
+      handle.className = "excel-col-resize";
+      handle.setAttribute("aria-hidden", "true");
+      handle.addEventListener("pointerdown", function (e) {
+        excelStartColResize(col, e);
+      });
+      handle.addEventListener("pointermove", excelMoveColResize);
+      handle.addEventListener("pointerup", excelEndColResize);
+      handle.addEventListener("pointercancel", excelEndColResize);
+      th.appendChild(handle);
+
       headRow.appendChild(th);
     });
     thead.appendChild(headRow);
@@ -3653,6 +3801,7 @@
         const ref = col + r;
         td.className = "excel-cell";
         td.dataset.cell = ref;
+        td.dataset.excelCol = col;
         td.tabIndex = -1;
         td.addEventListener("mousedown", function (e) {
           e.preventDefault();
@@ -3665,6 +3814,7 @@
     }
     els.excelGrid.appendChild(tbody);
     excelScratch.ready = true;
+    excelApplyColWidths();
     excelSelectCell("A1", false);
   }
 
@@ -3793,6 +3943,66 @@
       excelCommitActive();
     });
   }
+
+  document.addEventListener("keydown", function (e) {
+    if (!excelModalOpen()) return;
+    const mod = e.ctrlKey || e.metaKey;
+    if (!mod) return;
+    const key = String(e.key || "").toLowerCase();
+    if (key === "c") {
+      if (excelFormulaHasSelection()) return;
+      e.preventDefault();
+      excelCopyActive(e.shiftKey);
+    } else if (key === "v") {
+      // Let the formula bar handle native paste when editing text with a caret;
+      // still intercept so multi-cell TSV paste works when nothing is selected.
+      if (excelFormulaHasSelection()) return;
+      if (
+        document.activeElement === els.excelFormula &&
+        els.excelFormula &&
+        els.excelFormula.value &&
+        els.excelFormula.selectionStart !== 0
+      ) {
+        // Mid-field paste: keep native single-value paste
+        return;
+      }
+      // Clipboard read requires paste event; mark for paste handler via flag.
+      // Fall through — the paste event will fire next for Ctrl+V.
+    }
+  });
+
+  document.addEventListener("copy", function (e) {
+    if (!excelModalOpen()) return;
+    if (excelFormulaHasSelection()) return;
+    const raw = excelRaw(excelScratch.active);
+    const text =
+      raw.charAt(0) === "=" ? excelDisplayFor(excelScratch.active) : raw;
+    if (e.clipboardData) {
+      e.clipboardData.setData("text/plain", String(text || ""));
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener("paste", function (e) {
+    if (!excelModalOpen()) return;
+    if (excelFormulaHasSelection()) return;
+    if (!e.clipboardData) return;
+    const text = e.clipboardData.getData("text/plain");
+    if (text == null || text === "") return;
+    // Multi-cell / TSV from Excel, or whole-cell replace when formula empty/selected-all
+    const multi = /\t|\n|\r/.test(text);
+    const formulaEl = els.excelFormula;
+    const wholeReplace =
+      !formulaEl ||
+      document.activeElement !== formulaEl ||
+      !formulaEl.value ||
+      (formulaEl.selectionStart === 0 &&
+        formulaEl.selectionEnd === formulaEl.value.length);
+    if (!multi && !wholeReplace) return;
+    e.preventDefault();
+    excelCommitActive();
+    excelPasteText(text);
+  });
 
   const excelHandle = document.getElementById("excel-drag-handle");
   if (excelHandle && els.excelModal) {
