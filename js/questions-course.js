@@ -91,12 +91,16 @@
     return "c-" + Math.random().toString(36).slice(2, 10);
   }
 
-  function calcHelp(ti, casio, tip) {
-    return { ti: ti || "", casio: casio || ti || "", tip: tip || "" };
+  function calcHelp(ti, casio, excel) {
+    return { ti: ti || "", casio: casio || ti || "", excel: excel || "" };
+  }
+
+  function excelSteps(formula) {
+    return t("calc_panel_excel", { steps: formula });
   }
 
   function CALC_GENERIC() {
-    return { ti: t("calc_generic_ti"), casio: t("calc_generic_casio") };
+    return { ti: t("calc_generic_ti"), casio: t("calc_generic_casio"), excel: t("calc_generic_excel") };
   }
 
   function shuffle(arr) {
@@ -752,7 +756,11 @@
         "A = " + P + "(1 + " + r + " · " + years + ")",
       ].join("\n"),
       "dollars",
-      calcHelp(P + " × (1 + " + r + " × " + years + ") =", P + " × (1 + " + r + " × " + years + ") =")
+      calcHelp(
+        P + " × (1 + " + r + " × " + years + ") =",
+        P + " × (1 + " + r + " × " + years + ") =",
+        excelSteps("=" + P + "*(1+" + num(r * 100, 2) + "%*" + years + ")")
+      )
     );
   }
 
@@ -780,7 +788,11 @@
         "A = " + P + "(1 + " + r + ")^" + years,
       ].join("\n"),
       "dollars",
-      calcHelp(P + " × (1 + " + r + ") ^ " + years + " =", P + " × (1 + " + r + ") ^ " + years + " =")
+      calcHelp(
+        P + " × (1 + " + r + ") ^ " + years + " =",
+        P + " × (1 + " + r + ") ^ " + years + " =",
+        excelSteps("=FV(" + num(r * 100, 2) + "%," + years + ",0,-" + P + ")")
+      )
     );
   }
 
@@ -1169,7 +1181,7 @@
       t("c.h.fv_compound"),
       "FV = P(1+r)^n",
       "dollars",
-      calcHelp(P + " × (1+" + r + ")^" + n + " =", P + " × (1+" + r + ")^" + n + " =")
+      calcHelp(P + " × (1+" + r + ")^" + n + " =", P + " × (1+" + r + ")^" + n + " =", excelSteps("=FV(" + num(r * 100, 2) + "%," + n + ",0,-" + P + ")"))
     );
   }
 
@@ -1189,7 +1201,8 @@
       "dollars",
       calcHelp(
         pmt + " × ((1+" + num(r / 12, 6) + ")^" + n + " − 1)/(" + num(r / 12, 6) + ") =",
-        pmt + " × ((1+" + num(r / 12, 6) + ")^" + n + " − 1)/(" + num(r / 12, 6) + ") ="
+        pmt + " × ((1+" + num(r / 12, 6) + ")^" + n + " − 1)/(" + num(r / 12, 6) + ") =",
+        excelSteps("=FV(" + num(r * 100, 2) + "%/12," + n + ",-" + pmt + ")")
       )
     );
   }
@@ -1349,7 +1362,10 @@
       "dollars",
       calcHelp(
         gross + "×(1−" + taxPct + "/100)×0.15 − " + existing + " =",
-        gross + "×(1−" + taxPct + "/100)×0.15 − " + existing + " ="
+        gross + "×(1−" + taxPct + "/100)×0.15 − " + existing + " =",
+        excelSteps(
+          "=" + gross + "*(1-" + taxPct + "/100)*0.15-" + existing
+        )
       )
     );
   }
@@ -1359,12 +1375,13 @@
     const k401 = choice([5, 6, 6.5, 8]);
     const fed = choice([10, 12, 15]);
     const ss = 6.2;
-    const med = 1.45;
+    const med = choice([1.4, 1.45]);
     const state = choice([0, 4, 5]);
     const contrib = num(gross * (k401 / 100), 2);
     const taxes = num(gross * ((fed + ss + med + state) / 100), 2);
     const takeHome = num(gross - contrib - taxes, 2);
-    const maxDebt = num(takeHome * 0.15, 2);
+    const maxDebt = num(takeHome * 0.2, 2);
+    const taxPctSum = fed + ss + med + state;
     return _multi(
       tVar("c.q.takehome_debt", {
         gross: gross,
@@ -1382,7 +1399,22 @@
       ],
       "fin_budget",
       t("c.h.takehome_debt"),
-      "401(k) and taxes are % of gross; take-home = gross − 401(k) − taxes; max consumer debt ≈ 15% of take-home"
+      "401(k) and taxes are % of gross; take-home = gross − 401(k) − taxes; max consumer debt ≈ 20% of take-home",
+      calcHelp(
+        "401(k)=" + gross + "×" + k401 + "%; taxes=" + gross + "×" + taxPctSum + "%; take-home=gross−401(k)−taxes; max=take-home×20%",
+        "401(k)=" + gross + "×" + k401 + "%; taxes=" + gross + "×" + taxPctSum + "%; take-home=gross−401(k)−taxes; max=take-home×20%",
+        excelSteps(
+          "401(k): =" +
+            gross +
+            "*" +
+            k401 +
+            "/100\nTaxes: =" +
+            gross +
+            "*" +
+            taxPctSum +
+            "/100\nTake-home: =gross−401(k)−taxes\nMax debt: =takehome*0.2"
+        )
+      )
     );
   }
 
@@ -1391,14 +1423,14 @@
       tVar("c.q.debt_guideline"),
       [
         t("c.c.debt_10"),
-        t("c.c.debt_15"),
-        t("c.c.debt_20"),
+        t("c.c.debt_15_20"),
+        t("c.c.debt_20_gross"),
         t("c.c.debt_28"),
       ],
-      t("c.c.debt_15"),
+      t("c.c.debt_15_20"),
       "fin_percent",
       t("c.h.debt_guideline"),
-      "Lending guideline: about 15% of take-home pay for consumer debt"
+      "Lending guideline: about 15–20% of take-home pay for consumer debt"
     );
   }
 
@@ -1422,7 +1454,16 @@
       "months",
       calcHelp(
         "n = log(1 + FV·i/PMT) / log(1+i), i=APR/12",
-        "n = log(1 + FV·i/PMT) / log(1+i), i=APR/12"
+        "n = log(1 + FV·i/PMT) / log(1+i), i=APR/12",
+        excelSteps(
+          "=ROUNDUP(NPER(" +
+            num(apr * 100, 2) +
+            "%/12,-" +
+            pmt +
+            ",0," +
+            goal +
+            "),0)"
+        )
       )
     );
   }
@@ -1455,7 +1496,22 @@
       ],
       "credit_loan",
       t("c.h.mortgage_credit"),
-      "Amount after down + loan fee = financed; PMT on financed; total paid = PMT×360; cost of credit = total − financed"
+      "Amount after down + loan fee = financed; PMT on financed; total paid = PMT×360; cost of credit = total − financed",
+      calcHelp(
+        "Financed=(price−down)×(1+fee%); PMT with r=APR/12, n=360; total=PMT×360; cost=total−financed",
+        "Financed=(price−down)×(1+fee%); PMT with r=APR/12, n=360; total=PMT×360; cost=total−financed",
+        excelSteps(
+          "Financed: =(" +
+            price +
+            "-" +
+            down +
+            ")*(1+" +
+            feePct +
+            "/100)\nPMT: =PMT(" +
+            num(apr * 100, 2) +
+            "%/12,360,-financed)\nTotal: =PMT*360\nCost: =total-financed"
+        )
+      )
     );
   }
 
@@ -1479,7 +1535,24 @@
       1,
       t("c.h.extra_pmt_months"),
       "Find the normal PMT, add the extra, then solve n = log(PMT/(PMT−P·r))/log(1+r) with r = APR/12",
-      "months"
+      "months",
+      calcHelp(
+        "Base PMT then n = log(PMT/(PMT−P·r))/log(1+r), r=APR/12",
+        "Base PMT then n = log(PMT/(PMT−P·r))/log(1+r), r=APR/12",
+        excelSteps(
+          "Base: =PMT(" +
+            num(apr * 100, 2) +
+            "%/12,360,-" +
+            principal +
+            ")\nMonths: =ROUND(NPER(" +
+            num(apr * 100, 2) +
+            "%/12,-(base+" +
+            extra +
+            ")," +
+            principal +
+            "),0)"
+        )
+      )
     );
   }
 
@@ -1500,7 +1573,13 @@
       t("c.h.car_loan_pmt"),
       "Monthly rate = APR/12; n = years×12; use the amortizing loan payment formula",
       "dollars",
-      calcHelp("PMT = P·r(1+r)^n / ((1+r)^n − 1)", "PMT = P·r(1+r)^n / ((1+r)^n − 1)")
+      calcHelp(
+        "PMT = P·r(1+r)^n / ((1+r)^n − 1)",
+        "PMT = P·r(1+r)^n / ((1+r)^n − 1)",
+        excelSteps(
+          "=PMT(" + num(apr * 100, 2) + "%/12," + years + "*12,-" + principal + ")"
+        )
+      )
     );
   }
 
@@ -1531,7 +1610,30 @@
       "dollars",
       calcHelp(
         P + "×(1+" + apr + "/" + freq.m + ")^(" + years + "×" + freq.m + ") =",
-        P + "×(1+" + apr + "/" + freq.m + ")^(" + years + "×" + freq.m + ") ="
+        P + "×(1+" + apr + "/" + freq.m + ")^(" + years + "×" + freq.m + ") =",
+        excelSteps(
+          "=FV(" +
+            num(apr * 100, 2) +
+            "%/" +
+            freq.m +
+            "," +
+            years +
+            "*" +
+            freq.m +
+            ",0,-" +
+            P +
+            ")\nor =" +
+            P +
+            "*(1+" +
+            num(apr * 100, 2) +
+            "%/" +
+            freq.m +
+            ")^(" +
+            years +
+            "*" +
+            freq.m +
+            ")"
+        )
       )
     );
   }
@@ -1561,7 +1663,24 @@
       1,
       t("c.h.present_value"),
       "PV = FV / (1 + r/m)^(m·t)",
-      "dollars"
+      "dollars",
+      calcHelp(
+        "PV = " + fv + " / (1+" + apr + "/" + m + ")^(" + years + "×" + m + ") =",
+        "PV = " + fv + " / (1+" + apr + "/" + m + ")^(" + years + "×" + m + ") =",
+        excelSteps(
+          "=PV(" +
+            num(apr * 100, 2) +
+            "%/" +
+            m +
+            "," +
+            years +
+            "*" +
+            m +
+            ",0,-" +
+            fv +
+            ")"
+        )
+      )
     );
   }
 
@@ -1625,7 +1744,8 @@
       "%",
       calcHelp(
         "(" + face + "×" + couponPct + "/100) ÷ " + price + " × 100 =",
-        "(" + face + "×" + couponPct + "/100) ÷ " + price + " × 100 ="
+        "(" + face + "×" + couponPct + "/100) ÷ " + price + " × 100 =",
+        excelSteps("=(" + face + "*" + couponPct + "/100)/" + price + "*100")
       )
     );
   }
@@ -1683,20 +1803,20 @@
       "dollars",
       calcHelp(
         coinsure + "% × (" + claim1 + " + " + claim2 + ") =",
-        coinsure + "% × (" + claim1 + " + " + claim2 + ") ="
+        coinsure + "% × (" + claim1 + " + " + claim2 + ") =",
+        excelSteps("=ROUND((" + claim1 + "+" + claim2 + ")*" + coinsure + "/100,0)")
       )
     );
   }
 
   function genDinkNeed() {
-    const income = choice([120000, 150000, 180000, 200000]);
     const yourPct = choice([60, 70, 80]);
     const funeral = choice([7000, 8000, 9000, 10000]);
     const debts = choice([50000, 75000, 90000]);
-    const need = num(funeral + debts + income * (yourPct / 100), 2);
+    const need = num(funeral + debts * (yourPct / 100), 2);
     return _numeric(
       tVar("c.q.dink_need", {
-        income: income,
+        income: choice([120000, 150000, 180000, 200000]),
         yourPct: yourPct,
         spousePct: 100 - yourPct,
         funeral: funeral,
@@ -1706,11 +1826,12 @@
       "ins_expected",
       1,
       t("c.h.dink_need"),
-      "DINK (no children): your funeral + debts + one year of your income share",
+      "DINK (no children): your share of the debts + your funeral expense",
       "dollars",
       calcHelp(
-        funeral + " + " + debts + " + " + income + "×" + yourPct + "/100 =",
-        funeral + " + " + debts + " + " + income + "×" + yourPct + "/100 ="
+        funeral + " + " + debts + "×" + yourPct + "/100 =",
+        funeral + " + " + debts + "×" + yourPct + "/100 =",
+        excelSteps("=" + funeral + "+" + debts + "*" + yourPct + "/100")
       )
     );
   }
@@ -1802,7 +1923,7 @@
       t("c.c.six_keys_ans"),
       "fin_budget",
       t("c.h.six_keys"),
-      "Common study-guide keys center on pay yourself first, avoid consumer debt, and long-term investing"
+      "Study-guide keys: pay the Lord first, pay yourself second, spend less than you earn, save/invest the difference, collect interest, and develop discipline"
     );
   }
 
@@ -1810,15 +1931,122 @@
     return _choice(
       tVar("c.q.retire_rule"),
       [
-        t("c.c.retire_70_80"),
+        t("c.c.retire_75"),
         t("c.c.retire_50"),
         t("c.c.retire_100"),
         t("c.c.retire_25"),
       ],
-      t("c.c.retire_70_80"),
+      t("c.c.retire_75"),
       "save_annuity",
       t("c.h.retire_rule"),
-      "Rule of thumb: plan on about 70–80% of pre-retirement income"
+      "Study-guide rule of thumb: about 75% of monthly gross income after retirement"
+    );
+  }
+
+  function genConsumerDebtTypesMC() {
+    return _choice(
+      tVar("c.q.consumer_debt_types"),
+      [
+        t("c.c.consumer_debt_ans"),
+        t("c.c.consumer_debt_wrong_mortgage"),
+        t("c.c.consumer_debt_wrong_rent"),
+        t("c.c.consumer_debt_wrong_tuition"),
+      ],
+      t("c.c.consumer_debt_ans"),
+      "fin_percent",
+      t("c.h.consumer_debt_types"),
+      "Consumer debt includes auto loans and store/credit-card debt — not mortgages, tuition, insurance, or rent"
+    );
+  }
+
+  function genTakeHomeDeductionsMC() {
+    return _choice(
+      tVar("c.q.takehome_deductions"),
+      [
+        t("c.c.takehome_ded_ans"),
+        t("c.c.takehome_ded_wrong_rent"),
+        t("c.c.takehome_ded_wrong_grocery"),
+        t("c.c.takehome_ded_wrong_none"),
+      ],
+      t("c.c.takehome_ded_ans"),
+      "fin_budget",
+      t("c.h.takehome_deductions"),
+      "Taxes, Medicare/Social Security, 401(k), and other payroll deductions reduce gross to take-home"
+    );
+  }
+
+  function genCostOfCreditStepsMC() {
+    return _choice(
+      tVar("c.q.cost_credit_steps"),
+      [
+        t("c.c.cost_credit_ans"),
+        t("c.c.cost_credit_wrong_flip"),
+        t("c.c.cost_credit_wrong_skip"),
+        t("c.c.cost_credit_wrong_interest_only"),
+      ],
+      t("c.c.cost_credit_ans"),
+      "credit_loan",
+      t("c.h.cost_credit_steps"),
+      "Borrow amount → add fees → payment → total paid back → cost = total paid − amount financed"
+    );
+  }
+
+  function genLifelongPrinciplesMC() {
+    return _choice(
+      tVar("c.q.lifelong_principles"),
+      [
+        t("c.c.lifelong_ans"),
+        t("c.c.lifelong_wrong_credit"),
+        t("c.c.lifelong_wrong_ignore"),
+        t("c.c.lifelong_wrong_lottery"),
+      ],
+      t("c.c.lifelong_ans"),
+      "fin_budget",
+      t("c.h.lifelong_principles"),
+      "Set goals, budget, track net worth, and keep financial records"
+    );
+  }
+
+  function genCreditProsConsMC() {
+    return _choice(
+      tVar("c.q.credit_pros_cons"),
+      [
+        t("c.c.credit_pros_cons_ans"),
+        t("c.c.credit_pros_cons_wrong_free"),
+        t("c.c.credit_pros_cons_wrong_only_bad"),
+        t("c.c.credit_pros_cons_wrong_assets"),
+      ],
+      t("c.c.credit_pros_cons_ans"),
+      "credit_apr",
+      t("c.h.credit_pros_cons"),
+      "Credit can buy now / float purchases, but interest and obligation reduce self-reliance"
+    );
+  }
+
+  function genPrimaryAlternateInvestMC() {
+    return _choice(
+      tVar("c.q.primary_alt_invest"),
+      [
+        t("c.c.primary_alt_ans"),
+        t("c.c.primary_alt_wrong_swap"),
+        t("c.c.primary_alt_wrong_only_bank"),
+        t("c.c.primary_alt_wrong_all_same"),
+      ],
+      t("c.c.primary_alt_ans"),
+      "save_compound",
+      t("c.h.primary_alt_invest"),
+      "Primary: bank, stocks, bonds, mutual funds; alternate: collectibles, metals, real estate, etc."
+    );
+  }
+
+  function genFinanciallySecureTF() {
+    return _choice(
+      tVar("c.q.financially_secure"),
+      [t("c.c.true"), t("c.c.false")],
+      t("c.c.true"),
+      "fin_budget",
+      t("c.h.financially_secure"),
+      "Financial security comes from putting money to work and becoming financially self-reliant"
     );
   }
 
@@ -1883,6 +2111,13 @@
     genBondCharacteristicsMC,
     genSixKeysMC,
     genRetirementRuleMC,
+    genConsumerDebtTypesMC,
+    genTakeHomeDeductionsMC,
+    genCostOfCreditStepsMC,
+    genLifelongPrinciplesMC,
+    genCreditProsConsMC,
+    genPrimaryAlternateInvestMC,
+    genFinanciallySecureTF,
   ];
 
   const topicCache = {};
@@ -2040,9 +2275,11 @@
     if (!calc && hint2) calc = CALC_GENERIC();
     let hint3ti = "";
     let hint3casio = "";
+    let hint3excel = "";
     if (calc && typeof calc === "object") {
       hint3ti = calc.ti || "";
       hint3casio = calc.casio || "";
+      hint3excel = calc.excel || "";
     }
     const overviewKey = "hint_overview." + (q.topic || "");
     const overview = i18nHas(overviewKey) ? t(overviewKey) : t("hint_overview.generic");
@@ -2068,10 +2305,11 @@
       hint2: hint2,
       hint3_ti: hint3ti,
       hint3_casio: hint3casio,
+      hint3_excel: hint3excel,
       clarify: clarify,
       has_hint1: Boolean(hint1),
       has_hint2: Boolean(hint2),
-      has_hint3: Boolean(hint3ti || hint3casio),
+      has_hint3: Boolean(hint3ti || hint3casio || hint3excel),
       has_clarify: Boolean(clarify),
       unit: q.unit || "",
     };

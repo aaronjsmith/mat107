@@ -90,13 +90,13 @@
     return "fn-" + Math.random().toString(36).slice(2, 10);
   }
 
-  function calcHelp(ti, casio, tip) {
-    const out = { ti: ti || "", casio: casio || ti || "", tip: tip || "" };
+  function calcHelp(ti, casio, excel) {
+    const out = { ti: ti || "", casio: casio || ti || "", excel: excel || "", tip: "" };
     return out;
   }
 
   function CALC_GENERIC() {
-    return { ti: t("calc_generic_ti"), casio: t("calc_generic_casio") };
+    return { ti: t("calc_generic_ti"), casio: t("calc_generic_casio"), excel: t("calc_generic_excel") };
   }
 
   function _choice(prompt, choices, answer, topic, hint, setup, calc) {
@@ -958,9 +958,11 @@
     if (!calc && hint2) calc = CALC_GENERIC();
     let hint3ti = "";
     let hint3casio = "";
+    let hint3excel = "";
     if (calc && typeof calc === "object") {
       hint3ti = calc.ti || "";
       hint3casio = calc.casio || "";
+      hint3excel = calc.excel || "";
     }
     const overviewKey = "hint_overview." + (q.topic || "");
     const overview = i18nHas(overviewKey) ? t(overviewKey) : t("hint_overview.generic");
@@ -986,10 +988,11 @@
       hint2: hint2,
       hint3_ti: hint3ti,
       hint3_casio: hint3casio,
+      hint3_excel: hint3excel,
       clarify: clarify,
       has_hint1: Boolean(hint1),
       has_hint2: Boolean(hint2),
-      has_hint3: Boolean(hint3ti || hint3casio),
+      has_hint3: Boolean(hint3ti || hint3casio || hint3excel),
       has_clarify: Boolean(clarify),
       unit: q.unit || "",
     };

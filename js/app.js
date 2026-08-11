@@ -120,10 +120,12 @@
     hint2: document.getElementById("q-hint2"),
     hint3ti: document.getElementById("q-hint3-ti"),
     hint3casio: document.getElementById("q-hint3-casio"),
+    hint3excel: document.getElementById("q-hint3-excel"),
     hint1Btn: document.getElementById("btn-hint1"),
     hint2Btn: document.getElementById("btn-hint2"),
     hint3tiBtn: document.getElementById("btn-hint3-ti"),
     hint3casioBtn: document.getElementById("btn-hint3-casio"),
+    hint3excelBtn: document.getElementById("btn-hint3-excel"),
     figure: document.getElementById("q-figure"),
     choices: document.getElementById("q-choices"),
     form: document.getElementById("q-form"),
@@ -1121,11 +1123,13 @@
     els.hint2Btn.hidden = true;
     els.hint3tiBtn.hidden = true;
     els.hint3casioBtn.hidden = true;
+    if (els.hint3excelBtn) els.hint3excelBtn.hidden = true;
   }
 
   function showCalcButtons(openStyle) {
     const hasTi = Boolean(els.hint3ti.textContent);
     const hasCasio = Boolean(els.hint3casio.textContent);
+    const hasExcel = Boolean(els.hint3excel && els.hint3excel.textContent);
     if (hasTi) {
       els.hint3tiBtn.hidden = false;
       const opened = !els.hint3ti.hidden;
@@ -1149,6 +1153,20 @@
           : t("btn_hint3_casio");
     } else {
       els.hint3casioBtn.hidden = true;
+    }
+    if (els.hint3excelBtn) {
+      if (hasExcel) {
+        els.hint3excelBtn.hidden = false;
+        const opened = !els.hint3excel.hidden;
+        els.hint3excelBtn.disabled = opened;
+        els.hint3excelBtn.textContent = opened
+          ? t("btn_hint3_excel_used")
+          : openStyle
+            ? t("btn_hint3_excel_open")
+            : t("btn_hint3_excel");
+      } else {
+        els.hint3excelBtn.hidden = true;
+      }
     }
   }
 
@@ -1187,18 +1205,22 @@
     els.hint2.hidden = true;
     els.hint3ti.hidden = true;
     els.hint3casio.hidden = true;
+    if (els.hint3excel) els.hint3excel.hidden = true;
     setMathText(els.hint1, "");
     setMathText(els.hint2, "");
     setMathText(els.hint3ti, "");
     setMathText(els.hint3casio, "");
+    if (els.hint3excel) setMathText(els.hint3excel, "");
     els.hint1Btn.disabled = false;
     els.hint2Btn.disabled = false;
     els.hint3tiBtn.disabled = false;
     els.hint3casioBtn.disabled = false;
+    if (els.hint3excelBtn) els.hint3excelBtn.disabled = false;
     els.hint1Btn.textContent = t("btn_hint1");
     els.hint2Btn.textContent = t("btn_hint2");
     els.hint3tiBtn.textContent = t("btn_hint3_ti");
     els.hint3casioBtn.textContent = t("btn_hint3_casio");
+    if (els.hint3excelBtn) els.hint3excelBtn.textContent = t("btn_hint3_excel");
     hideHintControls();
     els.choices.hidden = true;
     els.choices.innerHTML = "";
@@ -1771,6 +1793,7 @@
     else {
       els.hint3tiBtn.hidden = true;
       els.hint3casioBtn.hidden = true;
+      if (els.hint3excelBtn) els.hint3excelBtn.hidden = true;
     }
     if (els.clarifyBtn) els.clarifyBtn.hidden = true;
 
@@ -1948,6 +1971,7 @@
     setMathText(els.hint2, pub.hint2 || "", true);
     setMathText(els.hint3ti, pub.hint3_ti || "", true, "ti");
     setMathText(els.hint3casio, pub.hint3_casio || "", true, "casio");
+    if (els.hint3excel) setMathText(els.hint3excel, pub.hint3_excel || "", true, "excel");
     if (pub.has_hint1 && state.mode !== "finalboss" && state.mode !== "teachme") {
       els.hint1Btn.hidden = false;
     } else if (pub.has_hint2 && state.mode !== "finalboss" && state.mode !== "teachme") {
@@ -2096,6 +2120,7 @@
     els.hint2.hidden = true;
     els.hint3ti.hidden = true;
     els.hint3casio.hidden = true;
+    if (els.hint3excel) els.hint3excel.hidden = true;
     els.hint1Btn.hidden = true;
     // Teach Me: keep both approach + setup open; calc stays opt-in.
     if (state.mode === "teachme") {
@@ -2108,6 +2133,7 @@
       else {
         els.hint3tiBtn.hidden = true;
         els.hint3casioBtn.hidden = true;
+        if (els.hint3excelBtn) els.hint3excelBtn.hidden = true;
       }
       if (els.clarifyBtn) els.clarifyBtn.hidden = true;
       return;
@@ -2501,20 +2527,32 @@
   }
 
   function openCalcPanel(kind) {
-    const panel = kind === "ti" ? els.hint3ti : els.hint3casio;
-    const btn = kind === "ti" ? els.hint3tiBtn : els.hint3casioBtn;
-    if (!panel.textContent || !panel.hidden) return;
+    const panel =
+      kind === "ti" ? els.hint3ti : kind === "excel" ? els.hint3excel : els.hint3casio;
+    const btn =
+      kind === "ti"
+        ? els.hint3tiBtn
+        : kind === "excel"
+          ? els.hint3excelBtn
+          : els.hint3casioBtn;
+    if (!panel || !btn || !panel.textContent || !panel.hidden) return;
     panel.hidden = false;
-    if (!state.answered) {
-      state.hintsUsed = Math.max(state.hintsUsed, 3);
-    }
-    btn.textContent =
-      kind === "ti" ? t("btn_hint3_ti_used") : t("btn_hint3_casio_used");
+    state.hintsUsed = Math.max(state.hintsUsed, 3);
     btn.disabled = true;
+    btn.textContent =
+      kind === "ti"
+        ? t("btn_hint3_ti_used")
+        : kind === "excel"
+          ? t("btn_hint3_excel_used")
+          : t("btn_hint3_casio_used");
+    if (els.clarifyBtn && state.publicQ?.has_clarify) els.clarifyBtn.hidden = false;
   }
 
   els.hint3tiBtn.addEventListener("click", () => openCalcPanel("ti"));
   els.hint3casioBtn.addEventListener("click", () => openCalcPanel("casio"));
+  if (els.hint3excelBtn) {
+    els.hint3excelBtn.addEventListener("click", () => openCalcPanel("excel"));
+  }
 
   if (els.remix) {
     els.remix.addEventListener("click", () => {
@@ -4091,6 +4129,16 @@
       }
     }
     if (notecardNote) notecardNote.hidden = !features.notecard;
+    const reviewLink = document.getElementById("review-link");
+    if (reviewLink) {
+      const reviewHref = features.reviewHref;
+      if (reviewHref) {
+        reviewLink.hidden = false;
+        reviewLink.setAttribute("href", reviewHref);
+      } else {
+        reviewLink.hidden = true;
+      }
+    }
     if (els.finalBossBtn) els.finalBossBtn.hidden = features.boss === false;
   }
 

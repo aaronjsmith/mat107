@@ -2489,7 +2489,21 @@ body.excel-col-resizing * {
   cursor: pointer;
 }
 
-.week-group-head--overview .week-group-notecard {
+.week-group-extras {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  margin-left: 1.1rem;
+  align-self: flex-start;
+}
+
+.week-group-extras .week-group-notecard {
+  margin-left: 0;
+}
+
+.week-group-head--overview .week-group-notecard,
+.week-group-head--overview .week-group-extras {
   margin-left: 0;
 }
 
@@ -2504,7 +2518,8 @@ body.excel-col-resizing * {
   border-radius: 4px;
 }
 
-.week-group.is-collapsed .week-group-notecard {
+.week-group.is-collapsed .week-group-notecard,
+.week-group.is-collapsed .week-group-extras {
   margin-bottom: 0.15rem;
 }
 

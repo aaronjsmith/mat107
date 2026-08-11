@@ -253,12 +253,15 @@
     return s;
   }
 
-  function calcHelp(tiSteps, casioSteps, tip) {
+  function calcHelp(tiSteps, casioSteps, tip, excelSteps) {
     tip = tip || t("calc_tip_default");
     const tipBlock = tip ? "\n\n" + tip : "";
     return {
       ti: t("calc_panel_ti", { steps: tiSteps }) + tipBlock,
       casio: t("calc_panel_casio", { steps: casioSteps }) + tipBlock,
+      excel: excelSteps
+        ? t("calc_panel_excel", { steps: excelSteps })
+        : "",
     };
   }
 
@@ -267,6 +270,7 @@
     return {
       ti: t("calc_generic_ti"),
       casio: t("calc_generic_casio"),
+      excel: t("calc_generic_excel"),
     };
   }
 
@@ -3309,15 +3313,17 @@
     if (!calc && hint2) calc = CALC_GENERIC();
     let hint3ti = "";
     let hint3casio = "";
+    let hint3excel = "";
     if (calc && typeof calc === "object") {
       hint3ti = calc.ti || "";
       hint3casio = calc.casio || "";
+      hint3excel = calc.excel || "";
     } else if (typeof calc === "string" && calc) {
       // Legacy single-string calc tips apply to both.
       hint3ti = calc;
       hint3casio = calc;
     }
-    const hasCalc = Boolean(hint3ti || hint3casio);
+    const hasCalc = Boolean(hint3ti || hint3casio || hint3excel);
 
     // Topic overview prepended to Hint 1 when available (strategy without answer).
     const overviewKey = "hint_overview." + (q.topic || "");
@@ -3352,9 +3358,10 @@
       prompt: q.prompt,
       hint1: hint1,
       hint2: hint2,
-      hint3: hint3ti || hint3casio,
+      hint3: hint3ti || hint3casio || hint3excel,
       hint3_ti: hint3ti,
       hint3_casio: hint3casio,
+      hint3_excel: hint3excel,
       hint: hint1,
       setup: hint2,
       calc: calc,

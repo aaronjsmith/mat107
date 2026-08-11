@@ -585,12 +585,13 @@
   }
 
   /**
-   * Rich HTML for calculator hint panels with stylized keycaps.
-   * brand: "ti" | "casio"
+   * Rich HTML for calculator / Excel hint panels with stylized keycaps.
+   * brand: "ti" | "casio" | "excel"
    */
   function formatCalcHtml(text, brand) {
     if (text == null || text === "") return "";
-    const b = brand === "casio" ? "casio" : "ti";
+    const b =
+      brand === "casio" ? "casio" : brand === "excel" ? "excel" : "ti";
     const lines = String(text).replace(/\r\n/g, "\n").split("\n");
     const out = ['<div class="math-doc calc-doc calc-doc--' + b + '">'];
 
@@ -603,10 +604,16 @@
       }
 
       // Brand header line
-      if (/^(TI-36X Pro|Casio)\b/i.test(trimmed)) {
+      if (/^(TI-36X Pro|Casio|Excel)\b/i.test(trimmed)) {
         out.push(
           '<p class="calc-brand-header">' + escapeHtml(trimmed) + "</p>"
         );
+        continue;
+      }
+
+      // Excel formulas stay as rich math/prose — not calculator keycap sequences.
+      if (b === "excel") {
+        out.push(formatLine(raw));
         continue;
       }
 

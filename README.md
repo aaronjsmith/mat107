@@ -18,6 +18,8 @@ MAT 107 practice: https://mat107.ensign.quest/
 
 **Assessment 3 (Deseret · Debt Bondage):** https://mat107.ensign.quest/quiz.html?a=assessment3
 
+**Assessment 3 Review (corrected key):** https://mat107.ensign.quest/assessment3-review.html
+
 **Week 5 · Finance (Singles Ward · Lifestyle Creep):** https://mat107.ensign.quest/quiz.html?a=lesson_finance
 
 **Week 6 · Savings (Widow’s Mite · Empty Storehouse):** https://mat107.ensign.quest/quiz.html?a=lesson_savings

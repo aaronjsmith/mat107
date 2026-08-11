@@ -308,7 +308,12 @@
       available: true,
       compose: true,
       questionsScripts: ["js/questions-course.js"],
-      features: { flashcards: false, notecard: false, boss: true },
+      features: {
+        flashcards: false,
+        notecard: false,
+        boss: true,
+        reviewHref: "assessment3-review.html",
+      },
       topicIds: ASSESS3_TOPICS.slice(),
     },
     {

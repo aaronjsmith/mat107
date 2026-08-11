@@ -236,6 +236,16 @@
     return null;
   }
 
+  /** Review answer-key page for a week (e.g. Assessment 3 Review). */
+  function weekReviewHref(weekId, quizzes) {
+    const list = quizzes || assessmentsForWeek(weekId);
+    for (let i = 0; i < list.length; i++) {
+      const href = list[i].features && list[i].features.reviewHref;
+      if (href) return href;
+    }
+    return null;
+  }
+
   function renderNotecardLink(href) {
     if (!href) return "";
     return (
@@ -247,6 +257,24 @@
     );
   }
 
+  function renderReviewLink(href) {
+    if (!href) return "";
+    return (
+      '<a class="week-group-notecard week-group-review" href="' +
+      escapeHtml(href) +
+      '" target="_blank" rel="noopener">' +
+      escapeHtml(t("btn_review")) +
+      "</a>"
+    );
+  }
+
+  function renderWeekExtras(weekId, quizzes) {
+    const notecardHtml = renderNotecardLink(weekNotecardHref(weekId, quizzes));
+    const reviewHtml = renderReviewLink(weekReviewHref(weekId, quizzes));
+    if (!notecardHtml && !reviewHtml) return "";
+    return '<div class="week-group-extras">' + notecardHtml + reviewHtml + "</div>";
+  }
+
   function renderWeekGroup(week, collapsedMap) {
     const quizzes = assessmentsForWeek(week.id);
     if (!quizzes.length) return "";
@@ -254,8 +282,7 @@
     const isOverview = week.id === "overview";
     const title = t(week.titleKey);
     const collapsed = isWeekCollapsed(week.id, collapsedMap);
-    const notecardHref = weekNotecardHref(week.id, quizzes);
-    const notecardHtml = renderNotecardLink(notecardHref);
+    const extrasHtml = renderWeekExtras(week.id, quizzes);
 
     if (isOverview) {
       return (
@@ -273,7 +300,7 @@
             "</span>"
           : "") +
         "</div>" +
-        notecardHtml +
+        extrasHtml +
         "</header>" +
         '<div class="card-grid card-grid--compact">' +
         quizzes.map(renderCard).join("") +
@@ -317,7 +344,7 @@
       ) +
       "</span>" +
       "</button>" +
-      notecardHtml +
+      extrasHtml +
       "</header>" +
       '<div class="week-group-body" id="week-body-' +
       escapeHtml(week.id) +

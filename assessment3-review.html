@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MAT 107 · Assessment 3 Review (corrected key)</title>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a2332;
+      --muted: #5c6b7a;
+      --line: #c9bba3;
+      --accent: #0f6e56;
+      --paper: #fffcf6;
+      --wash: #f3efe6;
+      --ans: #9b1c1c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--wash);
+      line-height: 1.45;
+    }
+    .toolbar {
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .toolbar h1 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+    .toolbar p {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .toolbar a, .toolbar button {
+      font: inherit;
+      font-size: 0.9rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .note {
+      max-width: 46rem;
+      margin: 0 auto 1rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid #b45309;
+      border-radius: 10px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 0.9rem;
+    }
+    main {
+      max-width: 46rem;
+      margin: 0 auto 3rem;
+      padding: 0 1.25rem;
+    }
+    .q {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      margin: 0 0 0.85rem;
+    }
+    .q h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 700;
+    }
+    .prompt { margin: 0 0 0.55rem; }
+    .ans {
+      color: var(--ans);
+      font-weight: 500;
+      margin: 0;
+    }
+    .ans .work {
+      display: block;
+      margin-top: 0.35rem;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: #7f1d1d;
+    }
+    ul.ans-list {
+      color: var(--ans);
+      margin: 0.35rem 0 0;
+      padding-left: 1.2rem;
+      font-weight: 500;
+    }
+    @media print {
+      .toolbar-actions, .note { display: none; }
+      body { background: #fff; }
+      .q { break-inside: avoid; border-color: #ccc; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <h1>MAT107 Assessment 3 Review</h1>
+      <p>Corrected study key · Weeks 5–7 (finance, savings &amp; credit, insurance)</p>
+    </div>
+    <div class="toolbar-actions">
+      <a href="index.html">← Course hub</a>
+      <a href="quiz.html?a=assessment3">Practice quiz</a>
+      <button type="button" onclick="window.print()">Print</button>
+    </div>
+  </div>
+  <p class="note"><strong>Corrected key.</strong> Several answers from the filled review sheet were wrong or incomplete (Q4 tax arithmetic &amp; names, Q6 cost of credit, Q7 rounding, Q12 DINK, Q21 numbering, Q30 step 5). This page matches the study-guide formulas used by the Assessment 3 practice quiz.</p>
+
+  <main>
+    <article class="q">
+      <h2>1.</h2>
+      <p class="prompt">If your monthly gross pay is $4,000, your income tax rate is 25%, and your “affordable debt” is 15%, what can your monthly car payment be if you already have monthly consumer debt of $200 per month?</p>
+      <p class="ans">Affordable car payment: <strong>$250</strong>
+        <span class="work">Take-home $3,000 · 15% = $450 affordable · − $200 existing = $250</span>
+        <span class="work">Excel: =4000*(1-25/100)*0.15-200</span>
+      </p>
+    </article>
+
+    <article class="q">
+      <h2>2.</h2>
+      <p class="prompt">Assume you could put $350 monthly into an investment account that will return 9%. How many months would it take you to pay cash for a car costing $18,495.00 (including the sales tax)? Round up to the nearest whole number of months.</p>
+      <p class="ans"><strong>45 months</strong>
+        <span class="work">PMT $350, APR 9% monthly, FV $18,495 → NPER ≈ 44.68 → round up to 45</span>
+        <span class="work">Excel: =ROUNDUP(NPER(9%/12,-350,0,18495),0)</span>
+      </p>
+    </article>
+
+    <article class="q">
+      <h2>3.</h2>
+      <p class="prompt">What guideline does the lending industry use to determine if you can “afford” debt?</p>
+      <p class="ans">Consumer debt within <strong>15–20% of your net (take-home) income</strong>.</p>
+    </article>
+
+    <article class="q">
+      <h2>4.</h2>
+      <p class="prompt">Use the following information to determine the <em>maximum</em> amount that Oscar and Abby can afford to pay on monthly consumer debt payments.</p>
+      <ul>
+        <li>Oscar and Abby’s gross salary is $6,250 per month</li>
+        <li>6.5% is deducted for a 401(k)</li>
+        <li>12% federal income tax</li>
+        <li>6.2% Social Security</li>
+        <li>1.4% Medicare</li>
+        <li>5% state income tax</li>
+      </ul>
+      <ul class="ans-list">
+        <li><strong>a.</strong> 401(k) contribution: <strong>$406.25</strong></li>
+        <li><strong>b.</strong> Total taxes: <strong>$1,537.50</strong> <span class="work">(12%+6.2%+1.4%+5% = 24.6% of $6,250)</span></li>
+        <li><strong>c.</strong> Take-home: <strong>$4,306.25</strong></li>
+        <li><strong>d.</strong> Maximum consumer credit (20% of take-home): <strong>$861.25</strong></li>
+      </ul>
+      <p class="ans"><span class="work">Excel: =6250*6.5/100 · =6250*24.6/100 · =6250−401(k)−taxes · =takehome*0.2</span></p>
+    </article>
+
+    <article class="q">
+      <h2>5.</h2>
+      <p class="prompt">When you submit a typical mortgage payment, not all of it goes to paying principal and interest on the loan you have taken out. True or false?</p>
+      <p class="ans"><strong>True.</strong> Escrow often includes taxes, insurance, and sometimes mortgage insurance (PMI).</p>
+    </article>
+
+    <article class="q">
+      <h2>6.</h2>
+      <p class="prompt">You buy a home for $173,271 and put $13,660 down. You borrow the remainder. The mortgage company also charges a 3% loan and closing fee which you must also borrow. The interest rate is 6.5% for 30 years. Calculate the following (monthly payments for the full term).</p>
+      <ul class="ans-list">
+        <li><strong>a.</strong> Price: <strong>$173,271</strong></li>
+        <li><strong>b.</strong> Down payment: <strong>$13,660</strong></li>
+        <li><strong>c.</strong> Amount after down: <strong>$159,611</strong></li>
+        <li><strong>d.</strong> Loan fee (3%): <strong>$4,788.33</strong></li>
+        <li><strong>e.</strong> Total financed: <strong>$164,399.33</strong></li>
+        <li><strong>f.</strong> Monthly payment: <strong>$1,039.12</strong></li>
+        <li><strong>g.</strong> Total paid back: <strong>$374,083.20</strong> ($1,039.12 × 360)</li>
+        <li><strong>h.</strong> Cost of credit: <strong>$209,683.87</strong> (total paid − total financed)</li>
+      </ul>
+      <p class="ans"><span class="work">Excel: financed =(173271-13660)*(1+3/100) · =PMT(6.5%/12,360,-financed) · =PMT*360 · =total-financed</span></p>
+    </article>
+
+    <article class="q">
+      <h2>7.</h2>
+      <p class="prompt">The mortgage on your new home is $195,856 at 6.5% for 30 years. How many months will it take to pay off if you make an extra $65 payment per month? Round to the nearest whole number.</p>
+      <p class="ans"><strong>312 months</strong>
+        <span class="work">Base PMT ≈ $1,237.94 · with extra ≈ $1,302.94 · n ≈ 311.59 → 312</span>
+        <span class="work">Excel: =PMT(6.5%/12,360,-195856) then =ROUND(NPER(6.5%/12,-(base+65),195856),0)</span>
+      </p>
+    </article>
+
+    <article class="q">
+      <h2>8.</h2>
+      <p class="prompt">When do you use the following?</p>
+      <ul class="ans-list">
+        <li><strong>a. Relative Excel cell reference:</strong> Default — the reference changes relative to where you copy the formula.</li>
+        <li><strong>b. Absolute Excel cell reference:</strong> The cell stays fixed (e.g. $A$1) when the formula is copied.</li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <h2>9.</h2>
+      <p class="prompt">You found a car you could afford for $16,445 after trading in your old car. Finance at 9% APR compounded monthly for 8 years.</p>
+      <ul class="ans-list">
+        <li><strong>a.</strong> Monthly payment: <strong>$240.92</strong></li>
+        <li><strong>b.</strong> Divide the rate by <strong>12</strong> and multiply periods by <strong>12</strong> because interest is compounded monthly.</li>
+      </ul>
+      <p class="ans"><span class="work">Excel: =PMT(9%/12,8*12,-16445)</span></p>
+    </article>
+
+    <article class="q">
+      <h2>10.</h2>
+      <p class="prompt">What is the present value of $30,130 at 4% received in 11 years compounded quarterly?</p>
+      <p class="ans"><strong>$19,447.27</strong>
+        <span class="work">PV = 30130 ÷ (1 + 0.04/4)^(11×4)</span>
+        <span class="work">Excel: =PV(4%/4,11*4,0,-30130)</span>
+      </p>
+    </article>
+
+    <article class="q">
+      <h2>11.</h2>
+      <p class="prompt">What does each of the items in a 100/250/50 car insurance policy mean?</p>
+      <p class="ans"><strong>$100,000</strong> bodily injury per person / <strong>$250,000</strong> bodily injury per accident / <strong>$50,000</strong> property damage.</p>
+    </article>
+
+    <article class="q">
+      <h2>12.</h2>
+      <p class="prompt">You provide 70% of the family income and your spouse provides 30% and you have no children. Your total income is $180,000 per year. If you expect funeral expense to be $9,000 for each of you, and you have debts totaling $75,000, how much insurance do you need for yourself using the DINK method?</p>
+      <p class="ans"><strong>$61,500</strong>
+        <span class="work">DINK: your % of the debts + your funeral = 70% × $75,000 + $9,000 = $52,500 + $9,000</span>
+        <span class="work">Excel: =9000+75000*70/100</span>
+      </p>
+    </article>
+
+    <article class="q">
+      <h2>13.</h2>
+      <p class="prompt">Jack and Julene have five children. Their health insurance pays 81% of medical expenses each year. If one child has an accident costing $6,352 and the rest of the family incurs $2,323, how much will the insurance company pay that year? (Round to the nearest whole number.)</p>
+      <p class="ans"><strong>$7,027</strong>
+        <span class="work">Total $8,675 × 81% = $7,026.75 → $7,027</span>
+        <span class="work">Excel: =ROUND((6352+2323)*81/100,0)</span>
+      </p>
+    </article>
+
+    <article class="q">
+      <h2>14.</h2>
+      <p class="prompt">There are 2 people in a car that has an accident caused by a car with 2 people in it. Every person involved sustains injuries that cost $48,220 each. The car damaged by the other car will cost $40,000 to repair. The at-fault car has a 100/300/50 policy.</p>
+      <ul class="ans-list">
+        <li><strong>a.</strong> Injury payout: <strong>$144,660</strong> (3 other injured parties × $48,220; under $100k/person and $300k/accident)</li>
+        <li><strong>b.</strong> Property damage: <strong>$40,000</strong> (under the $50k limit)</li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <h2>15.</h2>
+      <p class="prompt">To become financially secure requires that you put your money to work. In order to become financially secure you need to become financially self-reliant. True or false?</p>
+      <p class="ans"><strong>True.</strong></p>
+    </article>
+
+    <article class="q">
+      <h2>16.</h2>
+      <p class="prompt">What are the characteristics of a share of stock and what does it provide?</p>
+      <p class="ans">Ownership of the company; dividends if paid; growth or loss in stock value; investment risk. Gains or dividends may be subject to income tax.</p>
+    </article>
+
+    <article class="q">
+      <h2>17.</h2>
+      <p class="prompt">If you purchase a bond for $900 that has a face value of $1,000 and a coupon rate of 5%, what is your yield?</p>
+      <p class="ans"><strong>5.56%</strong>
+        <span class="work">Annual coupon $50 ÷ purchase price $900 = 5.56%. As price falls, yield rises.</span>
+        <span class="work">Excel: =(1000*5/100)/900*100</span>
+      </p>
+    </article>
+
+    <article class="q">
+      <h2>18.</h2>
+      <p class="prompt">What are the characteristics of bonds and what do they provide you?</p>
+      <p class="ans">Face value with a maturity date; you are a creditor of the issuer; coupon rate and yield (interest ÷ purchase price). Municipal bonds are often exempt from federal income tax.</p>
+    </article>
+
+    <article class="q">
+      <h2>19.</h2>
+      <p class="prompt">You put $1,450 into a college fund for your newborn daughter that grows at 6% per year. How much will she have for tuition in 20 years if it is:</p>
+      <ul class="ans-list">
+        <li><strong>a.</strong> Compounded semi-annually: <strong>$4,729.95</strong></li>
+        <li><strong>b.</strong> Compounded weekly: <strong>$4,810.84</strong></li>
+      </ul>
+      <p class="ans"><span class="work">Excel: =FV(6%/2,20*2,0,-1450) · =FV(6%/52,20*52,0,-1450)</span></p>
+    </article>
+
+    <article class="q">
+      <h2>20.</h2>
+      <p class="prompt">You put $5,000 into a college fund for your newborn son that grows at 7% per year. How much will he have for tuition in 21 years if it is:</p>
+      <ul class="ans-list">
+        <li><strong>a.</strong> Compounded annually: <strong>$20,702.81</strong></li>
+        <li><strong>b.</strong> Compounded monthly: <strong>$21,653.50</strong></li>
+      </ul>
+      <p class="ans"><span class="work">Excel: =FV(7%,21,0,-5000) · =FV(7%/12,21*12,0,-5000)</span></p>
+    </article>
+
+    <article class="q">
+      <h2>21.</h2>
+      <p class="prompt">What are the six keys to financial success?</p>
+      <ol class="ans-list" style="list-style: decimal;">
+        <li>Pay the Lord first</li>
+        <li>Pay yourself second</li>
+        <li>Spend less than you earn</li>
+        <li>Save and invest the difference</li>
+        <li>Do not pay interest — collect it instead</li>
+        <li>Develop the will, desire, and discipline to be a financial success</li>
+      </ol>
+    </article>
+
+    <article class="q">
+      <h2>22.</h2>
+      <p class="prompt">Based on what the Study Guide says, what rule-of-thumb is used to determine how much money you need after you retire?</p>
+      <p class="ans"><strong>75% of your monthly gross income</strong>.</p>
+    </article>
+
+    <article class="q">
+      <h2>23.</h2>
+      <p class="prompt">We have been counseled to eliminate consumer debt. Financial experts say you can afford to spend what percentage of your take-home pay on consumer debt?</p>
+      <p class="ans"><strong>15–20%</strong> of take-home (net, after-tax monthly income).</p>
+    </article>
+
+    <article class="q">
+      <h2>24.</h2>
+      <p class="prompt">What are some of the advantages and disadvantages of credit?</p>
+      <p class="ans"><strong>Advantages:</strong> enjoy goods/services now; benefit if an asset appreciates more than finance charges; credit-card “float” of up to ~50 days.<br />
+      <strong>Disadvantages:</strong> you pay interest until the debt is gone; self-reliance is inhibited; you are obligated to someone else; you could lose assets if you don’t pay.</p>
+    </article>
+
+    <article class="q">
+      <h2>25.</h2>
+      <p class="prompt">What are primary investments? Alternate investments?</p>
+      <p class="ans"><strong>Primary:</strong> bank accounts, stocks, bonds, mutual funds.<br />
+      <strong>Alternate:</strong> stamps, art, coins, precious metals/stones, real estate, rare collectibles, etc.</p>
+    </article>
+
+    <article class="q">
+      <h2>26.</h2>
+      <p class="prompt">When you are incurring quarterly, annual, monthly or daily interest rates, what do you divide the RATE by for each calculation?</p>
+      <ul class="ans-list">
+        <li><strong>a. Daily:</strong> 365</li>
+        <li><strong>b. Monthly:</strong> 12</li>
+        <li><strong>c. Quarterly:</strong> 4</li>
+        <li><strong>d. Annually:</strong> 1 (do not divide)</li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <h2>27.</h2>
+      <p class="prompt">Name some types of consumer debt.</p>
+      <p class="ans"><strong>Consumer debt:</strong> department store credit, auto loans, credit cards, personal loans.<br />
+      <strong>Not typically counted as consumer debt here:</strong> home loan (mortgage), tuition, insurance, rent.</p>
+    </article>
+
+    <article class="q">
+      <h2>28.</h2>
+      <p class="prompt">What is self-insurance?</p>
+      <p class="ans">You (individual, company, or corporation) assume the risk of loss yourself, and sometimes save to cover losses that could occur.</p>
+    </article>
+
+    <article class="q">
+      <h2>29.</h2>
+      <p class="prompt">What items reduce gross income when calculating take-home pay?</p>
+      <p class="ans">Federal income tax, state income tax, city/local income tax, 401(k) contributions, Medicare tax, Social Security, and other payroll deductions.</p>
+    </article>
+
+    <article class="q">
+      <h2>30.</h2>
+      <p class="prompt">What are the 5 steps in calculating the “cost of credit”?</p>
+      <ol class="ans-list" style="list-style: decimal;">
+        <li>Determine the amount you want to borrow.</li>
+        <li>Calculate the final loan amount (+ fees, processing costs).</li>
+        <li>Calculate the payment amount.</li>
+        <li>Calculate the total amount paid back (payment × number of periods).</li>
+        <li>Cost of credit = total amount paid back − amount borrowed (financed).</li>
+      </ol>
+    </article>
+
+    <article class="q">
+      <h2>31.</h2>
+      <p class="prompt">What are the 4 lifelong financial principles?</p>
+      <ol class="ans-list" style="list-style: decimal;">
+        <li>Set financial goals</li>
+        <li>Budget</li>
+        <li>Track net worth</li>
+        <li>Keep financial records</li>
+      </ol>
+    </article>
+  </main>
+</body>
+</html>
