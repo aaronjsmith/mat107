@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MAT 107 · Assessment 3 · 5×7 Formula + Excel Notecard</title>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a2332;
+      --muted: #5c6b7a;
+      --line: #c9bba3;
+      --accent: #0f6e56;
+      --accent-deep: #0a4f3d;
+      --paper: #fffcf6;
+      --wash: #f3efe6;
+      --z: #1e3a5f;
+      --xl: #1d4e89;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--wash);
+      line-height: 1.28;
+    }
+
+    .toolbar {
+      max-width: 48rem;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toolbar h1 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .toolbar p {
+      margin: 0.2rem 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .disclaimer-banner {
+      max-width: 48rem;
+      margin: 0 auto 0.75rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid #b45309;
+      border-radius: 10px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .disclaimer-banner strong {
+      display: block;
+      margin-bottom: 0.2rem;
+      font-size: 0.95rem;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      padding: 0.5rem 0.9rem;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .deck {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 0.75rem 1rem 2rem;
+    }
+
+    .side {
+      width: 7in;
+      height: 5in;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: 0 12px 28px rgba(26, 35, 50, 0.08);
+      padding: 0.16in 0.18in 0.12in;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .side-label {
+      position: absolute;
+      top: 0.06in;
+      right: 0.12in;
+      font-size: 0.5rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .side h2 {
+      margin: 0 0 0.04rem;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      padding-right: 1.6in;
+    }
+
+    .side h3 {
+      margin: 0.08rem 0 0.04rem;
+      font-size: 0.54rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(201, 187, 163, 0.7);
+      padding-bottom: 0.02rem;
+    }
+
+    .front-grid,
+    .back-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.05fr 0.95fr;
+      gap: 0.1in;
+      height: calc(100% - 0.38in);
+    }
+
+    .pair {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.48rem;
+      margin: 0.04rem 0 0.06rem;
+    }
+
+    .pair th,
+    .pair td {
+      border: 1px solid rgba(201, 187, 163, 0.75);
+      padding: 0.08rem 0.12rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .pair th {
+      background: rgba(15, 110, 86, 0.1);
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      font-size: 0.44rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-weight: 600;
+    }
+
+    .pair th.xl {
+      background: rgba(29, 78, 137, 0.12);
+      color: var(--xl);
+    }
+
+    .pair .math {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.46rem;
+    }
+
+    .pair .xl-cell {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.44rem;
+      color: var(--xl);
+      font-weight: 500;
+    }
+
+    .pair .tip {
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      font-size: 0.42rem;
+      color: var(--muted);
+      display: block;
+      margin-top: 0.02rem;
+    }
+
+    .note {
+      margin: 0.02rem 0 0.04rem;
+      font-size: 0.46rem;
+      color: var(--muted);
+    }
+
+    .z-box {
+      margin-top: 0.06rem;
+      padding: 0.1rem 0.16rem;
+      border: 1.5px solid var(--z);
+      border-radius: 5px;
+      background: rgba(30, 58, 95, 0.06);
+    }
+
+    .z-box.xl-box {
+      border-color: var(--xl);
+      background: rgba(29, 78, 137, 0.06);
+    }
+
+    .z-box .z-title {
+      margin: 0 0 0.04rem;
+      font-size: 0.52rem;
+      font-weight: 700;
+      color: var(--z);
+      letter-spacing: 0.02em;
+    }
+
+    .z-box.xl-box .z-title { color: var(--xl); }
+
+    .z-box .z-formula {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.5rem;
+      font-weight: 600;
+      margin: 0 0 0.04rem;
+    }
+
+    .z-box p,
+    .z-box ul {
+      margin: 0;
+      font-size: 0.44rem;
+    }
+
+    .z-box ul {
+      padding-left: 0.75rem;
+      margin-top: 0.04rem;
+    }
+
+    .z-box li { margin: 0.02rem 0; }
+
+    .steps {
+      margin: 0;
+      padding-left: 0.85rem;
+      font-size: 0.48rem;
+    }
+
+    .steps li { margin: 0.03rem 0; }
+
+    .footer-tiny {
+      margin-top: 0.04rem;
+      font-size: 0.42rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.1rem;
+      margin: 0.04rem 0;
+    }
+
+    .chip {
+      font-size: 0.42rem;
+      padding: 0.05rem 0.14rem;
+      border-radius: 3px;
+      background: rgba(15, 110, 86, 0.08);
+      border: 1px solid rgba(15, 110, 86, 0.2);
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    .chip.xl {
+      background: rgba(29, 78, 137, 0.08);
+      border-color: rgba(29, 78, 137, 0.25);
+      color: var(--xl);
+    }
+
+    @media print {
+      body { background: #fff; }
+      .toolbar { display: none !important; }
+      .disclaimer-banner { display: none !important; }
+      .deck { padding: 0; gap: 0; }
+      .side {
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        page-break-after: always;
+        break-after: page;
+        margin: 0;
+      }
+      .side:last-child { page-break-after: auto; }
+      @page {
+        size: 7in 5in landscape;
+        margin: 0;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .side {
+        width: min(100%, 7in);
+        height: auto;
+        min-height: 5in;
+      }
+      .front-grid,
+      .back-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <h1>MAT 107 · Assessment 3 notecard (formulas + Excel)</h1>
+      <p>Weeks 5–7 · Finance, savings &amp; credit, insurance. Print 5×7 landscape (7″×5″).</p>
+    </div>
+    <div class="toolbar-actions">
+      <a class="btn" href="quiz.html?a=assessment3">← Assessment 3 practice</a>
+      <a class="btn" href="assessment3-review.html">Review key</a>
+      <a class="btn" href="notecard-a2.html">Assessment 2 card</a>
+      <button class="btn primary" type="button" onclick="window.print()">Print study template</button>
+    </div>
+  </div>
+
+  <aside class="disclaimer-banner" role="note">
+    <strong>Testing-center disclaimer</strong>
+    Ensign College / testing-center rules typically require a <strong>handwritten</strong> notecard.
+    This page is an unofficial <strong>study template only</strong> — copy it by hand onto your approved
+    5×7 card. Do not bring a printed copy unless your instructor explicitly allows it. Always follow
+    your course and testing-center instructions.
+  </aside>
+
+  <div class="deck">
+    <!-- FRONT -->
+    <article class="side" aria-label="Notecard front">
+      <span class="side-label">Front · Budget + growth</span>
+      <h2>Assessment 3 · Math formula ↔ Excel</h2>
+      <p class="note">Rates as decimals or with <code>%</code> (5% → 0.05 or 5%). Monthly: divide rate by 12, multiply periods by 12. Negative PV/FV makes PMT positive.</p>
+
+      <div class="front-grid">
+        <div>
+          <h3>Take-home &amp; debt</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">take-home = gross − 401(k) − taxes
+                  <span class="tip">taxes = fed+SS+Medicare+state</span>
+                </td>
+                <td class="xl-cell">=gross*(1−k401%−tax%)</td>
+              </tr>
+              <tr>
+                <td class="math">affordable = take-home × 15–20%
+                  <span class="tip">max consumer = 20%</span>
+                </td>
+                <td class="xl-cell">=takehome*0.2</td>
+              </tr>
+              <tr>
+                <td class="math">car PMT = affordable − existing
+                  <span class="tip">leftover consumer room</span>
+                </td>
+                <td class="xl-cell">=affordable−existing</td>
+              </tr>
+              <tr>
+                <td class="math">% of income = expense ÷ income × 100
+                </td>
+                <td class="xl-cell">=expense/income*100</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Excel refs</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">relative A1
+                  <span class="tip">shifts when copied</span>
+                </td>
+                <td class="xl-cell">=B2*C2</td>
+              </tr>
+              <tr>
+                <td class="math">absolute $A$1
+                  <span class="tip">stays locked</span>
+                </td>
+                <td class="xl-cell">=B2*$D$1</td>
+              </tr>
+              <tr>
+                <td class="math">SUM / AVERAGE / PRODUCT
+                </td>
+                <td class="xl-cell">=SUM(B2:B5)
+                  <span class="tip">=AVERAGE · =B2*B3</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h3>Compound growth</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">A = P(1 + r)<sup>t</sup>
+                  <span class="tip">annual compound</span>
+                </td>
+                <td class="xl-cell">=FV(r,t,0,−P)</td>
+              </tr>
+              <tr>
+                <td class="math">A = P(1 + r/m)<sup>m·t</sup>
+                  <span class="tip">m times / year</span>
+                </td>
+                <td class="xl-cell">=FV(r/m,m*t,0,−P)</td>
+              </tr>
+              <tr>
+                <td class="math">PV = FV / (1 + r/m)<sup>m·t</sup>
+                  <span class="tip">discount a future amount</span>
+                </td>
+                <td class="xl-cell">=PV(r/m,m*t,0,−FV)</td>
+              </tr>
+              <tr>
+                <td class="math">annuity FV = PMT·((1+i)<sup>n</sup>−1)/i
+                  <span class="tip">i = APR/12 · n = months</span>
+                </td>
+                <td class="xl-cell">=FV(APR/12,n,−PMT)</td>
+              </tr>
+              <tr>
+                <td class="math">months to save (round up)
+                  <span class="tip">ordinary annuity NPER</span>
+                </td>
+                <td class="xl-cell">=ROUNDUP(NPER(i,−PMT,0,FV),0)</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="note">m: annual=1 · semi=2 · quarterly=4 · monthly=12 · weekly=52 · daily=365</p>
+        </div>
+
+        <div>
+          <h3>Rules of thumb</h3>
+          <div class="z-box">
+            <p class="z-title">GUIDELINES</p>
+            <ul>
+              <li>Consumer debt: <strong>15–20% of take-home</strong></li>
+              <li>Retirement need: <strong>75% of monthly gross</strong></li>
+              <li>Consumer debt: auto / store / cards — <em>not</em> mortgage, tuition, rent, insurance</li>
+              <li>Take-home deductions: taxes, FICA, 401(k), payroll — not groceries</li>
+            </ul>
+          </div>
+
+          <div class="z-box xl-box" style="margin-top:0.06rem;">
+            <p class="z-title">EXCEL FINANCE</p>
+            <ul>
+              <li><code>FV(rate, nper, pmt, [pv])</code></li>
+              <li><code>PV(rate, nper, pmt, [fv])</code></li>
+              <li><code>PMT(rate, nper, pv, [fv])</code></li>
+              <li><code>NPER(rate, pmt, pv, [fv])</code></li>
+              <li>Sign: −PV or −FV so cash out is positive</li>
+            </ul>
+          </div>
+
+          <div class="chip-row">
+            <span class="chip">P principal</span>
+            <span class="chip">r APR</span>
+            <span class="chip">m freq</span>
+            <span class="chip">n periods</span>
+            <span class="chip xl">FV · PV · PMT · NPER</span>
+          </div>
+          <p class="footer-tiny">Unofficial MAT 107 study aid · Assessment 3</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- BACK -->
+    <article class="side" aria-label="Notecard back">
+      <span class="side-label">Back · Loans + insurance</span>
+      <h2>Loans · insurance · investments · Excel twins</h2>
+      <p class="note">Cost of credit = total paid back − amount financed. Liability 100/250/50 is thousands of $.</p>
+
+      <div class="back-grid">
+        <div>
+          <h3>Loans &amp; cost of credit</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">financed = (price−down)+fee
+                  <span class="tip">fee often % of after-down</span>
+                </td>
+                <td class="xl-cell">=(price−down)*(1+fee%)</td>
+              </tr>
+              <tr>
+                <td class="math">PMT = P·r(1+r)<sup>n</sup>/((1+r)<sup>n</sup>−1)
+                  <span class="tip">r = APR/12 · n = years×12</span>
+                </td>
+                <td class="xl-cell">=PMT(APR/12,n,−P)</td>
+              </tr>
+              <tr>
+                <td class="math">total paid = PMT × n
+                  <span class="tip">30 yr → × 360</span>
+                </td>
+                <td class="xl-cell">=PMT*n</td>
+              </tr>
+              <tr>
+                <td class="math">cost of credit = total − financed
+                </td>
+                <td class="xl-cell">=total−financed</td>
+              </tr>
+              <tr>
+                <td class="math">extra $ → fewer months
+                  <span class="tip">round to nearest n</span>
+                </td>
+                <td class="xl-cell">=ROUND(NPER(r,−(base+extra),P),0)</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="note">5 steps: amount → +fees → payment → total paid → cost = total − financed.</p>
+        </div>
+
+        <div>
+          <h3>Insurance</h3>
+          <table class="pair">
+            <thead>
+              <tr><th>Formula</th><th class="xl">Excel</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="math">100/250/50
+                  <span class="tip">per person / accident / property</span>
+                </td>
+                <td class="xl-cell">=MIN(cost,limit)</td>
+              </tr>
+              <tr>
+                <td class="math">insurer pays coinsure% × claims
+                  <span class="tip">round to nearest $</span>
+                </td>
+                <td class="xl-cell">=ROUND(total*pct,0)</td>
+              </tr>
+              <tr>
+                <td class="math">DINK = funeral + (your% × debts)
+                  <span class="tip">no kids; share of debts</span>
+                </td>
+                <td class="xl-cell">=funeral+debts*pct</td>
+              </tr>
+              <tr>
+                <td class="math">bond yield = coupon ÷ price
+                  <span class="tip">coupon = face × rate</span>
+                </td>
+                <td class="xl-cell">=(face*rate)/price</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="z-box" style="margin-top:0.06rem;">
+            <p class="z-title">LIABILITY PAYOUT</p>
+            <ul>
+              <li>Each injury: min(cost, per-person)</li>
+              <li>Then cap accident total</li>
+              <li>Property: min(repair, property limit)</li>
+              <li>Mortgage PMT often includes escrow (tax/ins/PMI)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <h3>Principles</h3>
+          <ol class="steps">
+            <li>Pay the Lord first</li>
+            <li>Pay yourself second</li>
+            <li>Spend less than you earn</li>
+            <li>Save and invest the difference</li>
+            <li>Collect interest — don’t pay it</li>
+            <li>Will, desire, and discipline</li>
+          </ol>
+          <p class="note" style="margin-top:0.06rem;"><strong>Lifelong:</strong> goals · budget · net worth · records.</p>
+          <p class="note"><strong>Primary:</strong> bank, stocks, bonds, funds. <strong>Alt:</strong> art, coins, metals, real estate.</p>
+          <p class="note"><strong>Stock</strong> = ownership (div/gain/risk). <strong>Bond</strong> = creditor, coupon, maturity.</p>
+
+          <div class="z-box xl-box" style="margin-top:0.06rem;">
+            <p class="z-title">MINI EXAMPLES</p>
+            <p><strong>Car loan:</strong> $16,445, 9%, 8 yr → <code>=PMT(9%/12,8*12,-16445)</code></p>
+            <p><strong>College FV:</strong> $5,000, 7%, 21 yr mo. → <code>=FV(7%/12,21*12,0,-5000)</code></p>
+            <p><strong>DINK:</strong> 70% of $75k debts + $9k funeral = $61,500</p>
+          </div>
+          <p class="footer-tiny">Print double-sided · landscape 7″×5″ · mat107.ensign.quest</p>
+        </div>
+      </div>
+    </article>
+  </div>
+</body>
+</html>

@@ -310,7 +310,8 @@
       questionsScripts: ["js/questions-course.js"],
       features: {
         flashcards: false,
-        notecard: false,
+        notecard: true,
+        notecardHref: "notecard-a3.html",
         boss: true,
         reviewHref: "assessment3-review.html",
       },

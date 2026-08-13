@@ -30,3 +30,4 @@ Printable 5×7 landscape (7″×5″) double-sided formula notecards (study temp
 
 - Assessment 1 (geo/stats): https://mat107.ensign.quest/notecard.html
 - Assessment 2 (prob/sequences/models + Excel): https://mat107.ensign.quest/notecard-a2.html
+- Assessment 3 (finance/savings/insurance + Excel): https://mat107.ensign.quest/notecard-a3.html
