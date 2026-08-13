@@ -1537,6 +1537,62 @@
     return fallback || t("excel_formula_tip_default");
   }
 
+  function excelSheetTsv(item, formulaValue) {
+    const cols = item.cols && item.cols.length ? item.cols : ["A", "B"];
+    const rows = item.rows || [];
+    const formulaId = item.formulaField || "formula";
+    const activeRef = String(item.active || "").toUpperCase();
+    const lines = [];
+    lines.push("\t" + cols.join("\t"));
+    rows.forEach(function (row) {
+      const cells = [String(row.r)];
+      cols.forEach(function (col) {
+        const ref = col + String(row.r);
+        const raw = row.cells ? row.cells[col] : null;
+        const isActive =
+          (raw && typeof raw === "object" && raw.field === formulaId) ||
+          ref === activeRef;
+        if (isActive) {
+          cells.push(formulaValue != null ? String(formulaValue) : "");
+        } else if (raw != null && typeof raw === "object" && raw.value != null) {
+          cells.push(String(raw.value));
+        } else if (raw != null && typeof raw !== "object") {
+          cells.push(String(raw));
+        } else {
+          cells.push("");
+        }
+      });
+      lines.push(cells.join("\t"));
+    });
+    return lines.join("\n");
+  }
+
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(String(text)).catch(function () {
+        return fallbackCopyText(text);
+      });
+    }
+    return Promise.resolve(fallbackCopyText(text));
+  }
+
+  function fallbackCopyText(text) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = String(text);
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
   function appendExcelSheet(item, fieldById, focus) {
     const formulaId = item.formulaField || "formula";
     const formulaField = fieldById[formulaId];
@@ -1560,11 +1616,24 @@
     titleText.className = "excel-title";
     titleText.textContent = item.title || "Workbook.xlsx";
     titlebar.appendChild(titleText);
+
+    const titleActions = document.createElement("div");
+    titleActions.className = "excel-title-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "excel-copy-btn";
+    copyBtn.textContent = t("btn_excel_copy");
+    copyBtn.setAttribute("aria-label", t("btn_excel_copy_aria"));
+    copyBtn.title = t("btn_excel_copy_aria");
+    titleActions.appendChild(copyBtn);
+
     const traffic = document.createElement("span");
     traffic.className = "excel-traffic";
     traffic.setAttribute("aria-hidden", "true");
     traffic.innerHTML = "<i></i><i></i><i></i>";
-    titlebar.appendChild(traffic);
+    titleActions.appendChild(traffic);
+    titlebar.appendChild(titleActions);
     win.appendChild(titlebar);
 
     const formulaBar = document.createElement("div");
@@ -1669,6 +1738,20 @@
     input.addEventListener("input", syncExcelUi);
     input.addEventListener("focus", syncExcelUi);
     syncExcelUi();
+
+    let copyResetTimer = null;
+    copyBtn.addEventListener("click", function () {
+      const tsv = excelSheetTsv(item, input.value);
+      copyTextToClipboard(tsv).then(function () {
+        copyBtn.textContent = t("btn_excel_copied");
+        copyBtn.classList.add("is-copied");
+        if (copyResetTimer) clearTimeout(copyResetTimer);
+        copyResetTimer = setTimeout(function () {
+          copyBtn.textContent = t("btn_excel_copy");
+          copyBtn.classList.remove("is-copied");
+        }, 1600);
+      });
+    });
 
     if (focus) input.focus();
   }
